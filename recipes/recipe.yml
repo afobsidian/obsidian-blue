@@ -28,7 +28,12 @@ image-version: latest # only supported tag
 
 # ─── Build modules ─────────────────────────────────────────────────────────────
 modules:
-  # ── 1. RPM repos + installs ──────────────────────────────────────────────────
+  # ── 1. Clear stale DNF cache entries ──────────────────────────────────────────
+  - type: script
+    scripts:
+      - clear-rpmfusion-dnf-cache.sh
+
+  # ── 2. RPM repos + installs ──────────────────────────────────────────────────
   - type: dnf
     repos:
       # Current BlueBuild expects repo files under dnf.repos rather than bling.
@@ -55,17 +60,31 @@ modules:
         - SwayNotificationCenter # swaync; replaces dunst which wayblue ships
         - mpv # media player
         - nwg-look # GTK settings GUI
-        - qt6ct
         - qt5ct
-        - kvantum # QT style engine
-        - wallust # colour palette generator from wallpaper
+        - repo: fedora
+          packages:
+            - qt6ct
+            - kvantum # keep these on Fedora's Qt 6.9 line to match hyprland-qt-support
         - wlogout # logout / power menu
-        - imagemagick # wallpaper manipulation scripts
-        - nwg-displays # monitor management GUI
+        - ImageMagick # wallpaper manipulation scripts
         - tumbler # thumbnail service for Thunar (volman already in base)
         - yad # dialog boxes used by KooL scripts
         - yt-dlp # video downloader
         - imv # image viewer
+
+        # ── Upstream-installed extras: runtime deps ─────────────────────────
+        - python3-gobject # nwg-displays GTK bindings
+        - python3-i3ipc # nwg-displays sway IPC integration
+        - gtk-layer-shell # nwg-displays overlay support
+
+        # ── Upstream-installed extras: build deps ───────────────────────────
+        - python3-build # build nwg-displays wheel from source
+        - python3-installer # install nwg-displays wheel into the image
+        - python3-setuptools # nwg-displays packaging metadata
+        - python3-wheel # nwg-displays wheel build backend
+        - cargo # build wallust from upstream source
+        - rust # build wallust from upstream source
+        - gcc # linker for cargo builds
 
         # ── Bluefin DX: container runtimes ──────────────────────────────────
         - docker-ce
@@ -82,7 +101,6 @@ modules:
         # ── Bluefin DX: dev quality-of-life CLIs ────────────────────────────
         # (distrobox, fzf, just already in wayblue base)
         - gh # GitHub CLI
-        - lazygit
         - neovim
         - ripgrep
         - fd-find
@@ -102,7 +120,7 @@ modules:
         # wayblue ships dunst; swaync is what KooL dots expect
         - dunst
 
-  # ── 2. Enable systemd services ───────────────────────────────────────────────
+  # ── 3. Enable systemd services ───────────────────────────────────────────────
   - type: systemd
     system:
       enabled:
@@ -113,7 +131,24 @@ modules:
       enabled:
         - podman.socket
 
-  # ── 3. Default Flatpaks (installed on first boot, not baked in) ──────────────
+  # ── 4. Install upstream packages not shipped in enabled Fedora repos ───────
+  - type: script
+    scripts:
+      - install-upstream-tools.sh
+
+  # ── 5. Remove build-only deps used by upstream installers ──────────────────
+  - type: dnf
+    remove:
+      packages:
+        - python3-build
+        - python3-installer
+        - python3-setuptools
+        - python3-wheel
+        - cargo
+        - rust
+        - gcc
+
+  # ── 6. Default Flatpaks (installed on first boot, not baked in) ──────────────
   - type: default-flatpaks
     configurations:
       - notify: true
@@ -126,5 +161,5 @@ modules:
           - io.podman_desktop.PodmanDesktop
           - org.gnome.Boxes
 
-  # ── 4. Signing ───────────────────────────────────────────────────────────────
+          # ── 7. Signing ───────────────────────────────────────────────────────────────
   - type: signing

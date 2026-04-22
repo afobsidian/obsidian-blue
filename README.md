@@ -6,7 +6,7 @@ A custom immutable Fedora Atomic OS image built with [BlueBuild](https://blue-bu
 
 ```text
 Fedora Atomic
-  └── ghcr.io/wayblueorg/hyprland   (wayblue base)
+  └── ghcr.io/wayblueorg/hyprland-nvidia-open   (wayblue base)
         └── obsidian-blue              (this image)
 ```
 
@@ -50,11 +50,13 @@ Packages not already in the wayblue base:
 | `qt6ct` · `qt5ct` · `kvantum` | QT app theming                                             |
 | `wallust`                     | Colour palette generator from wallpaper                    |
 | `wlogout`                     | Logout / power menu                                        |
-| `imagemagick`                 | Image manipulation for wallpaper scripts                   |
+| `ImageMagick`                 | Image manipulation for wallpaper scripts                   |
 | `nwg-displays`                | Monitor management GUI                                     |
 | `tumbler`                     | Thumbnail service for Thunar                               |
 | `yad` · `yt-dlp`              | Dialog boxes and video downloader used by KooL scripts     |
 | `imv`                         | Image viewer                                               |
+
+`wallust` and `nwg-displays` are installed from upstream source during the image build because they are not available from the enabled Fedora repos used by this recipe.
 
 ### Added: Developer tooling (inspired by bluefin-dx)
 
@@ -63,16 +65,18 @@ Packages not already in the wayblue base:
 | `docker-ce` + compose + buildx      | Container runtime (default for VS Code devcontainers) |
 | `code`                              | VS Code with devcontainers extension                  |
 | `kubectl` · `helm`                  | Kubernetes tooling                                    |
-| `gh` · `lazygit` · `neovim`         | Git tooling                                           |
+| `gh` · `lazygit` · `neovim`         | Git and editor tooling                                |
 | `ripgrep` · `fd-find` · `jq` · `yq` | CLI utilities (`fzf` already in base)                 |
 | `zsh` · `fish`                      | Shells                                                |
 | `perf` · `sysprof`                  | System performance profiling                          |
+
+`lazygit` is installed from the upstream GitHub release during the image build because it is not available from the enabled Fedora repos used by this recipe.
 
 > `distrobox` and `just` are already provided by the wayblue base.
 
 ### Flatpaks (installed on first boot)
 
-Brave Browser, EasyEffects, Podman Desktop, GNOME Boxes, Dolphin.
+EasyEffects, Podman Desktop, GNOME Boxes.
 
 ---
 
@@ -112,7 +116,7 @@ rpm-ostree kargs \
   --append-if-missing=nvidia-drm.fbdev=1
 ```
 
-> **Nvidia GPU?** Change `base-image` in `recipe.yml` to `ghcr.io/wayblueorg/hyprland-nvidia` or `ghcr.io/wayblueorg/hyprland-nvidia-open`.
+> **Nvidia GPU?** This recipe already uses `ghcr.io/wayblueorg/hyprland-nvidia-open`. Change `base-image` only if you want a different wayblue variant.
 
 ---
 
@@ -135,4 +139,4 @@ podman build -t obsidian-blue .
 2. Replace `recipe.yml` with the one from this project
 3. Add `.github/workflows/build.yml`
 4. Generate a cosign keypair (`cosign generate-key-pair`) and add the private key as `SIGNING_SECRET` in your repo secrets
-5. Push to `main` — GitHub Actions will build and push to `ghcr.io/YOUR_USERNAME/obsidian-blue:latest`
+5. Push to `main` — GitHub Actions will build and push to `ghcr.io/afobsidian/obsidian-blue:latest`

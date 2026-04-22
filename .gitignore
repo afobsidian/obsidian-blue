@@ -1,2 +1,3 @@
 cosign.key
 .bluebuild-scripts_*
+/.bluebuild-scripts_*
