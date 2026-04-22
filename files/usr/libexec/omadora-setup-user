@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+# omadora-setup-user
+# Runs once per user at first login to complete the user-level portion of the
+# omadora setup.  All RPM/COPR packages are already installed in the image;
+# this script handles only user-space configuration (configs, themes, cargo
+# bins, MIME types, keyrings, …).
+#
+# Guard: the omadora-setup.service unit only runs when ~/.config/omadora does
+# NOT yet exist, so this script itself never needs to re-check that condition.
+
+set -eEo pipefail
+
+export OMADORA_PATH="$HOME/.local/share/omadora"
+export OMADORA_INSTALL="$OMADORA_PATH/install"
+export PATH="$OMADORA_PATH/bin:$PATH"
+
+# ── packaging/fonts.sh ──────────────────────────────────────────────────────
+mkdir -p ~/.local/share/fonts
+fc-cache
+
+# ── packaging/icons.sh ──────────────────────────────────────────────────────
+ICON_DIR="$HOME/.local/share/applications/icons"
+mkdir -p "$ICON_DIR"
+cp "$OMADORA_PATH/applications/icons/"*.png "$ICON_DIR/"
+
+# ── packaging/nvim.sh ───────────────────────────────────────────────────────
+if [[ ! -d "$HOME/.config/nvim" ]]; then
+  git clone https://github.com/LazyVim/starter ~/.config/nvim
+  cp -R "$OMADORA_PATH/config/nvim/"* ~/.config/nvim/
+  rm -rf ~/.config/nvim/.git
+fi
+
+# ── packaging/cargo.sh ──────────────────────────────────────────────────────
+# bluetui, eza, impala are pre-compiled into /usr/local/bin at image build
+# time.  cargo-update is not relevant in an immutable image context.
+
+# ── packaging/tuis.sh ───────────────────────────────────────────────────────
+# Runs after icons are available
+omadora-tui-install "Disk Usage" "bash -c 'dust -r; read -n 1 -s'" float "$ICON_DIR/Disk Usage.png"
+
+# ── packaging/webapps.sh ────────────────────────────────────────────────────
+omadora-webapp-install "Google Maps" https://maps.google.com "Google Maps.png"
+omadora-webapp-install "ChatGPT" https://chatgpt.com/ ChatGPT.png
+omadora-webapp-install "YouTube" https://youtube.com/ YouTube.png
+
+# ── config/config.sh ────────────────────────────────────────────────────────
+xdg-user-dirs-update
+mkdir -p ~/.config
+cp -R "$OMADORA_PATH/config/"* ~/.config/
+cp "$OMADORA_PATH/default/bashrc" ~/.bashrc
+
+# ── config/branding.sh ──────────────────────────────────────────────────────
+mkdir -p ~/.config/omadora/branding
+cp "$OMADORA_PATH/icon.txt" ~/.config/omadora/branding/about.txt
+cp "$OMADORA_PATH/logo.txt" ~/.config/omadora/branding/screensaver.txt
+
+# ── config/theme.sh (user-level parts) ──────────────────────────────────────
+mkdir -p ~/.config/omadora/themes
+omadora-theme-set "Rose Pine Darker"
+ln -snf ~/.config/omadora/current/theme/neovim.lua ~/.config/nvim/lua/plugins/theme.lua
+mkdir -p ~/.config/btop/themes
+ln -snf ~/.config/omadora/current/theme/btop.theme ~/.config/btop/themes/current.theme
+mkdir -p ~/.config/mako
+ln -snf ~/.config/omadora/current/theme/mako.ini ~/.config/mako/config
+pipx install terminaltexteffects==0.14.2
+
+# ── config/gpg.sh ───────────────────────────────────────────────────────────
+# System-level GPG config – requires sudo.  Attempt it; failures are non-fatal
+# because gnome-keyring provides an adequate fallback for most use-cases.
+sudo mkdir -p /etc/gnupg && \
+  sudo cp "$OMADORA_PATH/default/gpg/dirmngr.conf" /etc/gnupg/ && \
+  sudo chmod 644 /etc/gnupg/dirmngr.conf && \
+  sudo gpgconf --kill dirmngr 2>/dev/null || true
+sudo gpgconf --launch dirmngr 2>/dev/null || true
+
+# ── config/ssh-flakiness.sh / xcompose.sh / detect-keyboard-layout.sh ──────
+source "$OMADORA_INSTALL/config/ssh-flakiness.sh"
+source "$OMADORA_INSTALL/config/xcompose.sh"
+source "$OMADORA_INSTALL/config/detect-keyboard-layout.sh"
+
+# ── config/hardware/ ────────────────────────────────────────────────────────
+source "$OMADORA_INSTALL/config/hardware/network.sh"
+source "$OMADORA_INSTALL/config/hardware/fix-fkeys.sh"
+source "$OMADORA_INSTALL/config/hardware/power.sh"
+
+# ── config/mimetypes.sh ─────────────────────────────────────────────────────
+omadora-refresh-applications
+update-desktop-database ~/.local/share/applications
+source "$OMADORA_INSTALL/config/mimetypes.sh"
+
+# ── login/default-keyring.sh ────────────────────────────────────────────────
+source "$OMADORA_INSTALL/login/default-keyring.sh"
+
+echo "omadora first-login setup complete."

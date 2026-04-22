@@ -18,9 +18,9 @@
 name: obsidian-blue
 description: >-
   Custom immutable Fedora Atomic image.
-  wayblue hyprland base + bluefin-dx developer tooling
-  + extra opinionated Hyprland ecosystem packages
-  + KooL Hyprland-Dots dependencies.
+  wayblue hyprland base + omadora Hyprland desktop
+  + bluefin-dx developer tooling
+  + extra opinionated Hyprland ecosystem packages.
 
 # ─── Base image ────────────────────────────────────────────────────────────────
 # Change to hyprland-nvidia / hyprland-nvidia-open if you have an Nvidia GPU.
@@ -38,11 +38,11 @@ modules:
   # ── 2. RPM repos + installs ──────────────────────────────────────────────────
   - type: dnf
     repos:
-      # Current BlueBuild expects repo files under dnf.repos rather than bling.
       cleanup: true
       files:
         - https://download.docker.com/linux/fedora/docker-ce.repo
         - sdegler-hyprland.repo
+        - jdxcode-mise.repo # omadora: version manager
         - vscode.repo
     install:
       install-weak-deps: false
@@ -66,6 +66,57 @@ modules:
         - hyprsunset
         - hyprland-contrib # community scripts: grimblast, etc.
         - satty # screenshot annotation tool
+
+        # ── omadora base packages ─────────────────────────────────────────────
+        # (packages already provided by wayblue base or recipe above are omitted)
+        - alacritty # omadora default terminal
+        - bat # cat with syntax highlighting
+        - bind-utils # DNS tools (dig, nslookup)
+        - btop # resource monitor
+        - cascadia-code-nf-fonts # terminal Nerd Font
+        - cascadia-mono-nf-fonts # monospace variant
+        - chromium # default browser
+        - clang # cargo build dep (impala/bluetui); removed after build
+        - dbus-tools # dbus-send etc.
+        - du-dust # dust: intuitive du alternative
+        - evince # PDF viewer
+        - fastfetch # system info display
+        - fcitx5 # input method framework
+        - fcitx5-configtool
+        - fcitx5-gtk
+        - fcitx5-qt
+        - fontawesome-fonts-all # icon fonts
+        - gnome-calculator
+        - gnome-keyring
+        - gnome-themes-extra # Adwaita-dark GTK theme
+        - google-noto-fonts-common # base Noto fonts
+        - gum # fancy shell scripts
+        - gvfs-mtp # phone MTP access via Nautilus
+        - gvfs-smb # Samba/SMB network shares
+        - iwd # WiFi daemon
+        - libxkbcommon-utils # xkbcli inspect etc.
+        - mako # notification daemon (omadora default)
+        - mise # version manager (jdxcode COPR)
+        - nautilus # omadora default file manager
+        - pipewire-devel # cargo build dep (impala); removed after build
+        - pipx # user-level Python app installer
+        - plocate # fast locate
+        - plymouth # boot splash
+        - power-profiles-daemon # power profile switching
+        - sushi # Nautilus file previewer
+        - swaybg # wallpaper setter
+        - tldr # simplified man pages
+        - usbutils # lsusb
+        - uwsm # Universal Wayland Session Manager
+        - wf-recorder # screen recorder
+        - whois # domain lookup
+        - wiremix # PipeWire TUI mixer
+        - xdg-desktop-portal-gtk # GTK portal backend
+        - xdg-terminal-exec # default terminal selector
+        - xdg-user-dirs # XDG user directory management
+        - xmlstarlet # XML CLI tools
+        - yaru-icon-theme # Yaru icon set (omadora default)
+        - zoxide # smart cd replacement
 
         # ── KooL Hyprland-Dots deps not already in wayblue common ────────────
         - swappy # screenshot editor (grim + slurp already in base)
@@ -93,8 +144,8 @@ modules:
         - python3-installer # install nwg-displays wheel into the image
         - python3-setuptools # nwg-displays packaging metadata
         - python3-wheel # nwg-displays wheel build backend
-        - cargo # build wallust from upstream source
-        - rust # build wallust from upstream source
+        - cargo # build wallust, bluetui, eza, impala from source
+        - rust # build wallust, bluetui, eza, impala from source
         - gcc # linker for cargo builds
 
         # ── Bluefin DX: container runtimes ──────────────────────────────────
@@ -141,13 +192,22 @@ modules:
     user:
       enabled:
         - podman.socket
+        - omadora-setup.service # run omadora first-login setup for each new user
 
-  # ── 4. Install upstream packages not shipped in enabled Fedora repos ───────
+  # ── 4. Deploy omadora submodule and system files into the image ──────────────
+  - type: files
+    files:
+      - source: omadora
+        destination: /etc/skel/.local/share/omadora
+      - source: usr
+        destination: /usr
+
+  # ── 5. Install upstream packages not shipped in enabled Fedora repos ───────
   - type: script
     scripts:
       - install-upstream-tools.sh
 
-  # ── 5. Remove build-only deps used by upstream installers ──────────────────
+  # ── 6. Remove build-only deps used by upstream installers ──────────────────
   - type: dnf
     remove:
       packages:
@@ -158,8 +218,10 @@ modules:
         - cargo
         - rust
         - gcc
+        - clang
+        - pipewire-devel
 
-  # ── 6. Default Flatpaks (installed on first boot, not baked in) ──────────────
+  # ── 7. Default Flatpaks (installed on first boot, not baked in) ──────────────
   - type: default-flatpaks
     configurations:
       - notify: true
@@ -172,5 +234,5 @@ modules:
           - io.podman_desktop.PodmanDesktop
           - org.gnome.Boxes
 
-          # ── 7. Signing ───────────────────────────────────────────────────────────────
+  # ── 8. Signing ───────────────────────────────────────────────────────────────
   - type: signing

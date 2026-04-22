@@ -1,0 +1,17 @@
+[Unit]
+Description=Omadora first-login setup
+Documentation=https://github.com/elpritchos/omadora
+After=network-online.target
+Wants=network-online.target
+# Only run once – skip if omadora has already been configured for this user
+ConditionPathExists=!%h/.config/omadora
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/libexec/omadora-setup-user
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

@@ -5,6 +5,9 @@ set -euo pipefail
 readonly LAZYGIT_VERSION="0.61.1"
 readonly NWG_DISPLAYS_VERSION="0.3.28"
 readonly WALLUST_VERSION="3.5.2"
+readonly BLUETUI_VERSION="0.4.2"
+readonly EZA_VERSION="0.20.18"
+readonly IMPALA_VERSION="0.3.0"
 readonly TARGET_BIN_DIR="/usr/local/bin"
 readonly WORKDIR="$(mktemp -d)"
 
@@ -95,8 +98,20 @@ install_wallust() {
     )
 }
 
+install_cargo_bin() {
+    local name="$1"
+    local version="$2"
+
+    export CARGO_HOME="${WORKDIR}/cargo-home"
+    export CARGO_TARGET_DIR="${WORKDIR}/cargo-target"
+    cargo install "${name}" --version "${version}" --locked --root /usr/local
+}
+
 trap cleanup EXIT
 
 install_lazygit
 install_nwg_displays
 install_wallust
+install_cargo_bin bluetui "${BLUETUI_VERSION}"
+install_cargo_bin eza "${EZA_VERSION}"
+install_cargo_bin impala "${IMPALA_VERSION}"
