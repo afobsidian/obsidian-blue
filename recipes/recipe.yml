@@ -28,15 +28,14 @@ image-version: latest # only supported tag
 
 # ─── Build modules ─────────────────────────────────────────────────────────────
 modules:
-  # ── 1. Extra RPM repos ───────────────────────────────────────────────────────
-  - type: bling
-    # Adds Docker CE and VS Code RPM repos (same ones used by bluefin-dx)
-    install:
-      - repo-docker
-      - repo-vscode
-
-  # ── 2. RPM installs ──────────────────────────────────────────────────────────
+  # ── 1. RPM repos + installs ──────────────────────────────────────────────────
   - type: dnf
+    repos:
+      # Current BlueBuild expects repo files under dnf.repos rather than bling.
+      cleanup: true
+      files:
+        - https://download.docker.com/linux/fedora/docker-ce.repo
+        - vscode.repo
     install:
       install-weak-deps: false
       packages:
@@ -97,12 +96,13 @@ modules:
         - sysprof
 
     remove:
-      # wayblue ships wlsunset; hyprsunset is the Hyprland-native replacement
-      - wlsunset
-      # wayblue ships dunst; swaync is what KooL dots expect
-      - dunst
+      packages:
+        # wayblue ships wlsunset; hyprsunset is the Hyprland-native replacement
+        - wlsunset
+        # wayblue ships dunst; swaync is what KooL dots expect
+        - dunst
 
-  # ── 3. Enable systemd services ───────────────────────────────────────────────
+  # ── 2. Enable systemd services ───────────────────────────────────────────────
   - type: systemd
     system:
       enabled:
@@ -113,16 +113,18 @@ modules:
       enabled:
         - podman.socket
 
-  # ── 4. Default Flatpaks (installed on first boot, not baked in) ──────────────
+  # ── 3. Default Flatpaks (installed on first boot, not baked in) ──────────────
   - type: default-flatpaks
-    notify: true
-    system:
-      repo-url: https://dl.flathub.org/repo/flathub.flatpakrepo
-      repo-name: flathub
-      install:
-        - com.github.wwmm.easyeffects
-        - io.podman_desktop.PodmanDesktop
-        - org.gnome.Boxes
+    configurations:
+      - notify: true
+        scope: system
+        repo:
+          url: https://dl.flathub.org/repo/flathub.flatpakrepo
+          name: flathub
+        install:
+          - com.github.wwmm.easyeffects
+          - io.podman_desktop.PodmanDesktop
+          - org.gnome.Boxes
 
-  # ── 5. Signing ───────────────────────────────────────────────────────────────
+  # ── 4. Signing ───────────────────────────────────────────────────────────────
   - type: signing
