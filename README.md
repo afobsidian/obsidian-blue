@@ -14,7 +14,7 @@ Fedora Atomic
 
 ### From wayblue common base (already provided, not re-added)
 
-`rofi-wayland` · `wofi` · `fzf` · `just` · `distrobox` · `wl-clipboard` · `pavucontrol` · `playerctl` · `pamixer` · `brightnessctl` · `blueman` · `slurp` · `grim` · `dunst`_ · `wlsunset`_ · `kanshi` · `wlr-randr` · `thunar` · `thunar-archive-plugin` · `thunar-volman` · `xarchiver` · `wireplumber` · `pipewire` · `qt5-qtwayland` · `qt6-qtwayland` · `vim` · and more
+`rofi-wayland` · `wofi` · `fzf` · `just` · `distrobox` · `wl-clipboard` · `pavucontrol` · `playerctl` · `pamixer` · `brightnessctl` · `blueman` · `slurp` · `grim` · `dunst`_· `wlsunset`_ · `kanshi` · `wlr-randr` · `thunar` · `thunar-archive-plugin` · `thunar-volman` · `xarchiver` · `wireplumber` · `pipewire` · `qt5-qtwayland` · `qt6-qtwayland` · `vim` · and more
 
 > \* `dunst` is replaced by `SwayNotificationCenter` and `wlsunset` is replaced by `hyprsunset` — both removed in this image.
 
@@ -36,9 +36,9 @@ Fedora Atomic
 | `hyprland-contrib` | Community scripts (grimblast, etc.)                       |
 | `satty`            | Screenshot annotation                                     |
 
-### Added: KooL Hyprland-Dots dependencies
+### Added: Modern Hyprland-Dots dependencies
 
-Packages required by [LinuxBeginnings/Hyprland-Dots](https://github.com/LinuxBeginnings/Hyprland-Dots) not already in the wayblue base:
+Packages not already in the wayblue base:
 
 | Package(s)                    | Purpose                                                    |
 | ----------------------------- | ---------------------------------------------------------- |
