@@ -192,15 +192,15 @@ modules:
     user:
       enabled:
         - podman.socket
-        - omadora-setup.service # run omadora setup on first login for each new user
 
-  # ── 4. Deploy omadora submodule and system files into the image ──────────────
+  # ── 4. Deploy omadora submodule into /etc/skel (new users only) ──────────────
+  # Existing users are never touched; /etc/skel is only applied at account
+  # creation time.  Users who want to apply omadora configs to an existing
+  # account can run ~/.local/share/omadora/install.sh themselves.
   - type: files
     files:
       - source: omadora
         destination: /etc/skel/.local/share/omadora
-      - source: usr
-        destination: /usr
 
   # ── 5. Install upstream packages not shipped in enabled Fedora repos ───────
   - type: script
