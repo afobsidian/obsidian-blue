@@ -1,0 +1,128 @@
+# recipe.yml
+# Based on: ghcr.io/wayblueorg/hyprland
+# DX layer inspired by: ublue-os/bluefin-dx
+#
+# wayblue common base already provides (do NOT re-add):
+#   rofi-wayland, wofi, fzf, wl-clipboard, pavucontrol, playerctl, pamixer,
+#   distrobox, just, brightnessctl, blueman, slurp, grim, dunst,
+#   thunar, thunar-archive-plugin, thunar-volman, xarchiver,
+#   wireplumber, pipewire, pulseaudio-utils, network-manager-applet,
+#   qt5-qtwayland, qt6-qtwayland, wlsunset, kanshi, wlr-randr, vim, ...
+#
+# wayblue hyprland image also provides (do NOT re-add):
+#   hyprland, waybar, kitty, xdg-desktop-portal-hyprland,
+#   hyprpaper, hyprlock, hypridle, hyprland-qtutils
+#   (all from solopasha/hyprland COPR, already enabled)
+
+name: obsidian-blue
+description: >
+  Custom immutable Fedora Atomic image.
+  wayblue hyprland base + bluefin-dx developer tooling
+  + extra opinionated Hyprland ecosystem packages
+  + KooL Hyprland-Dots dependencies.
+
+# ─── Base image ────────────────────────────────────────────────────────────────
+# Change to hyprland-nvidia / hyprland-nvidia-open if you have an Nvidia GPU.
+base-image: ghcr.io/wayblueorg/hyprland
+image-version: latest # only supported tag
+
+# ─── Build modules ─────────────────────────────────────────────────────────────
+modules:
+  # ── 1. Extra RPM repos ───────────────────────────────────────────────────────
+  - type: bling
+    # Adds Docker CE and VS Code RPM repos (same ones used by bluefin-dx)
+    install:
+      - repo-docker
+      - repo-vscode
+
+  # ── 2. RPM installs ──────────────────────────────────────────────────────────
+  - type: dnf
+    install:
+      install-weak-deps: false
+      packages:
+        # ── Extra Hyprland ecosystem (solopasha COPR already enabled by wayblue)
+        - hyprland-plugins # official plugin set: border++, hyprexpo, hyprtrails, …
+        - hyprpicker # colour picker
+        - hyprshot # screenshot utility
+        - hyprpolkitagent # polkit authentication agent
+        # NOTE: wayblue ships wlsunset for blue-light; hyprsunset replaces it
+        - hyprsunset
+        - hyprland-contrib # community scripts: grimblast, etc.
+        - satty # screenshot annotation tool
+
+        # ── KooL Hyprland-Dots deps not already in wayblue common ────────────
+        - swappy # screenshot editor (grim + slurp already in base)
+        - cliphist # clipboard manager (wl-clipboard backend already in base)
+        - SwayNotificationCenter # swaync; replaces dunst which wayblue ships
+        - mpv # media player
+        - nwg-look # GTK settings GUI
+        - qt6ct
+        - qt5ct
+        - kvantum # QT style engine
+        - wallust # colour palette generator from wallpaper
+        - wlogout # logout / power menu
+        - imagemagick # wallpaper manipulation scripts
+        - nwg-displays # monitor management GUI
+        - tumbler # thumbnail service for Thunar (volman already in base)
+        - yad # dialog boxes used by KooL scripts
+        - yt-dlp # video downloader
+        - imv # image viewer
+
+        # ── Bluefin DX: container runtimes ──────────────────────────────────
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+        - docker-buildx-plugin
+        - docker-compose-plugin
+
+        # ── Bluefin DX: IDE & Kubernetes tooling ────────────────────────────
+        - code # VS Code from Microsoft repo
+        - kubectl
+        - helm
+
+        # ── Bluefin DX: dev quality-of-life CLIs ────────────────────────────
+        # (distrobox, fzf, just already in wayblue base)
+        - gh # GitHub CLI
+        - lazygit
+        - neovim
+        - ripgrep
+        - fd-find
+        - jq
+        - yq
+        - zsh
+        - fish
+
+        # ── Bluefin DX: performance profiling (Brendan Gregg toolkit) ───────
+        - perf
+        - sysprof
+
+    remove:
+      # wayblue ships wlsunset; hyprsunset is the Hyprland-native replacement
+      - wlsunset
+      # wayblue ships dunst; swaync is what KooL dots expect
+      - dunst
+
+  # ── 3. Enable systemd services ───────────────────────────────────────────────
+  - type: systemd
+    system:
+      enabled:
+        - docker.socket
+        - docker.service
+        - podman.socket
+    user:
+      enabled:
+        - podman.socket
+
+  # ── 4. Default Flatpaks (installed on first boot, not baked in) ──────────────
+  - type: default-flatpaks
+    notify: true
+    system:
+      repo-url: https://dl.flathub.org/repo/flathub.flatpakrepo
+      repo-name: flathub
+      install:
+        - com.github.wwmm.easyeffects
+        - io.podman_desktop.PodmanDesktop
+        - org.gnome.Boxes
+
+  # ── 5. Signing ───────────────────────────────────────────────────────────────
+  - type: signing
