@@ -192,7 +192,7 @@ modules:
     user:
       enabled:
         - podman.socket
-        - omadora-setup.service # run omadora first-login setup for each new user
+        - omadora-setup.service # run omadora setup on first login for each new user
 
   # ── 4. Deploy omadora submodule and system files into the image ──────────────
   - type: files

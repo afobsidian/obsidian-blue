@@ -24,6 +24,9 @@ mkdir -p "$ICON_DIR"
 cp "$OMADORA_PATH/applications/icons/"*.png "$ICON_DIR/"
 
 # ── packaging/nvim.sh ───────────────────────────────────────────────────────
+# NOTE: clones LazyVim starter from upstream without pinning — this mirrors
+# omadora's own install script behaviour.  Users who need a reproducible
+# nvim config should fork omadora and pin the LazyVim commit there.
 if [[ ! -d "$HOME/.config/nvim" ]]; then
   git clone https://github.com/LazyVim/starter ~/.config/nvim
   cp -R "$OMADORA_PATH/config/nvim/"* ~/.config/nvim/
@@ -65,13 +68,16 @@ ln -snf ~/.config/omadora/current/theme/mako.ini ~/.config/mako/config
 pipx install terminaltexteffects==0.14.2
 
 # ── config/gpg.sh ───────────────────────────────────────────────────────────
-# System-level GPG config – requires sudo.  Attempt it; failures are non-fatal
-# because gnome-keyring provides an adequate fallback for most use-cases.
-sudo mkdir -p /etc/gnupg && \
-  sudo cp "$OMADORA_PATH/default/gpg/dirmngr.conf" /etc/gnupg/ && \
-  sudo chmod 644 /etc/gnupg/dirmngr.conf && \
+# System-level GPG config – requires sudo.  Silently skipped when sudo is
+# unavailable or passwordless sudo is not configured; gnome-keyring provides
+# an adequate fallback for most desktop use-cases.
+if sudo -n true 2>/dev/null; then
+  sudo mkdir -p /etc/gnupg
+  sudo cp "$OMADORA_PATH/default/gpg/dirmngr.conf" /etc/gnupg/
+  sudo chmod 644 /etc/gnupg/dirmngr.conf
   sudo gpgconf --kill dirmngr 2>/dev/null || true
-sudo gpgconf --launch dirmngr 2>/dev/null || true
+  sudo gpgconf --launch dirmngr 2>/dev/null || true
+fi
 
 # ── config/ssh-flakiness.sh / xcompose.sh / detect-keyboard-layout.sh ──────
 source "$OMADORA_INSTALL/config/ssh-flakiness.sh"
