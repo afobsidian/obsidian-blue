@@ -15,7 +15,7 @@
 #   (all from solopasha/hyprland COPR, already enabled)
 
 name: obsidian-blue
-description: >
+description: >-
   Custom immutable Fedora Atomic image.
   wayblue hyprland base + bluefin-dx developer tooling
   + extra opinionated Hyprland ecosystem packages
@@ -23,7 +23,7 @@ description: >
 
 # ─── Base image ────────────────────────────────────────────────────────────────
 # Change to hyprland-nvidia / hyprland-nvidia-open if you have an Nvidia GPU.
-base-image: ghcr.io/wayblueorg/hyprland
+base-image: ghcr.io/wayblueorg/hyprland-nvidia-open
 image-version: latest # only supported tag
 
 # ─── Build modules ─────────────────────────────────────────────────────────────

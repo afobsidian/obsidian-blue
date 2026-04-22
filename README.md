@@ -123,7 +123,7 @@ rpm-ostree kargs \
 podman run --pull always --rm ghcr.io/blue-build/cli:latest-installer | bash
 
 # Generate Containerfile and build
-bluebuild generate -o Containerfile recipe.yml
+bluebuild generate -o Containerfile recipes/recipe.yml
 podman build -t obsidian-blue .
 ```
 
