@@ -79,7 +79,7 @@ RUN \
 --mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-latest-stage-obsidian-blue \
 --mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-latest-stage-obsidian-blue \
 --mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-latest-stage-obsidian-blue \
-/tmp/scripts/run_module.sh 'dnf' '{"type":"dnf","repos":{"cleanup":true,"files":["https://download.docker.com/linux/fedora/docker-ce.repo","sdegler-hyprland.repo","vscode.repo"]},"install":{"install-weak-deps":false,"packages":["hyprland","xdg-desktop-portal-hyprland","hyprpaper","hyprlock","hypridle","hyprland-qtutils","hyprland-plugins","hyprpicker","hyprshot","hyprpolkitagent","hyprsunset","hyprland-contrib","satty","swappy","cliphist","SwayNotificationCenter","mpv","nwg-look","qt5ct","qt6ct","kvantum","wlogout","ImageMagick","tumbler","yad","yt-dlp","imv","python3-gobject","python3-i3ipc","gtk-layer-shell","python3-build","python3-installer","python3-setuptools","python3-wheel","cargo","rust","gcc","docker-ce","docker-ce-cli","containerd.io","docker-buildx-plugin","docker-compose-plugin","code","kubectl","helm","gh","neovim","ripgrep","fd-find","jq","yq","zsh","fish","perf","sysprof"]},"remove":{"packages":["wlsunset","dunst"]}}'
+/tmp/scripts/run_module.sh 'dnf' '{"type":"dnf","repos":{"cleanup":true,"files":["https://download.docker.com/linux/fedora/docker-ce.repo","sdegler-hyprland.repo","jdxcode-mise.repo","vscode.repo"]},"install":{"install-weak-deps":false,"packages":["hyprland","xdg-desktop-portal-hyprland","hyprpaper","hyprlock","hypridle","hyprland-qtutils","hyprland-plugins","hyprpicker","hyprshot","hyprpolkitagent","hyprsunset","hyprland-contrib","satty","alacritty","bat","bind-utils","btop","cascadia-code-nf-fonts","cascadia-mono-nf-fonts","chromium","clang","dbus-tools","du-dust","evince","fastfetch","fcitx5","fcitx5-configtool","fcitx5-gtk","fcitx5-qt","fontawesome-fonts-all","gnome-calculator","gnome-keyring","gnome-themes-extra","google-noto-fonts-common","gum","gvfs-mtp","gvfs-smb","iwd","libxkbcommon-utils","mako","mise","nautilus","pipewire-devel","pipx","plocate","plymouth","power-profiles-daemon","sushi","swaybg","tldr","usbutils","uwsm","wf-recorder","whois","wiremix","xdg-desktop-portal-gtk","xdg-terminal-exec","xdg-user-dirs","xmlstarlet","yaru-icon-theme","zoxide","swappy","cliphist","SwayNotificationCenter","mpv","nwg-look","qt5ct","qt6ct","kvantum","wlogout","ImageMagick","tumbler","yad","yt-dlp","imv","python3-gobject","python3-i3ipc","gtk-layer-shell","python3-build","python3-installer","python3-setuptools","python3-wheel","cargo","rust","gcc","docker-ce","docker-ce-cli","containerd.io","docker-buildx-plugin","docker-compose-plugin","code","kubectl","helm","gh","neovim","ripgrep","fd-find","jq","yq","zsh","fish","perf","sysprof"]},"remove":{"packages":["wlsunset","dunst"]}}'
 RUN \
 --mount=type=bind,from=stage-files,src=/files,dst=/tmp/files,rw \
 --mount=type=bind,from=ghcr.io/blue-build/modules/systemd:latest,src=/modules,dst=/tmp/modules,rw \
@@ -92,6 +92,18 @@ RUN \
 --mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-latest-stage-obsidian-blue \
 --mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-latest-stage-obsidian-blue \
 /tmp/scripts/run_module.sh 'systemd' '{"type":"systemd","system":{"enabled":["docker.socket","docker.service","podman.socket"]},"user":{"enabled":["podman.socket"]}}'
+RUN \
+--mount=type=bind,from=stage-files,src=/files,dst=/tmp/files,rw \
+--mount=type=bind,from=ghcr.io/blue-build/modules/files:latest,src=/modules,dst=/tmp/modules,rw \
+--mount=type=bind,src=.bluebuild-scripts_6fc443c6,dst=/tmp/scripts/,Z \
+--mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-latest-stage-obsidian-blue \
+/tmp/scripts/run_module.sh 'files' '{"type":"files","files":[{"source":"omadora","destination":"/etc/skel/.local/share/omadora"}]}'
 RUN \
 --mount=type=bind,from=stage-files,src=/files,dst=/tmp/files,rw \
 --mount=type=bind,from=ghcr.io/blue-build/modules/script:latest,src=/modules,dst=/tmp/modules,rw \
@@ -115,7 +127,7 @@ RUN \
 --mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-latest-stage-obsidian-blue \
 --mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-latest-stage-obsidian-blue \
 --mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-latest-stage-obsidian-blue \
-/tmp/scripts/run_module.sh 'dnf' '{"type":"dnf","remove":{"packages":["python3-build","python3-installer","python3-setuptools","python3-wheel","cargo","rust","gcc"]}}'
+/tmp/scripts/run_module.sh 'dnf' '{"type":"dnf","remove":{"packages":["python3-build","python3-installer","python3-setuptools","python3-wheel","cargo","rust","gcc","clang","pipewire-devel"]}}'
 RUN \
 --mount=type=bind,from=stage-files,src=/files,dst=/tmp/files,rw \
 --mount=type=bind,from=ghcr.io/blue-build/modules/default-flatpaks:latest,src=/modules,dst=/tmp/modules,rw \
@@ -151,6 +163,6 @@ LABEL org.blue-build.build-id="53a41dc5-7976-4394-ba77-a8be15dfd8e6"
 LABEL org.opencontainers.image.base.digest="sha256:7b1d673a689ab73f9dc6a644cd89b440fb081a7c753a55ff28d935113a9ed575"
 LABEL org.opencontainers.image.base.name="ghcr.io/wayblueorg/hyprland-nvidia-open:latest"
 LABEL org.opencontainers.image.created="2026-04-22T02:13:32.041897807+00:00"
-LABEL org.opencontainers.image.description="Custom immutable Fedora Atomic image. wayblue hyprland base + bluefin-dx developer tooling + extra opinionated Hyprland ecosystem packages + KooL Hyprland-Dots dependencies."
+LABEL org.opencontainers.image.description="Custom immutable Fedora Atomic image. wayblue hyprland base + omadora Hyprland desktop + bluefin-dx developer tooling + extra opinionated Hyprland ecosystem packages."
 LABEL org.opencontainers.image.source=""
 LABEL org.opencontainers.image.title="obsidian-blue"
