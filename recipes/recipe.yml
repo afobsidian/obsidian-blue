@@ -76,6 +76,7 @@ modules:
         - bat # cat with syntax highlighting
         - bind-utils # DNS tools (dig, nslookup)
         - btop # resource monitor
+        - bluez # bluetui runtime dependency (Bluetooth daemon and tooling)
         - cascadia-code-nf-fonts # terminal Nerd Font
         - cascadia-mono-nf-fonts # monospace variant
         - chromium # default browser
@@ -150,6 +151,7 @@ modules:
         - cargo # build wallust, matugen, bluetui, eza, impala from source
         - rust # build wallust, matugen, bluetui, eza, impala from source
         - gcc # linker for cargo builds
+        - dbus-devel # bluetui/libdbus-sys build dep; removed after build
 
         # ── Bluefin DX: container runtimes ──────────────────────────────────
         - docker-ce
@@ -225,6 +227,7 @@ modules:
         - rust
         - gcc
         - clang
+        - dbus-devel
         - pipewire-devel
 
   # ── 7. Default Flatpaks (installed on first boot, not baked in) ──────────────
