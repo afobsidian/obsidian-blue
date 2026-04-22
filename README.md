@@ -49,6 +49,7 @@ Packages not already in the wayblue base:
 | `nwg-look`                    | GTK settings GUI                                           |
 | `qt6ct` · `qt5ct` · `kvantum` | QT app theming                                             |
 | `wallust`                     | Colour palette generator from wallpaper                    |
+| `matugen`                     | Material You and base16 palette generator                  |
 | `wlogout`                     | Logout / power menu                                        |
 | `ImageMagick`                 | Image manipulation for wallpaper scripts                   |
 | `nwg-displays`                | Monitor management GUI                                     |
@@ -56,7 +57,7 @@ Packages not already in the wayblue base:
 | `yad` · `yt-dlp`              | Dialog boxes and video downloader used by KooL scripts     |
 | `imv`                         | Image viewer                                               |
 
-`wallust` and `nwg-displays` are installed from upstream source during the image build because they are not available from the enabled Fedora repos used by this recipe.
+`wallust`, `matugen`, and `nwg-displays` are installed from upstream source during the image build because they are not available from the enabled Fedora repos used by this recipe.
 
 ### Added: Developer tooling (inspired by bluefin-dx)
 

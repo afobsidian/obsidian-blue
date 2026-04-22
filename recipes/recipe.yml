@@ -42,6 +42,7 @@ modules:
       files:
         - https://download.docker.com/linux/fedora/docker-ce.repo
         - sdegler-hyprland.repo
+        - lionheartp-hyprland.repo
         - jdxcode-mise.repo # omadora: version manager
         - vscode.repo
     install:
@@ -57,7 +58,9 @@ modules:
         - hypridle
         - hyprland-qtutils
 
-        # ── Extra Hyprland ecosystem (sdegler/hyprland COPR) ─────────────────
+        # ── Extra Hyprland ecosystem (Hyprland COPRs) ────────────────────────
+        # hyprland-plugins currently comes from lionheartp/Hyprland because the
+        # sdegler COPR build still depends on hyprland 0.53.x.
         - hyprland-plugins # official plugin set: border++, hyprexpo, hyprtrails, …
         - hyprpicker # colour picker
         - hyprshot # screenshot utility
@@ -144,8 +147,8 @@ modules:
         - python3-installer # install nwg-displays wheel into the image
         - python3-setuptools # nwg-displays packaging metadata
         - python3-wheel # nwg-displays wheel build backend
-        - cargo # build wallust, bluetui, eza, impala from source
-        - rust # build wallust, bluetui, eza, impala from source
+        - cargo # build wallust, matugen, bluetui, eza, impala from source
+        - rust # build wallust, matugen, bluetui, eza, impala from source
         - gcc # linker for cargo builds
 
         # ── Bluefin DX: container runtimes ──────────────────────────────────
@@ -177,6 +180,9 @@ modules:
 
     remove:
       packages:
+        # wayblue currently ships tuned-ppd; remove it before adding
+        # power-profiles-daemon, which provides the same ppd-service.
+        - tuned-ppd
         # wayblue ships wlsunset; hyprsunset is the Hyprland-native replacement
         - wlsunset
         # wayblue ships dunst; swaync is what KooL dots expect

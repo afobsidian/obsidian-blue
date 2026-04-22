@@ -5,6 +5,7 @@ set -euo pipefail
 readonly LAZYGIT_VERSION="0.61.1"
 readonly NWG_DISPLAYS_VERSION="0.3.28"
 readonly WALLUST_VERSION="3.5.2"
+readonly MATUGEN_VERSION="4.1.0"
 readonly BLUETUI_VERSION="0.4.2"
 readonly EZA_VERSION="0.20.18"
 readonly IMPALA_VERSION="0.3.0"
@@ -112,6 +113,7 @@ trap cleanup EXIT
 install_lazygit
 install_nwg_displays
 install_wallust
+install_cargo_bin matugen "${MATUGEN_VERSION}"
 install_cargo_bin bluetui "${BLUETUI_VERSION}"
 install_cargo_bin eza "${EZA_VERSION}"
 install_cargo_bin impala "${IMPALA_VERSION}"
