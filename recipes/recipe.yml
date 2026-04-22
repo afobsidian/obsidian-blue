@@ -9,10 +9,11 @@
 #   wireplumber, pipewire, pulseaudio-utils, network-manager-applet,
 #   qt5-qtwayland, qt6-qtwayland, wlsunset, kanshi, wlr-randr, vim, ...
 #
-# wayblue hyprland image also provides (do NOT re-add):
+# wayblue hyprland image also provides (upgraded via sdegler/hyprland COPR):
 #   hyprland, waybar, kitty, xdg-desktop-portal-hyprland,
 #   hyprpaper, hyprlock, hypridle, hyprland-qtutils
-#   (all from solopasha/hyprland COPR, already enabled)
+#   (originally from solopasha/hyprland; that COPR is abandoned — we disable it
+#    at build time and upgrade these packages from sdegler/hyprland instead)
 
 name: obsidian-blue
 description: >-
@@ -28,10 +29,11 @@ image-version: latest # only supported tag
 
 # ─── Build modules ─────────────────────────────────────────────────────────────
 modules:
-  # ── 1. Clear stale DNF cache entries ──────────────────────────────────────────
+  # ── 1. Clear stale DNF cache entries; swap to sdegler/hyprland COPR ───────────
   - type: script
     scripts:
       - clear-rpmfusion-dnf-cache.sh
+      - swap-hyprland-copr.sh
 
   # ── 2. RPM repos + installs ──────────────────────────────────────────────────
   - type: dnf
@@ -40,11 +42,22 @@ modules:
       cleanup: true
       files:
         - https://download.docker.com/linux/fedora/docker-ce.repo
+        - sdegler-hyprland.repo
         - vscode.repo
     install:
       install-weak-deps: false
       packages:
-        # ── Extra Hyprland ecosystem (solopasha COPR already enabled by wayblue)
+        # ── Core Hyprland packages (upgrade from sdegler/hyprland COPR) ──────
+        # wayblue base installs these from the now-abandoned solopasha COPR;
+        # listing them here ensures dnf upgrades them from sdegler.
+        - hyprland
+        - xdg-desktop-portal-hyprland
+        - hyprpaper
+        - hyprlock
+        - hypridle
+        - hyprland-qtutils
+
+        # ── Extra Hyprland ecosystem (sdegler/hyprland COPR) ─────────────────
         - hyprland-plugins # official plugin set: border++, hyprexpo, hyprtrails, …
         - hyprpicker # colour picker
         - hyprshot # screenshot utility
@@ -61,10 +74,8 @@ modules:
         - mpv # media player
         - nwg-look # GTK settings GUI
         - qt5ct
-        - repo: fedora
-          packages:
-            - qt6ct
-            - kvantum # keep these on Fedora's Qt 6.9 line to match hyprland-qt-support
+        - qt6ct
+        - kvantum
         - wlogout # logout / power menu
         - ImageMagick # wallpaper manipulation scripts
         - tumbler # thumbnail service for Thunar (volman already in base)
