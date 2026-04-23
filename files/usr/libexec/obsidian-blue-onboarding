@@ -14,7 +14,33 @@
 
 set -euo pipefail
 
-OMADORA_SKEL="/etc/skel/.local/share/omadora"
+# ── Argument parsing ──────────────────────────────────────────────────────────
+FORCE=false
+for arg in "$@"; do
+    case "$arg" in
+        --force) FORCE=true ;;
+        *) echo "Unknown argument: $arg" >&2; exit 1 ;;
+    esac
+done
+
+# ── Path resolution ───────────────────────────────────────────────────────────
+# Resolve the directory this script lives in so we can detect a repo-clone run.
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# OMADORA_SKEL: where the pristine omadora source lives.
+# • Env-var override wins (explicit control from any caller).
+# • If the script is running from inside a repo tree (files/usr/libexec/),
+#   auto-derive the repo root and point at files/omadora.
+# • Otherwise fall back to the installed-image path (/etc/skel/…).
+if [[ -z "${OMADORA_SKEL:-}" ]]; then
+    if [[ "$SCRIPT_DIR" == */files/usr/libexec* ]]; then
+        REPO_ROOT="${SCRIPT_DIR%/files/usr/libexec*}"
+        OMADORA_SKEL="$REPO_ROOT/files/omadora"
+    else
+        OMADORA_SKEL="/etc/skel/.local/share/omadora"
+    fi
+fi
+
 OMADORA_PATH="$HOME/.local/share/omadora"
 STATE_DIR="$HOME/.local/state/obsidian-blue"
 VERSION_FILE="$STATE_DIR/onboarding-version"
@@ -35,7 +61,7 @@ TERMINALTEXTEFFECTS_VERSION="0.14.2"
 CURRENT_BUILD=$(cat "$OMADORA_SKEL/.obsidian-blue-build" 2>/dev/null || echo "unknown")
 INSTALLED_BUILD=$(cat "$VERSION_FILE" 2>/dev/null || echo "")
 
-if [[ -n "$INSTALLED_BUILD" && "$CURRENT_BUILD" == "$INSTALLED_BUILD" ]]; then
+if [[ "$FORCE" == false && -n "$INSTALLED_BUILD" && "$CURRENT_BUILD" == "$INSTALLED_BUILD" ]]; then
     exit 0
 fi
 
@@ -244,16 +270,32 @@ fi
 } > "$CONTEXT_FILE"
 
 # ── Write version stamp ───────────────────────────────────────────────────────
-echo "$CURRENT_BUILD" > "$VERSION_FILE"
+# When forced (dev/repo-clone run), write "dev" so a real image service run
+# always sees a mismatch and re-triggers.
+if [[ "$FORCE" == true ]]; then
+    echo "dev" > "$VERSION_FILE"
+else
+    echo "$CURRENT_BUILD" > "$VERSION_FILE"
+fi
 echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] obsidian-blue background setup complete."
 
-# ── Launch the interactive wizard in a floating terminal window ───────────────
-# Only launch if we have a live Wayland session to display into.
-if [[ -n "${WAYLAND_DISPLAY:-}" ]] && command -v alacritty &>/dev/null && \
-   command -v uwsm-app &>/dev/null; then
+# ── Launch the interactive wizard ─────────────────────────────────────────────
+# Prefer a repo-local wizard when running from a repo clone.
+WIZARD=/usr/libexec/obsidian-blue-onboarding-wizard
+[[ "$SCRIPT_DIR" == */files/usr/libexec* ]] && \
+    WIZARD="$SCRIPT_DIR/obsidian-blue-onboarding-wizard"
+
+# In --force (dev/repo-clone) mode, or when uwsm-app is unavailable, run the
+# wizard inline in the current terminal.  Otherwise spawn it in a floating
+# alacritty window within the live Wayland session.
+if [[ "$FORCE" == true ]] || ! command -v uwsm-app &>/dev/null; then
+    if [[ -x "$WIZARD" ]]; then
+        exec "$WIZARD"
+    fi
+elif [[ -n "${WAYLAND_DISPLAY:-}" ]] && command -v alacritty &>/dev/null; then
     setsid uwsm-app -- alacritty \
         --class "org.obsidian-blue.Onboarding,org.obsidian-blue.Onboarding" \
         --title "obsidian-blue Setup" \
-        -e /usr/libexec/obsidian-blue-onboarding-wizard \
+        -e "$WIZARD" \
         >/dev/null 2>&1 &
 fi

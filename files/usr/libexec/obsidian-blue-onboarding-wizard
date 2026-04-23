@@ -13,7 +13,21 @@
 #   refresh summary → new config detection & offer → shell integration check
 #   → done screen
 
-export OMADORA_PATH="$HOME/.local/share/omadora"
+# Honour OMADORA_PATH override from environment (e.g. when running from a repo
+# clone via OMADORA_PATH=./files/omadora ./files/usr/libexec/obsidian-blue-onboarding-wizard).
+# If not set, auto-detect from this script's own location (repo-clone run), or
+# fall back to the installed-image location in the user home.
+if [[ -z "${OMADORA_PATH:-}" ]]; then
+    _WIZARD_DIR="$(cd "$(dirname "$0")" && pwd)"
+    if [[ "$_WIZARD_DIR" == */files/usr/libexec* ]]; then
+        _REPO_ROOT="${_WIZARD_DIR%/files/usr/libexec*}"
+        OMADORA_PATH="$_REPO_ROOT/files/omadora"
+    else
+        OMADORA_PATH="$HOME/.local/share/omadora"
+    fi
+    unset _WIZARD_DIR _REPO_ROOT
+fi
+export OMADORA_PATH
 export OMADORA_INSTALL="$OMADORA_PATH/install"
 export PATH="$OMADORA_PATH/bin:$PATH"
 
