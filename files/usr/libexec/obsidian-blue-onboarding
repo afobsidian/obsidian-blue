@@ -25,6 +25,15 @@ STATE_DIR="$HOME/.local/state/obsidian-blue"
 VERSION_FILE="$STATE_DIR/onboarding-version"
 LOG_FILE="$STATE_DIR/onboarding.log"
 
+# Subdirectories of ~/.local/share/omadora that are owned by the image
+# (refreshed on every rebase).  The config/ subdir is intentionally excluded
+# because ~/.config/<app> dirs copied from it are considered user-editable.
+OMADORA_IMAGE_DIRS=(bin default install migrations themes applications)
+
+# Version of terminaltexteffects installed for the omadora screensaver.
+# Check https://github.com/ChrisBuilds/terminaltexteffects/releases when updating.
+TERMINALTEXTEFFECTS_VERSION="0.14.2"
+
 # ── Version check ────────────────────────────────────────────────────────────
 # Re-run onboarding when the image's omadora build stamp changes (rebase/update).
 CURRENT_BUILD=$(cat "$OMADORA_SKEL/.obsidian-blue-build" 2>/dev/null || echo "unknown")
@@ -48,7 +57,7 @@ else
     # leaving ~/.config untouched.  User-facing customisations live in
     # ~/.config/<app>/, not inside ~/.local/share/omadora itself.
     echo "  Refreshing omadora internals from /etc/skel..."
-    for d in bin default install migrations themes applications; do
+    for d in "${OMADORA_IMAGE_DIRS[@]}"; do
         [[ -d "$OMADORA_SKEL/$d" ]] || continue
         rm -rf "${OMADORA_PATH:?}/$d"
         cp -r "$OMADORA_SKEL/$d" "$OMADORA_PATH/$d"
@@ -214,7 +223,7 @@ echo "  Marked omadora migrations as applied"
 
 # ── Step 13: Install terminaltexteffects (screensaver helper) ─────────────────
 if command -v pipx &>/dev/null && ! pipx list 2>/dev/null | grep -q terminaltexteffects; then
-    pipx install terminaltexteffects==0.14.2 2>/dev/null || true
+    pipx install "terminaltexteffects==${TERMINALTEXTEFFECTS_VERSION}" 2>/dev/null || true
 fi
 
 # ── Done ──────────────────────────────────────────────────────────────────────
