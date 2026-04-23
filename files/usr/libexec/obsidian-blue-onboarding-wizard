@@ -35,10 +35,33 @@ STATE_DIR="$HOME/.local/state/obsidian-blue"
 CONTEXT_FILE="$STATE_DIR/onboarding-context"
 
 # ── Load context written by the background runner ────────────────────────────
-if [[ -f "$CONTEXT_FILE" ]]; then
-    # shellcheck source=/dev/null
-    source "$CONTEXT_FILE"
-fi
+load_context_file() {
+    local context_file="$1"
+    local line key value
+
+    [[ -f "$context_file" ]] || return 0
+
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        # Skip blank lines and comments.
+        [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+
+        # Only accept simple KEY=VALUE entries.
+        [[ "$line" == *"="* ]] || continue
+        key=${line%%=*}
+        value=${line#*=}
+
+        # Trim a trailing carriage return if the file has CRLF endings.
+        value=${value%$'\r'}
+
+        # Ignore invalid shell variable names rather than executing anything.
+        [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
+
+        printf -v "$key" '%s' "$value"
+        export "$key"
+    done < "$context_file"
+}
+
+load_context_file "$CONTEXT_FILE"
 
 INSTALL_TYPE="${INSTALL_TYPE:-first_install}"
 CURRENT_BUILD="${CURRENT_BUILD:-unknown}"
