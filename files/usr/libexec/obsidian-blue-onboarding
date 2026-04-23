@@ -102,6 +102,10 @@ export OMADORA_PATH
 export OMADORA_INSTALL="$OMADORA_PATH/install"
 export PATH="$OMADORA_PATH/bin:$PATH"
 
+# ── Step 1b: Rebuild font cache ───────────────────────────────────────────────
+mkdir -p "$HOME/.local/share/fonts"
+fc-cache 2>/dev/null || true
+
 # ── Step 2: XDG user directories ─────────────────────────────────────────────
 xdg-user-dirs-update 2>/dev/null || true
 
@@ -220,14 +224,36 @@ if [[ -d "$OMADORA_CURRENT_THEME" ]]; then
             "$HOME/.config/mako/config" 2>/dev/null || true
 fi
 
-# ── Step 8: Branding ─────────────────────────────────────────────────────────
+# ── Step 8: LazyVim nvim starter ──────────────────────────────────────────────
+# omadora ships a config/nvim/ overlay (plugins, lazyvim.json).  LazyVim also
+# needs its own init.lua and starter files.  On a conventional Fedora install
+# the omadora install script clones the LazyVim starter repo first, then copies
+# the overlay on top.  Here we detect a missing init.lua and supplement the
+# existing ~/.config/nvim with the LazyVim starter files without overwriting any
+# omadora-provided files.
+if [[ ! -f "$HOME/.config/nvim/init.lua" ]]; then
+    echo "  Setting up LazyVim nvim starter..."
+    LAZYVIM_TMP="$(mktemp -d)"
+    if git clone --depth 1 https://github.com/LazyVim/starter "$LAZYVIM_TMP" 2>/dev/null; then
+        rm -rf "$LAZYVIM_TMP/.git"
+        mkdir -p "$HOME/.config/nvim"
+        # Copy LazyVim starter files; -n means don't overwrite existing (omadora) files
+        cp -rn "$LAZYVIM_TMP/"* "$HOME/.config/nvim/" 2>/dev/null || true
+        echo "  LazyVim starter installed."
+    else
+        echo "  Warning: could not clone LazyVim/starter (no network?). Skipping nvim setup."
+    fi
+    rm -rf "$LAZYVIM_TMP"
+fi
+
+# ── Step 9: Branding ──────────────────────────────────────────────────────────
 mkdir -p "$HOME/.config/omadora/branding"
 [[ ! -f "$HOME/.config/omadora/branding/about.txt" ]] && \
     cp "$OMADORA_PATH/icon.txt" "$HOME/.config/omadora/branding/about.txt" 2>/dev/null || true
 [[ ! -f "$HOME/.config/omadora/branding/screensaver.txt" ]] && \
     cp "$OMADORA_PATH/logo.txt" "$HOME/.config/omadora/branding/screensaver.txt" 2>/dev/null || true
 
-# ── Step 9: Keyboard layout in Hyprland input config ─────────────────────────
+# ── Step 10: Keyboard layout in Hyprland input config ────────────────────────
 HYPR_INPUT="$HOME/.config/hypr/input.conf"
 if [[ -f "$HYPR_INPUT" ]] && ! grep -q "kb_layout" "$HYPR_INPUT"; then
     layout=$(localectl status 2>/dev/null | awk -F: '/X11 Layout/ {gsub(/ /,"",$2); print $2}')
@@ -240,32 +266,62 @@ if [[ -f "$HYPR_INPUT" ]] && ! grep -q "kb_layout" "$HYPR_INPUT"; then
     fi
 fi
 
-# ── Step 10: MIME-type defaults ───────────────────────────────────────────────
+# ── Step 11: MIME-type defaults ───────────────────────────────────────────────
 if command -v xdg-mime &>/dev/null; then
     for mime in image/png image/jpeg image/gif image/webp image/bmp image/tiff; do
         xdg-mime default imv.desktop "$mime" 2>/dev/null || true
     done
     xdg-mime default org.gnome.Evince.desktop application/pdf 2>/dev/null || true
     for mime in video/mp4 video/x-msvideo video/x-matroska video/webm \
-                video/mpeg video/ogg video/quicktime video/3gpp; do
+                video/mpeg video/ogg video/quicktime video/3gpp \
+                video/3gpp2 video/x-ms-asf video/x-ogm+ogg video/x-theora+ogg \
+                application/ogg; do
         xdg-mime default mpv.desktop "$mime" 2>/dev/null || true
     done
-    for mime in text/plain application/x-shellscript; do
+    for mime in text/plain text/english text/x-makefile \
+                text/x-c++hdr text/x-c++src text/x-chdr text/x-csrc \
+                text/x-java text/x-moc text/x-pascal text/x-tcl \
+                text/x-tex text/x-c text/x-c++ \
+                application/x-shellscript application/xml text/xml; do
         xdg-mime default nvim.desktop "$mime" 2>/dev/null || true
     done
     xdg-settings set default-web-browser chromium-browser.desktop 2>/dev/null || true
     xdg-mime default chromium-browser.desktop x-scheme-handler/http 2>/dev/null || true
     xdg-mime default chromium-browser.desktop x-scheme-handler/https 2>/dev/null || true
 fi
+
+# ── Step 12: Deploy application shortcuts, icons, webapps, and TUI entries ───
+# This mirrors what omadora's install/packaging/{icons,webapps,tuis}.sh do:
+# copies bundled .desktop files + icons to ~/.local/share/applications, installs
+# the default webapp shortcuts (Google Maps, ChatGPT, YouTube), and creates the
+# Disk Usage TUI launcher.  Safe to re-run; existing entries are not overwritten.
+if command -v omadora-refresh-applications &>/dev/null; then
+    echo "  Deploying application shortcuts and icons..."
+    omadora-refresh-applications 2>/dev/null || true
+    echo "  Application shortcuts deployed."
+fi
 update-desktop-database "$HOME/.local/share/applications" 2>/dev/null || true
 
-# ── Step 11: Enable omadora user systemd services ────────────────────────────
+# ── Step 13: Enable omadora user systemd services ────────────────────────────
 if command -v systemctl &>/dev/null; then
     systemctl --user enable omadora-battery-monitor.timer 2>/dev/null || true
     echo "  Enabled omadora user systemd services"
 fi
 
-# ── Step 12: Mark all existing omadora migrations as done ────────────────────
+# ── Step 14: Power profile ───────────────────────────────────────────────────
+# Match what omadora's install script does: balanced on battery, performance
+# when plugged in.  powerprofilesctl is provided by power-profiles-daemon.
+if command -v powerprofilesctl &>/dev/null; then
+    if ls /sys/class/power_supply/BAT* &>/dev/null 2>&1; then
+        powerprofilesctl set balanced 2>/dev/null || true
+        echo "  Set power profile: balanced (battery detected)"
+    else
+        powerprofilesctl set performance 2>/dev/null || true
+        echo "  Set power profile: performance (no battery)"
+    fi
+fi
+
+# ── Step 15: Mark all existing omadora migrations as done ────────────────────
 # Prevents the omadora migration runner from re-applying migrations on a fresh
 # user account that already has an up-to-date system image.
 MIGRATIONS_STATE="$HOME/.local/state/omadora/migrations"
@@ -275,12 +331,12 @@ for f in "$OMADORA_PATH/migrations/"*.sh; do
 done
 echo "  Marked omadora migrations as applied"
 
-# ── Step 13: Install terminaltexteffects (screensaver helper) ─────────────────
+# ── Step 16: Install terminaltexteffects (screensaver helper) ────────────────
 if command -v pipx &>/dev/null && ! pipx list 2>/dev/null | grep -q terminaltexteffects; then
     pipx install "terminaltexteffects==${TERMINALTEXTEFFECTS_VERSION}" 2>/dev/null || true
 fi
 
-# ── Step 14: Reload Hyprland and start any missing autostart processes ────────
+# ── Step 17: Reload Hyprland and start any missing autostart processes ────────
 # The onboarding service runs while Hyprland is already up.  A reload ensures
 # freshly deployed configs take effect in the running session.  exec-once
 # entries do not re-run on reload, so we also start any processes that weren't

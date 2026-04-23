@@ -229,10 +229,32 @@ modules:
   # waybar, mako, or keybindings.  Shipping these configs in /etc/skel ensures
   # they exist before Hyprland launches.  The onboarding service still runs to
   # handle post-rebase config refreshes and interactive setup (theme, shell, …).
+  #
+  # Also ship the Plymouth "sliced" boot-splash theme files into the image so
+  # the theme can be activated by plymouthd.conf without any sudo at runtime.
   - type: files
     files:
       - source: omadora/config
         destination: /etc/skel/.config
+      - source: omadora/default/plymouth
+        destination: /usr/share/plymouth/themes/sliced
+
+  # ── 5c. Deploy system-level config that omadora's install script applies ────
+  # On a conventional Fedora install these are written with `sudo` by
+  # omadora's install script.  On an immutable image we bake them in at build
+  # time instead:
+  #   • /etc/gnupg/dirmngr.conf  — GPG keyserver list for reliable key lookup
+  #   • /etc/sysctl.d/99-omadora.conf — TCP MTU probing to reduce SSH flakiness
+  #   • /etc/plymouth/plymouthd.conf  — Sets the default Plymouth theme to "sliced"
+  - type: files
+    files:
+      - source: etc
+        destination: /etc
+
+  # ── 5d. System config that requires running commands (Nautilus icon symlinks) ─
+  - type: script
+    scripts:
+      - setup-image-config.sh
 
   # ── 6. Stamp the omadora skel with the image build version ───────────────────
   # The onboarding service compares this stamp to detect rebase/update events.
