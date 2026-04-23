@@ -223,6 +223,17 @@ modules:
       - source: omadora
         destination: /etc/skel/.local/share/omadora
 
+  # ── 5b. Deploy omadora app configs into /etc/skel/.config ───────────────────
+  # Without this, a fresh account has no ~/.config/hypr/hyprland.conf when
+  # Hyprland starts for the first time, so the user sees a blank desktop with no
+  # waybar, mako, or keybindings.  Shipping these configs in /etc/skel ensures
+  # they exist before Hyprland launches.  The onboarding service still runs to
+  # handle post-rebase config refreshes and interactive setup (theme, shell, …).
+  - type: files
+    files:
+      - source: omadora/config
+        destination: /etc/skel/.config
+
   # ── 6. Stamp the omadora skel with the image build version ───────────────────
   # The onboarding service compares this stamp to detect rebase/update events.
   - type: script

@@ -196,6 +196,8 @@ if [[ ! -d "$OMADORA_CURRENT_THEME" ]]; then
         mv "$NEXT_THEME" "$OMADORA_CURRENT_THEME"
         echo "rose-pine-darker" > "$HOME/.config/omadora/current/theme.name"
         echo "  Default theme files installed."
+        # Set up the background symlink so swaybg can start on first login
+        omadora-theme-bg-next 2>/dev/null || true
     fi
     # Signal wizard to offer the interactive theme picker
     THEME_NEEDS_PICK=true
@@ -276,6 +278,35 @@ echo "  Marked omadora migrations as applied"
 # ── Step 13: Install terminaltexteffects (screensaver helper) ─────────────────
 if command -v pipx &>/dev/null && ! pipx list 2>/dev/null | grep -q terminaltexteffects; then
     pipx install "terminaltexteffects==${TERMINALTEXTEFFECTS_VERSION}" 2>/dev/null || true
+fi
+
+# ── Step 14: Reload Hyprland and start any missing autostart processes ────────
+# The onboarding service runs while Hyprland is already up.  A reload ensures
+# freshly deployed configs take effect in the running session.  exec-once
+# entries do not re-run on reload, so we also start any processes that weren't
+# running yet (e.g. swaybg whose background symlink was just created above).
+if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]] && command -v hyprctl &>/dev/null; then
+    echo "  Reloading Hyprland config..."
+    hyprctl reload 2>/dev/null || true
+
+    if [[ -n "${WAYLAND_DISPLAY:-}" ]] && command -v uwsm-app &>/dev/null; then
+        # swaybg: start if the background symlink is ready and swaybg isn't running
+        if [[ -L "$HOME/.config/omadora/current/background" ]] && \
+           ! pgrep -x swaybg >/dev/null 2>&1; then
+            setsid uwsm-app -- swaybg \
+                -i "$HOME/.config/omadora/current/background" \
+                -m fill >/dev/null 2>&1 & disown
+            echo "  Started swaybg"
+        fi
+        pgrep -x waybar >/dev/null 2>&1 || {
+            setsid uwsm-app -- waybar >/dev/null 2>&1 & disown
+            echo "  Started waybar"
+        }
+        pgrep -x mako >/dev/null 2>&1 || {
+            setsid uwsm-app -- mako >/dev/null 2>&1 & disown
+            echo "  Started mako"
+        }
+    fi
 fi
 
 # ── Write context file for the interactive wizard ────────────────────────────
