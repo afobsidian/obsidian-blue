@@ -1,7 +1,7 @@
 [Unit]
 Description=obsidian-blue first-login onboarding (omadora configuration setup)
 Documentation=https://github.com/afobsidian/obsidian-blue
-# Run after the graphical session is established so theme/wallpaper helpers work
+# Run after the graphical session is established so the wizard can open a window
 After=graphical-session.target
 Wants=graphical-session.target
 # Re-run whenever the installed image version changes (stamp tracks image build)
@@ -9,6 +9,8 @@ ConditionPathExists=/etc/skel/.local/share/omadora/.obsidian-blue-build
 
 [Service]
 Type=oneshot
+# Background runner: does all filesystem setup, then launches the interactive
+# wizard in an alacritty window (org.obsidian-blue.Onboarding).
 ExecStart=/usr/libexec/obsidian-blue-onboarding
 RemainAfterExit=yes
 StandardOutput=journal

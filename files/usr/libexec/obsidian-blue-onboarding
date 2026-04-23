@@ -1,18 +1,13 @@
 #!/bin/bash
 # obsidian-blue-onboarding
 #
-# Run-once-per-image-version omadora configuration setup.
-# Triggered by obsidian-blue-onboarding.service on first graphical login, and
-# again whenever the image is rebased/updated (the build stamp in /etc/skel changes).
+# Background setup runner. Triggered by obsidian-blue-onboarding.service on
+# first graphical login and again whenever the image is rebased/updated.
 #
-# What this does:
-#   - Copies/refreshes omadora into ~/.local/share/omadora
-#   - Installs default app configs into ~/.config (only if not already present)
-#   - Integrates omadora shell defaults into ~/.bashrc without overwriting user content
-#   - Sets up the default keyring, XCompose, keyboard layout, MIME defaults
-#   - Applies the default omadora theme (file setup only; apps pick it up on start)
-#   - Enables omadora user systemd services
-#   - Marks all existing omadora migrations as already applied
+# This script runs non-interactively in the background and handles all
+# filesystem-level setup.  Once done it launches obsidian-blue-onboarding-wizard
+# in an alacritty window so the user can make interactive choices (theme, shell
+# integration, etc.) while their session is already live.
 #
 # User customisations (existing ~/.config dirs, custom ~/.bashrc content, etc.)
 # are never overwritten — only missing pieces are added.
@@ -23,6 +18,7 @@ OMADORA_SKEL="/etc/skel/.local/share/omadora"
 OMADORA_PATH="$HOME/.local/share/omadora"
 STATE_DIR="$HOME/.local/state/obsidian-blue"
 VERSION_FILE="$STATE_DIR/onboarding-version"
+CONTEXT_FILE="$STATE_DIR/onboarding-context"
 LOG_FILE="$STATE_DIR/onboarding.log"
 
 # Subdirectories of ~/.local/share/omadora that are owned by the image
@@ -43,9 +39,17 @@ if [[ -n "$INSTALLED_BUILD" && "$CURRENT_BUILD" == "$INSTALLED_BUILD" ]]; then
     exit 0
 fi
 
+# Determine whether this is a first install or a post-rebase update
+INSTALL_TYPE="first_install"
+[[ -n "$INSTALLED_BUILD" ]] && INSTALL_TYPE="update"
+
 mkdir -p "$STATE_DIR"
 exec > >(tee -a "$LOG_FILE") 2>&1
-echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] obsidian-blue onboarding starting (build: $CURRENT_BUILD)..."
+echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] obsidian-blue onboarding starting (type: $INSTALL_TYPE, build: $CURRENT_BUILD)..."
+
+# Track which configs were deployed vs skipped, so the wizard can report them
+DEPLOYED_CONFIGS=()
+SKIPPED_CONFIGS=()
 
 # ── Step 1: Ensure omadora is in the user home ───────────────────────────────
 if [[ ! -d "$OMADORA_PATH" ]]; then
@@ -75,14 +79,17 @@ export PATH="$OMADORA_PATH/bin:$PATH"
 # ── Step 2: XDG user directories ─────────────────────────────────────────────
 xdg-user-dirs-update 2>/dev/null || true
 
-# ── Step 3: Deploy app configs (copy only what is missing) ───────────────────
+# ── Step 3: Deploy app configs (record what was deployed vs skipped) ──────────
 mkdir -p "$HOME/.config"
 while IFS= read -r -d '' src; do
     name="$(basename "$src")"
     dst="$HOME/.config/$name"
     if [[ ! -e "$dst" ]]; then
         cp -r "$src" "$dst"
+        DEPLOYED_CONFIGS+=("$name")
         echo "  Installed config: $name"
+    else
+        SKIPPED_CONFIGS+=("$name")
     fi
 done < <(find "$OMADORA_PATH/config" -maxdepth 1 -mindepth 1 -print0)
 
@@ -129,24 +136,25 @@ EOF
     echo "  Set up default keyring"
 fi
 
-# ── Step 7: Apply default omadora theme (file setup; apps pick it up on start) ──
+# ── Step 7: Apply default omadora theme (silent fallback; wizard lets user pick) ─
 mkdir -p "$HOME/.config/omadora/themes"
 OMADORA_CURRENT_THEME="$HOME/.config/omadora/current/theme"
+THEME_NEEDS_PICK=false
 if [[ ! -d "$OMADORA_CURRENT_THEME" ]]; then
-    echo "  Setting up default theme: Rose Pine Darker..."
+    echo "  Installing default theme (Rose Pine Darker)..."
     THEME_SRC="$OMADORA_PATH/themes/rose-pine-darker"
     if [[ -d "$THEME_SRC" ]]; then
         NEXT_THEME="$HOME/.config/omadora/current/next-theme"
         mkdir -p "$NEXT_THEME"
         cp -r "$THEME_SRC/"* "$NEXT_THEME/" 2>/dev/null || true
-        # Generate template-based dynamic configs
         omadora-theme-set-templates 2>/dev/null || true
-        # Promote next-theme → current/theme
         rm -rf "$OMADORA_CURRENT_THEME"
         mv "$NEXT_THEME" "$OMADORA_CURRENT_THEME"
         echo "rose-pine-darker" > "$HOME/.config/omadora/current/theme.name"
         echo "  Default theme files installed."
     fi
+    # Signal wizard to offer the interactive theme picker
+    THEME_NEEDS_PICK=true
 fi
 
 # Set up per-app theme symlinks (only if not already present)
@@ -226,6 +234,26 @@ if command -v pipx &>/dev/null && ! pipx list 2>/dev/null | grep -q terminaltext
     pipx install "terminaltexteffects==${TERMINALTEXTEFFECTS_VERSION}" 2>/dev/null || true
 fi
 
-# ── Done ──────────────────────────────────────────────────────────────────────
+# ── Write context file for the interactive wizard ────────────────────────────
+{
+    echo "INSTALL_TYPE=$INSTALL_TYPE"
+    echo "CURRENT_BUILD=$CURRENT_BUILD"
+    echo "THEME_NEEDS_PICK=$THEME_NEEDS_PICK"
+    printf 'DEPLOYED_CONFIGS=%s\n' "$(IFS=','; echo "${DEPLOYED_CONFIGS[*]:-}")"
+    printf 'SKIPPED_CONFIGS=%s\n' "$(IFS=','; echo "${SKIPPED_CONFIGS[*]:-}")"
+} > "$CONTEXT_FILE"
+
+# ── Write version stamp ───────────────────────────────────────────────────────
 echo "$CURRENT_BUILD" > "$VERSION_FILE"
-echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] obsidian-blue onboarding complete."
+echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] obsidian-blue background setup complete."
+
+# ── Launch the interactive wizard in a floating terminal window ───────────────
+# Only launch if we have a live Wayland session to display into.
+if [[ -n "${WAYLAND_DISPLAY:-}" ]] && command -v alacritty &>/dev/null && \
+   command -v uwsm-app &>/dev/null; then
+    setsid uwsm-app -- alacritty \
+        --class "org.obsidian-blue.Onboarding,org.obsidian-blue.Onboarding" \
+        --title "obsidian-blue Setup" \
+        -e /usr/libexec/obsidian-blue-onboarding-wizard \
+        >/dev/null 2>&1 &
+fi
