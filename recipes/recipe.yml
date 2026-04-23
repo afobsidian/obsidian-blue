@@ -190,7 +190,15 @@ modules:
         # wayblue ships dunst; swaync is what KooL dots expect
         - dunst
 
-  # ── 3. Enable systemd services ───────────────────────────────────────────────
+  # ── 3. Deploy onboarding service and exec script into /usr ───────────────────
+  # Must run before the systemd module so the service unit file exists when
+  # systemctl enable is called.
+  - type: files
+    files:
+      - source: usr
+        destination: /usr
+
+  # ── 4. Enable systemd services ───────────────────────────────────────────────
   - type: systemd
     system:
       enabled:
@@ -200,22 +208,33 @@ modules:
     user:
       enabled:
         - podman.socket
+        # Run-once-per-image-version omadora onboarding (first graphical login
+        # after install or rebase).  The service checks a build stamp and exits
+        # immediately when the image version has not changed.
+        - obsidian-blue-onboarding.service
 
-  # ── 4. Deploy omadora submodule into /etc/skel (new users only) ──────────────
-  # Existing users are never touched; /etc/skel is only applied at account
-  # creation time.  Users who want to apply omadora configs to an existing
-  # account can run ~/.local/share/omadora/install.sh themselves.
+  # ── 5. Deploy omadora submodule into /etc/skel ───────────────────────────────
+  # /etc/skel is applied at account creation for new users.
+  # Existing users get omadora via the obsidian-blue-onboarding user service
+  # which copies/refreshes ~/.local/share/omadora on first graphical login and
+  # again whenever the image is rebased (the build stamp changes).
   - type: files
     files:
       - source: omadora
         destination: /etc/skel/.local/share/omadora
 
-  # ── 5. Install upstream packages not shipped in enabled Fedora repos ───────
+  # ── 6. Stamp the omadora skel with the image build version ───────────────────
+  # The onboarding service compares this stamp to detect rebase/update events.
+  - type: script
+    scripts:
+      - write-build-version.sh
+
+  # ── 7. Install upstream packages not shipped in enabled Fedora repos ───────
   - type: script
     scripts:
       - install-upstream-tools.sh
 
-  # ── 6. Remove build-only deps used by upstream installers ──────────────────
+  # ── 8. Remove build-only deps used by upstream installers ──────────────────
   - type: dnf
     remove:
       packages:
@@ -230,7 +249,7 @@ modules:
         - dbus-devel
         - pipewire-devel
 
-  # ── 7. Default Flatpaks (installed on first boot, not baked in) ──────────────
+  # ── 9. Default Flatpaks (installed on first boot, not baked in) ──────────────
   - type: default-flatpaks
     configurations:
       - notify: true
@@ -243,5 +262,5 @@ modules:
           - io.podman_desktop.PodmanDesktop
           - org.gnome.Boxes
 
-  # ── 8. Signing ───────────────────────────────────────────────────────────────
+  # ── 10. Signing ───────────────────────────────────────────────────────────────
   - type: signing
