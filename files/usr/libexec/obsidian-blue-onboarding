@@ -119,6 +119,24 @@ while IFS= read -r -d '' src; do
     fi
 done < <(find "$OMADORA_PATH/config" -maxdepth 1 -mindepth 1 -print0)
 
+# ── Step 3b: Ensure all hyprland user-override files exist ───────────────────
+# hyprland.conf sources 6 user-editable files from ~/.config/hypr/.  Step 3
+# above only copies the whole hypr/ directory if it was missing entirely.
+# If the directory already existed (or was just created), individual files may
+# still be absent — create them from omadora defaults without overwriting.
+HYPR_CONF_DIR="$HOME/.config/hypr"
+HYPR_SKEL_DIR="$OMADORA_PATH/config/hypr"
+HYPR_USER_OVERRIDES=(monitors.conf input.conf bindings.conf looknfeel.conf autostart.conf windows.conf)
+if [[ -d "$HYPR_SKEL_DIR" ]]; then
+    mkdir -p "$HYPR_CONF_DIR"
+    for f in "${HYPR_USER_OVERRIDES[@]}"; do
+        if [[ ! -f "$HYPR_CONF_DIR/$f" && -f "$HYPR_SKEL_DIR/$f" ]]; then
+            cp "$HYPR_SKEL_DIR/$f" "$HYPR_CONF_DIR/$f"
+            echo "  Installed missing hyprland config: $f"
+        fi
+    done
+fi
+
 # ── Step 4: Shell integration — add omadora source to ~/.bashrc ──────────────
 OMADORA_MARKER="# obsidian-blue: omadora shell integration"
 OMADORA_RC_LINE='[[ -f ~/.local/share/omadora/default/bashrc ]] && source ~/.local/share/omadora/default/bashrc'
