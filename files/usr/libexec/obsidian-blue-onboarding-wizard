@@ -1,0 +1,409 @@
+#!/bin/bash
+# obsidian-blue-onboarding-wizard
+#
+# Interactive TUI launched by obsidian-blue-onboarding after all background
+# setup completes.  Runs inside an alacritty window on first login and after
+# every image rebase/update.
+#
+# First-install flow:
+#   welcome → setup summary → theme picker → shell integration → hyprland
+#   config awareness → done screen with key shortcuts
+#
+# Post-rebase / update flow:
+#   refresh summary → new config detection & offer → shell integration check
+#   → done screen
+
+# Honour OMADORA_PATH override from environment (e.g. when running from a repo
+# clone via OMADORA_PATH=./files/omadora ./files/usr/libexec/obsidian-blue-onboarding-wizard).
+# If not set, auto-detect from this script's own location (repo-clone run), or
+# fall back to the installed-image location in the user home.
+if [[ -z "${OMADORA_PATH:-}" ]]; then
+    _WIZARD_DIR="$(cd "$(dirname "$0")" && pwd)"
+    if [[ "$_WIZARD_DIR" == */files/usr/libexec* ]]; then
+        _REPO_ROOT="${_WIZARD_DIR%/files/usr/libexec*}"
+        OMADORA_PATH="$_REPO_ROOT/files/omadora"
+    else
+        OMADORA_PATH="$HOME/.local/share/omadora"
+    fi
+    unset _WIZARD_DIR _REPO_ROOT
+fi
+export OMADORA_PATH
+export OMADORA_INSTALL="$OMADORA_PATH/install"
+export PATH="$OMADORA_PATH/bin:$PATH"
+
+STATE_DIR="$HOME/.local/state/obsidian-blue"
+CONTEXT_FILE="$STATE_DIR/onboarding-context"
+
+# ── Load context written by the background runner ────────────────────────────
+load_context_file() {
+    local context_file="$1"
+    local line key value
+
+    [[ -f "$context_file" ]] || return 0
+
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        # Skip blank lines and comments.
+        [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+
+        # Only accept simple KEY=VALUE entries.
+        [[ "$line" == *"="* ]] || continue
+        key=${line%%=*}
+        value=${line#*=}
+
+        # Trim a trailing carriage return if the file has CRLF endings.
+        value=${value%$'\r'}
+
+        # Ignore invalid shell variable names rather than executing anything.
+        [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
+
+        printf -v "$key" '%s' "$value"
+        export "$key"
+    done < "$context_file"
+}
+
+load_context_file "$CONTEXT_FILE"
+
+INSTALL_TYPE="${INSTALL_TYPE:-first_install}"
+CURRENT_BUILD="${CURRENT_BUILD:-unknown}"
+THEME_NEEDS_PICK="${THEME_NEEDS_PICK:-false}"
+
+# ── Guard: require gum ────────────────────────────────────────────────────────
+if ! command -v gum &>/dev/null; then
+    echo "obsidian-blue: gum not found, skipping interactive wizard."
+    echo "Run /usr/libexec/obsidian-blue-onboarding-wizard manually once gum is installed."
+    exit 0
+fi
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+check() { gum style --foreground 2   "  ✓ $*"; }
+info()  { gum style --foreground 12  "  • $*"; }
+warn()  { gum style --foreground 214 "  ! $*"; }
+hr()    { gum style --foreground 240 "  $(printf '%.0s─' {1..58})"; }
+
+wait_for_key() {
+    local prompt="${1:-Press Enter to continue…}"
+    # Use gum input as a "press any key" — user just hits Enter
+    gum input --placeholder "$prompt" >/dev/null 2>&1 || true
+}
+
+# ── Logo ─────────────────────────────────────────────────────────────────────
+show_logo() {
+    clear
+    local icon_file="$HOME/.config/omadora/branding/about.txt"
+    [[ ! -f "$icon_file" ]] && icon_file="$OMADORA_PATH/icon.txt"
+    if [[ -f "$icon_file" ]]; then
+        gum style --foreground 2 "$(cat "$icon_file")"
+    else
+        gum style --foreground 2 --bold "obsidian-blue"
+    fi
+    echo
+}
+
+# ── Theme picker ─────────────────────────────────────────────────────────────
+pick_theme() {
+    echo
+    gum style --foreground 212 --bold "  Choose your theme"
+    echo
+
+    # Build prettified theme list; put current/default at the top
+    local current_theme
+    current_theme=$(cat "$HOME/.config/omadora/current/theme.name" 2>/dev/null || echo "rose-pine-darker")
+    local current_pretty
+    current_pretty=$(echo "$current_theme" | sed -E 's/(^|-)([a-z])/\1\u\2/g; s/-/ /g')
+
+    local all_themes
+    all_themes=$(omadora-theme-list 2>/dev/null | grep -vF "$current_pretty" || true)
+
+    local theme_list
+    theme_list=$(printf '%s\n%s' "$current_pretty" "$all_themes")
+
+    local chosen
+    chosen=$(echo "$theme_list" | gum choose \
+        --header "  ↑↓ navigate  •  Enter select  •  Esc keep current ($current_pretty)" \
+        --height 16 \
+        2>/dev/null) || {
+        check "Theme kept: $current_pretty"
+        return 0
+    }
+
+    if [[ -n "$chosen" && "$chosen" != "$current_pretty" ]]; then
+        gum spin --spinner dot \
+            --title "  Applying theme: $chosen…" -- \
+            bash -c "
+                export OMADORA_PATH=\"$OMADORA_PATH\"
+                export PATH=\"$OMADORA_PATH/bin:\$PATH\"
+                omadora-theme-set '$chosen' 2>/dev/null || true
+            "
+        check "Theme set to: $chosen"
+    else
+        check "Theme kept: $current_pretty"
+    fi
+}
+
+# ── Shell integration ────────────────────────────────────────────────────────
+setup_shell_integration() {
+    local marker="# obsidian-blue: omadora shell integration"
+    local bash_line='[[ -f ~/.local/share/omadora/default/bashrc ]] && source ~/.local/share/omadora/default/bashrc'
+
+    echo
+    gum style --foreground 212 --bold "  Shell integration"
+    echo
+
+    # bash (always done by background runner; just report)
+    if grep -qF "$marker" "$HOME/.bashrc" 2>/dev/null; then
+        check "bash  →  omadora aliases & functions active in ~/.bashrc"
+        info  "        Add your own overrides to ~/.bashrc.d/*.sh"
+    fi
+
+    # zsh
+    if command -v zsh &>/dev/null; then
+        local zshrc="$HOME/.zshrc"
+        if ! grep -qF "$marker" "$zshrc" 2>/dev/null; then
+            echo
+            if gum confirm "  zsh is installed — add omadora shell integration to ~/.zshrc?"; then
+                {
+                    echo ""
+                    echo "$marker"
+                    echo "$bash_line"
+                } >> "$zshrc"
+                check "zsh   →  omadora integration added to ~/.zshrc"
+            else
+                info  "zsh   →  skipped (add manually: $bash_line)"
+            fi
+        else
+            check "zsh   →  omadora integration already in ~/.zshrc"
+        fi
+    fi
+
+    # fish — PATH + OMADORA_PATH env only (bash rc is not fish-compatible)
+    if command -v fish &>/dev/null; then
+        local fish_conf="$HOME/.config/fish/conf.d/omadora.fish"
+        if [[ ! -f "$fish_conf" ]]; then
+            echo
+            if gum confirm "  fish is installed — add omadora to fish PATH & environment?"; then
+                mkdir -p "$(dirname "$fish_conf")"
+                cat > "$fish_conf" <<'EOF'
+# obsidian-blue: omadora shell integration
+fish_add_path "$HOME/.local/share/omadora/bin"
+set -gx OMADORA_PATH "$HOME/.local/share/omadora"
+EOF
+                check "fish  →  omadora PATH added to ~/.config/fish/conf.d/omadora.fish"
+            else
+                info  "fish  →  skipped"
+            fi
+        else
+            check "fish  →  omadora integration already in fish conf.d"
+        fi
+    fi
+}
+
+# ── Hyprland config awareness ─────────────────────────────────────────────────
+# If the user has an existing ~/.config/hypr/hyprland.conf that doesn't source
+# omadora's defaults, offer to open it so they can add the source lines.
+check_hyprland_integration() {
+    local hyprconf="$HOME/.config/hypr/hyprland.conf"
+    [[ ! -f "$hyprconf" ]] && return 0
+    grep -q "omadora" "$hyprconf" 2>/dev/null && return 0
+
+    echo
+    hr
+    echo
+    warn "Your ~/.config/hypr/hyprland.conf doesn't source omadora defaults."
+    echo
+    gum style --foreground 7 \
+        "  omadora provides keybindings, autostart, look & feel, and more." \
+        "  Without the source lines, those features won't be active." \
+        "" \
+        "  The omadora hyprland.conf (at ~/.config/hypr/hyprland.conf if freshly" \
+        "  installed, or ~/.local/share/omadora/config/hypr/hyprland.conf) uses:"
+    echo
+    gum style --foreground 6 \
+        '    source = ~/.local/share/omadora/default/hypr/autostart.conf' \
+        '    source = ~/.local/share/omadora/default/hypr/bindings/media.conf' \
+        '    source = ~/.local/share/omadora/default/hypr/bindings/tiling.conf' \
+        '    source = ~/.local/share/omadora/default/hypr/bindings/utilities.conf' \
+        '    source = ~/.local/share/omadora/default/hypr/envs.conf' \
+        '    source = ~/.local/share/omadora/default/hypr/looknfeel.conf' \
+        '    source = ~/.local/share/omadora/default/hypr/input.conf' \
+        '    source = ~/.local/share/omadora/default/hypr/windows.conf' \
+        '    source = ~/.config/omadora/current/theme/hyprland.conf'
+    echo
+    gum style --foreground 7 \
+        "  Tip: Use omadora-menu → Update → Config → Hyprland to reset to the" \
+        "  omadora default, or add the lines above to your existing config."
+    echo
+    if gum confirm "  Open ~/.config/hypr/hyprland.conf in editor now?"; then
+        "${VISUAL:-${EDITOR:-nvim}}" "$hyprconf"
+    fi
+}
+
+# ── Existing / skipped configs report ────────────────────────────────────────
+report_configs() {
+    if [[ -z "${DEPLOYED_CONFIGS:-}" && -z "${SKIPPED_CONFIGS:-}" ]]; then
+        return 0
+    fi
+
+    echo
+    gum style --foreground 212 --bold "  App configuration"
+    echo
+
+    if [[ -n "${DEPLOYED_CONFIGS:-}" ]]; then
+        IFS=',' read -ra configs <<< "$DEPLOYED_CONFIGS"
+        for c in "${configs[@]}"; do
+            [[ -n "$c" ]] && check "~/.config/$c  →  freshly installed from omadora defaults"
+        done
+    fi
+
+    if [[ -n "${SKIPPED_CONFIGS:-}" ]]; then
+        IFS=',' read -ra configs <<< "$SKIPPED_CONFIGS"
+        for c in "${configs[@]}"; do
+            [[ -n "$c" ]] && info  "~/.config/$c  →  kept your existing config (omadora won't overwrite)"
+        done
+        echo
+        gum style --foreground 7 \
+            "  Tip: Use omadora-menu → Update → Config to selectively apply" \
+            "  updated omadora defaults while keeping a .bak of your changes."
+    fi
+}
+
+# ── New configs available after an update ────────────────────────────────────
+offer_new_configs() {
+    local new_configs=()
+
+    while IFS= read -r -d '' src; do
+        local name dst
+        name="$(basename "$src")"
+        dst="$HOME/.config/$name"
+        [[ ! -e "$dst" ]] && new_configs+=("$name")
+    done < <(find "$OMADORA_PATH/config" -maxdepth 1 -mindepth 1 -print0)
+
+    [[ ${#new_configs[@]} -eq 0 ]] && return 0
+
+    echo
+    warn "New config templates are available that aren't in your ~/.config yet:"
+    echo
+    for c in "${new_configs[@]}"; do
+        info "~/.config/$c"
+    done
+    echo
+    if gum confirm "  Install these now?"; then
+        for c in "${new_configs[@]}"; do
+            cp -r "$OMADORA_PATH/config/$c" "$HOME/.config/$c"
+            check "Installed ~/.config/$c"
+        done
+    else
+        info "You can install them later via omadora-menu → Update → Config"
+    fi
+}
+
+# ── Done screens ──────────────────────────────────────────────────────────────
+show_first_install_done() {
+    echo
+    hr
+    echo
+    gum style \
+        --border rounded \
+        --border-foreground 212 \
+        --padding "1 3" \
+        --bold \
+        "  You're all set!"
+    echo
+    gum style --foreground 7 \
+        "  Key shortcuts to get started:" \
+        "" \
+        "  $(gum style --foreground 6 'SUPER + SPACE')     Launch applications" \
+        "  $(gum style --foreground 6 'SUPER + RETURN')    Open terminal" \
+        "  $(gum style --foreground 6 'SUPER + M    ')     omadora menu  (settings, themes, tools)" \
+        "  $(gum style --foreground 6 'SUPER + SHIFT+Q')   Close window" \
+        "" \
+        "  Tips:" \
+        "  • Customise keybindings in ~/.config/hypr/bindings.conf" \
+        "  • Customise your shell in ~/.bashrc.d/*.sh  (don't edit ~/.bashrc directly)" \
+        "  • Run omadora-menu-keybindings for the full shortcut reference"
+    echo
+    wait_for_key "Press Enter to close and start using your desktop…"
+}
+
+show_update_done() {
+    echo
+    hr
+    echo
+    gum style \
+        --border rounded \
+        --border-foreground 212 \
+        --padding "1 3" \
+        --bold \
+        "  obsidian-blue updated  (build: $CURRENT_BUILD)"
+    echo
+    gum style --foreground 7 \
+        "  omadora scripts, binaries and theme templates have been refreshed." \
+        "  Your customisations in ~/.config/ are unchanged." \
+        "" \
+        "  Use omadora-menu → Update → Config to selectively apply any" \
+        "  updated default configs (a .bak of your version is kept)."
+    echo
+    wait_for_key "Press Enter to close…"
+}
+
+# ── First-install flow ────────────────────────────────────────────────────────
+first_install_flow() {
+    show_logo
+
+    gum style \
+        --border rounded \
+        --border-foreground 212 \
+        --padding "1 3" \
+        --bold \
+        "  Welcome to obsidian-blue" \
+        "" \
+        "$(gum style --foreground 7 '  Your Hyprland environment is ready.')"
+
+    echo
+    gum style --foreground 7 "  Background setup completed:"
+    echo
+    check "omadora tools & scripts installed to PATH"
+    check "Default keyring configured"
+    check "Shell integration added to ~/.bashrc"
+    check "XCompose key-composition loaded"
+
+    report_configs
+
+    [[ "$THEME_NEEDS_PICK" == "true" ]] && pick_theme
+
+    setup_shell_integration
+    check_hyprland_integration
+    show_first_install_done
+}
+
+# ── Update flow ───────────────────────────────────────────────────────────────
+update_flow() {
+    show_logo
+
+    gum style \
+        --border rounded \
+        --border-foreground 212 \
+        --padding "1 3" \
+        --bold \
+        "  obsidian-blue updated" \
+        "" \
+        "$(gum style --foreground 7 "  Build: $CURRENT_BUILD")"
+
+    echo
+    gum style --foreground 7 "  What changed:"
+    echo
+    check "omadora scripts & binaries refreshed from the new image"
+    check "Default config templates updated in ~/.local/share/omadora"
+    check "Your customisations in ~/.config/ are unchanged"
+
+    offer_new_configs
+    setup_shell_integration
+    check_hyprland_integration
+    show_update_done
+}
+
+# ── Main ─────────────────────────────────────────────────────────────────────
+if [[ "$INSTALL_TYPE" == "first_install" ]]; then
+    first_install_flow
+else
+    update_flow
+fi

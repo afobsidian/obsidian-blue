@@ -1,0 +1,406 @@
+#!/bin/bash
+# obsidian-blue-onboarding
+#
+# Background setup runner. Triggered by obsidian-blue-onboarding.service on
+# first graphical login and again whenever the image is rebased/updated.
+#
+# This script runs non-interactively in the background and handles all
+# filesystem-level setup.  Once done it launches obsidian-blue-onboarding-wizard
+# in an alacritty window so the user can make interactive choices (theme, shell
+# integration, etc.) while their session is already live.
+#
+# User customisations (existing ~/.config dirs, custom ~/.bashrc content, etc.)
+# are never overwritten — only missing pieces are added.
+
+set -euo pipefail
+
+# ── Argument parsing ──────────────────────────────────────────────────────────
+FORCE=false
+for arg in "$@"; do
+    case "$arg" in
+        --force) FORCE=true ;;
+        *) echo "Unknown argument: $arg" >&2; exit 1 ;;
+    esac
+done
+
+# ── Path resolution ───────────────────────────────────────────────────────────
+# Resolve the directory this script lives in so we can detect a repo-clone run.
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# OMADORA_SKEL: where the pristine omadora source lives.
+# • Env-var override wins (explicit control from any caller).
+# • If the script is running from inside a repo tree (files/usr/libexec/),
+#   auto-derive the repo root and point at files/omadora.
+# • Otherwise fall back to the installed-image path (/etc/skel/…).
+if [[ -z "${OMADORA_SKEL:-}" ]]; then
+    if [[ "$SCRIPT_DIR" == */files/usr/libexec* ]]; then
+        REPO_ROOT="${SCRIPT_DIR%/files/usr/libexec*}"
+        OMADORA_SKEL="$REPO_ROOT/files/omadora"
+    else
+        OMADORA_SKEL="/etc/skel/.local/share/omadora"
+    fi
+fi
+
+OMADORA_PATH="$HOME/.local/share/omadora"
+STATE_DIR="$HOME/.local/state/obsidian-blue"
+VERSION_FILE="$STATE_DIR/onboarding-version"
+CONTEXT_FILE="$STATE_DIR/onboarding-context"
+LOG_FILE="$STATE_DIR/onboarding.log"
+
+# Subdirectories of ~/.local/share/omadora that are owned by the image
+# (refreshed on every rebase).  The config/ subdir is intentionally excluded
+# because ~/.config/<app> dirs copied from it are considered user-editable.
+OMADORA_IMAGE_DIRS=(bin default install migrations themes applications)
+
+# Version of terminaltexteffects installed for the omadora screensaver.
+# Check https://github.com/ChrisBuilds/terminaltexteffects/releases when updating.
+TERMINALTEXTEFFECTS_VERSION="0.14.2"
+
+# ── Version check ────────────────────────────────────────────────────────────
+# Re-run onboarding when the image's omadora build stamp changes (rebase/update).
+CURRENT_BUILD=$(cat "$OMADORA_SKEL/.obsidian-blue-build" 2>/dev/null || echo "unknown")
+INSTALLED_BUILD=$(cat "$VERSION_FILE" 2>/dev/null || echo "")
+
+if [[ "$FORCE" == false && -n "$INSTALLED_BUILD" && "$CURRENT_BUILD" == "$INSTALLED_BUILD" ]]; then
+    exit 0
+fi
+
+# Determine whether this is a first install or a post-rebase update
+INSTALL_TYPE="first_install"
+[[ -n "$INSTALLED_BUILD" ]] && INSTALL_TYPE="update"
+
+mkdir -p "$STATE_DIR"
+exec > >(tee -a "$LOG_FILE") 2>&1
+echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] obsidian-blue onboarding starting (type: $INSTALL_TYPE, build: $CURRENT_BUILD)..."
+
+# Track which configs were deployed vs skipped, so the wizard can report them
+DEPLOYED_CONFIGS=()
+SKIPPED_CONFIGS=()
+
+# ── Step 1: Ensure omadora is in the user home ───────────────────────────────
+if [[ ! -d "$OMADORA_PATH" ]]; then
+    echo "  Copying omadora from /etc/skel..."
+    mkdir -p "$(dirname "$OMADORA_PATH")"
+    cp -r "$OMADORA_SKEL" "$OMADORA_PATH"
+else
+    # On subsequent runs (after a rebase): refresh omadora internals while
+    # leaving ~/.config untouched.  User-facing customisations live in
+    # ~/.config/<app>/, not inside ~/.local/share/omadora itself.
+    echo "  Refreshing omadora internals from /etc/skel..."
+    for d in "${OMADORA_IMAGE_DIRS[@]}"; do
+        [[ -d "$OMADORA_SKEL/$d" ]] || continue
+        rm -rf "${OMADORA_PATH:?}/$d"
+        cp -r "$OMADORA_SKEL/$d" "$OMADORA_PATH/$d"
+    done
+    # Refresh root-level files (install.sh, boot.sh, icon.txt, logo.txt, …)
+    find "$OMADORA_SKEL" -maxdepth 1 -type f | while IFS= read -r f; do
+        cp "$f" "$OMADORA_PATH/$(basename "$f")"
+    done
+fi
+
+export OMADORA_PATH
+export OMADORA_INSTALL="$OMADORA_PATH/install"
+export PATH="$OMADORA_PATH/bin:$PATH"
+
+# ── Step 1b: Rebuild font cache ───────────────────────────────────────────────
+mkdir -p "$HOME/.local/share/fonts"
+fc-cache 2>/dev/null || true
+
+# ── Step 2: XDG user directories ─────────────────────────────────────────────
+xdg-user-dirs-update 2>/dev/null || true
+
+# ── Step 3: Deploy app configs (record what was deployed vs skipped) ──────────
+mkdir -p "$HOME/.config"
+while IFS= read -r -d '' src; do
+    name="$(basename "$src")"
+    dst="$HOME/.config/$name"
+    if [[ ! -e "$dst" ]]; then
+        cp -r "$src" "$dst"
+        DEPLOYED_CONFIGS+=("$name")
+        echo "  Installed config: $name"
+    else
+        SKIPPED_CONFIGS+=("$name")
+    fi
+done < <(find "$OMADORA_PATH/config" -maxdepth 1 -mindepth 1 -print0)
+
+# ── Step 3b: Ensure all hyprland user-override files exist ───────────────────
+# hyprland.conf sources 6 user-editable files from ~/.config/hypr/.  Step 3
+# above only copies the whole hypr/ directory if it was missing entirely.
+# If the directory already existed (or was just created), individual files may
+# still be absent — create them from omadora defaults without overwriting.
+HYPR_CONF_DIR="$HOME/.config/hypr"
+HYPR_SKEL_DIR="$OMADORA_PATH/config/hypr"
+HYPR_USER_OVERRIDES=(monitors.conf input.conf bindings.conf looknfeel.conf autostart.conf windows.conf)
+if [[ -d "$HYPR_SKEL_DIR" ]]; then
+    mkdir -p "$HYPR_CONF_DIR"
+    for f in "${HYPR_USER_OVERRIDES[@]}"; do
+        if [[ ! -f "$HYPR_CONF_DIR/$f" && -f "$HYPR_SKEL_DIR/$f" ]]; then
+            cp "$HYPR_SKEL_DIR/$f" "$HYPR_CONF_DIR/$f"
+            echo "  Installed missing hyprland config: $f"
+        fi
+    done
+fi
+
+# ── Step 4: Shell integration — add omadora source to ~/.bashrc ──────────────
+OMADORA_MARKER="# obsidian-blue: omadora shell integration"
+OMADORA_RC_LINE='[[ -f ~/.local/share/omadora/default/bashrc ]] && source ~/.local/share/omadora/default/bashrc'
+
+if [[ ! -f "$HOME/.bashrc" ]]; then
+    cp "$OMADORA_PATH/default/bashrc" "$HOME/.bashrc"
+    echo "  Installed default ~/.bashrc"
+elif ! grep -qF "$OMADORA_MARKER" "$HOME/.bashrc"; then
+    {
+        echo ""
+        echo "$OMADORA_MARKER"
+        echo "$OMADORA_RC_LINE"
+    } >> "$HOME/.bashrc"
+    echo "  Added omadora shell integration to ~/.bashrc"
+fi
+
+# ── Step 5: XCompose ─────────────────────────────────────────────────────────
+if [[ ! -f "$HOME/.XCompose" ]]; then
+    tee "$HOME/.XCompose" > /dev/null <<'EOF'
+include "%H/.local/share/omadora/default/xcompose"
+EOF
+    echo "  Installed ~/.XCompose"
+fi
+
+# ── Step 6: Default keyring ───────────────────────────────────────────────────
+KEYRING_DIR="$HOME/.local/share/keyrings"
+if [[ ! -f "$KEYRING_DIR/Default_keyring.keyring" ]]; then
+    mkdir -p "$KEYRING_DIR"
+    cat > "$KEYRING_DIR/Default_keyring.keyring" <<EOF
+[keyring]
+display-name=Default keyring
+ctime=$(date +%s)
+mtime=0
+lock-on-idle=false
+lock-after=false
+EOF
+    echo "Default_keyring" > "$KEYRING_DIR/default"
+    chmod 700 "$KEYRING_DIR"
+    chmod 600 "$KEYRING_DIR/Default_keyring.keyring"
+    chmod 644 "$KEYRING_DIR/default"
+    echo "  Set up default keyring"
+fi
+
+# ── Step 7: Apply default omadora theme (silent fallback; wizard lets user pick) ─
+mkdir -p "$HOME/.config/omadora/themes"
+OMADORA_CURRENT_THEME="$HOME/.config/omadora/current/theme"
+THEME_NEEDS_PICK=false
+if [[ ! -d "$OMADORA_CURRENT_THEME" ]]; then
+    echo "  Installing default theme (Rose Pine Darker)..."
+    THEME_SRC="$OMADORA_PATH/themes/rose-pine-darker"
+    if [[ -d "$THEME_SRC" ]]; then
+        NEXT_THEME="$HOME/.config/omadora/current/next-theme"
+        mkdir -p "$NEXT_THEME"
+        cp -r "$THEME_SRC/"* "$NEXT_THEME/" 2>/dev/null || true
+        omadora-theme-set-templates 2>/dev/null || true
+        rm -rf "$OMADORA_CURRENT_THEME"
+        mv "$NEXT_THEME" "$OMADORA_CURRENT_THEME"
+        echo "rose-pine-darker" > "$HOME/.config/omadora/current/theme.name"
+        echo "  Default theme files installed."
+        # Set up the background symlink so swaybg can start on first login
+        omadora-theme-bg-next 2>/dev/null || true
+    fi
+    # Signal wizard to offer the interactive theme picker
+    THEME_NEEDS_PICK=true
+fi
+
+# Set up per-app theme symlinks (only if not already present)
+if [[ -d "$OMADORA_CURRENT_THEME" ]]; then
+    mkdir -p "$HOME/.config/btop/themes"
+    ln -snf "$OMADORA_CURRENT_THEME/btop.theme" \
+        "$HOME/.config/btop/themes/current.theme" 2>/dev/null || true
+
+    mkdir -p "$HOME/.config/nvim/lua/plugins"
+    [[ ! -f "$HOME/.config/nvim/lua/plugins/theme.lua" ]] && \
+        ln -snf "$OMADORA_CURRENT_THEME/neovim.lua" \
+            "$HOME/.config/nvim/lua/plugins/theme.lua" 2>/dev/null || true
+
+    mkdir -p "$HOME/.config/mako"
+    [[ ! -f "$HOME/.config/mako/config" ]] && \
+        ln -snf "$OMADORA_CURRENT_THEME/mako.ini" \
+            "$HOME/.config/mako/config" 2>/dev/null || true
+fi
+
+# ── Step 8: LazyVim nvim starter ──────────────────────────────────────────────
+# omadora ships a config/nvim/ overlay (plugins, lazyvim.json).  LazyVim also
+# needs its own init.lua and starter files.  On a conventional Fedora install
+# the omadora install script clones the LazyVim starter repo first, then copies
+# the overlay on top.  Here we detect a missing init.lua and supplement the
+# existing ~/.config/nvim with the LazyVim starter files without overwriting any
+# omadora-provided files.
+if [[ ! -f "$HOME/.config/nvim/init.lua" ]]; then
+    echo "  Setting up LazyVim nvim starter..."
+    LAZYVIM_TMP="$(mktemp -d)"
+    if git clone --depth 1 https://github.com/LazyVim/starter "$LAZYVIM_TMP" 2>/dev/null; then
+        rm -rf "$LAZYVIM_TMP/.git"
+        mkdir -p "$HOME/.config/nvim"
+        # Copy LazyVim starter files; -n means don't overwrite existing (omadora) files
+        cp -rn "$LAZYVIM_TMP/"* "$HOME/.config/nvim/" 2>/dev/null || true
+        echo "  LazyVim starter installed."
+    else
+        echo "  Warning: could not clone LazyVim/starter (no network?). Skipping nvim setup."
+    fi
+    rm -rf "$LAZYVIM_TMP"
+fi
+
+# ── Step 9: Branding ──────────────────────────────────────────────────────────
+mkdir -p "$HOME/.config/omadora/branding"
+[[ ! -f "$HOME/.config/omadora/branding/about.txt" ]] && \
+    cp "$OMADORA_PATH/icon.txt" "$HOME/.config/omadora/branding/about.txt" 2>/dev/null || true
+[[ ! -f "$HOME/.config/omadora/branding/screensaver.txt" ]] && \
+    cp "$OMADORA_PATH/logo.txt" "$HOME/.config/omadora/branding/screensaver.txt" 2>/dev/null || true
+
+# ── Step 10: Keyboard layout in Hyprland input config ────────────────────────
+HYPR_INPUT="$HOME/.config/hypr/input.conf"
+if [[ -f "$HYPR_INPUT" ]] && ! grep -q "kb_layout" "$HYPR_INPUT"; then
+    layout=$(localectl status 2>/dev/null | awk -F: '/X11 Layout/ {gsub(/ /,"",$2); print $2}')
+    variant=$(localectl status 2>/dev/null | awk -F: '/X11 Variant/ {gsub(/ /,"",$2); print $2}')
+    if [[ -n "$layout" ]]; then
+        sed -i "/^[[:space:]]*kb_options *=/i\\  kb_layout = $layout" "$HYPR_INPUT" 2>/dev/null || true
+    fi
+    if [[ -n "$variant" ]]; then
+        sed -i "/^[[:space:]]*kb_options *=/i\\  kb_variant = $variant" "$HYPR_INPUT" 2>/dev/null || true
+    fi
+fi
+
+# ── Step 11: MIME-type defaults ───────────────────────────────────────────────
+if command -v xdg-mime &>/dev/null; then
+    for mime in image/png image/jpeg image/gif image/webp image/bmp image/tiff; do
+        xdg-mime default imv.desktop "$mime" 2>/dev/null || true
+    done
+    xdg-mime default org.gnome.Evince.desktop application/pdf 2>/dev/null || true
+    for mime in video/mp4 video/x-msvideo video/x-matroska video/webm \
+                video/mpeg video/ogg video/quicktime video/3gpp \
+                video/3gpp2 video/x-ms-asf video/x-ogm+ogg video/x-theora+ogg \
+                application/ogg; do
+        xdg-mime default mpv.desktop "$mime" 2>/dev/null || true
+    done
+    for mime in text/plain text/english text/x-makefile \
+                text/x-c++hdr text/x-c++src text/x-chdr text/x-csrc \
+                text/x-java text/x-moc text/x-pascal text/x-tcl \
+                text/x-tex text/x-c text/x-c++ \
+                application/x-shellscript application/xml text/xml; do
+        xdg-mime default nvim.desktop "$mime" 2>/dev/null || true
+    done
+    xdg-settings set default-web-browser chromium-browser.desktop 2>/dev/null || true
+    xdg-mime default chromium-browser.desktop x-scheme-handler/http 2>/dev/null || true
+    xdg-mime default chromium-browser.desktop x-scheme-handler/https 2>/dev/null || true
+fi
+
+# ── Step 12: Deploy application shortcuts, icons, webapps, and TUI entries ───
+# This mirrors what omadora's install/packaging/{icons,webapps,tuis}.sh do:
+# copies bundled .desktop files + icons to ~/.local/share/applications, installs
+# the default webapp shortcuts (Google Maps, ChatGPT, YouTube), and creates the
+# Disk Usage TUI launcher.  Safe to re-run; existing entries are not overwritten.
+if command -v omadora-refresh-applications &>/dev/null; then
+    echo "  Deploying application shortcuts and icons..."
+    omadora-refresh-applications 2>/dev/null || true
+    echo "  Application shortcuts deployed."
+fi
+update-desktop-database "$HOME/.local/share/applications" 2>/dev/null || true
+
+# ── Step 13: Enable omadora user systemd services ────────────────────────────
+if command -v systemctl &>/dev/null; then
+    systemctl --user enable omadora-battery-monitor.timer 2>/dev/null || true
+    echo "  Enabled omadora user systemd services"
+fi
+
+# ── Step 14: Power profile ───────────────────────────────────────────────────
+# Match what omadora's install script does: balanced on battery, performance
+# when plugged in.  powerprofilesctl is provided by power-profiles-daemon.
+if command -v powerprofilesctl &>/dev/null; then
+    if ls /sys/class/power_supply/BAT* &>/dev/null 2>&1; then
+        powerprofilesctl set balanced 2>/dev/null || true
+        echo "  Set power profile: balanced (battery detected)"
+    else
+        powerprofilesctl set performance 2>/dev/null || true
+        echo "  Set power profile: performance (no battery)"
+    fi
+fi
+
+# ── Step 15: Mark all existing omadora migrations as done ────────────────────
+# Prevents the omadora migration runner from re-applying migrations on a fresh
+# user account that already has an up-to-date system image.
+MIGRATIONS_STATE="$HOME/.local/state/omadora/migrations"
+mkdir -p "$MIGRATIONS_STATE"
+for f in "$OMADORA_PATH/migrations/"*.sh; do
+    [[ -f "$f" ]] && touch "$MIGRATIONS_STATE/$(basename "$f")"
+done
+echo "  Marked omadora migrations as applied"
+
+# ── Step 16: Install terminaltexteffects (screensaver helper) ────────────────
+if command -v pipx &>/dev/null && ! pipx list 2>/dev/null | grep -q terminaltexteffects; then
+    pipx install "terminaltexteffects==${TERMINALTEXTEFFECTS_VERSION}" 2>/dev/null || true
+fi
+
+# ── Step 17: Reload Hyprland and start any missing autostart processes ────────
+# The onboarding service runs while Hyprland is already up.  A reload ensures
+# freshly deployed configs take effect in the running session.  exec-once
+# entries do not re-run on reload, so we also start any processes that weren't
+# running yet (e.g. swaybg whose background symlink was just created above).
+if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]] && command -v hyprctl &>/dev/null; then
+    echo "  Reloading Hyprland config..."
+    hyprctl reload 2>/dev/null || true
+
+    if [[ -n "${WAYLAND_DISPLAY:-}" ]] && command -v uwsm-app &>/dev/null; then
+        # swaybg: start if the background symlink is ready and swaybg isn't running
+        if [[ -L "$HOME/.config/omadora/current/background" ]] && \
+           ! pgrep -x swaybg >/dev/null 2>&1; then
+            setsid uwsm-app -- swaybg \
+                -i "$HOME/.config/omadora/current/background" \
+                -m fill >/dev/null 2>&1 & disown
+            echo "  Started swaybg"
+        fi
+        pgrep -x waybar >/dev/null 2>&1 || {
+            setsid uwsm-app -- waybar >/dev/null 2>&1 & disown
+            echo "  Started waybar"
+        }
+        pgrep -x mako >/dev/null 2>&1 || {
+            setsid uwsm-app -- mako >/dev/null 2>&1 & disown
+            echo "  Started mako"
+        }
+    fi
+fi
+
+# ── Write context file for the interactive wizard ────────────────────────────
+{
+    echo "INSTALL_TYPE=$INSTALL_TYPE"
+    echo "CURRENT_BUILD=$CURRENT_BUILD"
+    echo "THEME_NEEDS_PICK=$THEME_NEEDS_PICK"
+    printf 'DEPLOYED_CONFIGS=%s\n' "$(IFS=','; echo "${DEPLOYED_CONFIGS[*]:-}")"
+    printf 'SKIPPED_CONFIGS=%s\n' "$(IFS=','; echo "${SKIPPED_CONFIGS[*]:-}")"
+} > "$CONTEXT_FILE"
+
+# ── Write version stamp ───────────────────────────────────────────────────────
+# When forced (dev/repo-clone run), write "dev" so a real image service run
+# always sees a mismatch and re-triggers.
+if [[ "$FORCE" == true ]]; then
+    echo "dev" > "$VERSION_FILE"
+else
+    echo "$CURRENT_BUILD" > "$VERSION_FILE"
+fi
+echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] obsidian-blue background setup complete."
+
+# ── Launch the interactive wizard ─────────────────────────────────────────────
+# Prefer a repo-local wizard when running from a repo clone.
+WIZARD=/usr/libexec/obsidian-blue-onboarding-wizard
+[[ "$SCRIPT_DIR" == */files/usr/libexec* ]] && \
+    WIZARD="$SCRIPT_DIR/obsidian-blue-onboarding-wizard"
+
+# In --force (dev/repo-clone) mode, or when uwsm-app is unavailable, run the
+# wizard inline in the current terminal.  Otherwise spawn it in a floating
+# alacritty window within the live Wayland session.
+if [[ "$FORCE" == true ]] || ! command -v uwsm-app &>/dev/null; then
+    if [[ -x "$WIZARD" ]]; then
+        exec "$WIZARD"
+    fi
+elif [[ -n "${WAYLAND_DISPLAY:-}" ]] && command -v alacritty &>/dev/null; then
+    setsid uwsm-app -- alacritty \
+        --class "org.obsidian-blue.Onboarding,org.obsidian-blue.Onboarding" \
+        --title "obsidian-blue Setup" \
+        -e "$WIZARD" \
+        >/dev/null 2>&1 &
+fi
