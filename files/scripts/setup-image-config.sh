@@ -19,4 +19,22 @@ if [[ -d /usr/share/icons/Yaru/scalable/actions ]]; then
     gtk-update-icon-cache /usr/share/icons/Yaru 2>/dev/null || true
 fi
 
+# ── Ensure SDDM wins as the display manager ─────────────────────────────────
+# On an ostree/bootc system, systemd unit symlinks under /etc/systemd/system/
+# are part of the mutable /etc layer.  The wayblue base has greetd enabled
+# there (display-manager.service → greetd.service).  When an existing user
+# upgrades, ostree's 3-way merge treats those symlinks as "user state" and
+# preserves them even though we mask greetd in the image — so greetd would
+# keep winning as display-manager.service.
+#
+# Explicitly writing the display-manager.service symlink here (image build
+# time) puts it in the new image's /etc baseline, which ostree will use as
+# the new "expected" state and will apply even to existing installations
+# where the user never manually changed the symlink.
+mkdir -p /etc/systemd/system
+ln -sf /usr/lib/systemd/system/sddm.service \
+    /etc/systemd/system/display-manager.service
+# Remove the old greetd wants symlink if it survived from the base image.
+rm -f /etc/systemd/system/multi-user.target.wants/greetd.service
+
 echo "Image system config applied."
