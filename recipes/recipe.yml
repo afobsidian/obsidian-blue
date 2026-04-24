@@ -196,6 +196,11 @@ modules:
         - wlsunset
         # wayblue ships dunst; swaync is what KooL dots expect
         - dunst
+        # greetd (+ its greeter frontends) is replaced by SDDM; removing the
+        # package ensures it can never be started even when ostree's /etc
+        # 3-way merge preserves old enable symlinks from a prior deployment.
+        - greetd
+        - gtkgreet
 
   # ── 3. Deploy onboarding service and exec script into /usr ───────────────────
   # Must run before the systemd module so the service unit file exists when
