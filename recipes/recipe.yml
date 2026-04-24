@@ -180,6 +180,13 @@ modules:
         - perf
         - sysprof
 
+        # ── SDDM greeter (replaces wayblue's greetd + gtkgreet/cage) ─────
+        # SDDM handles multi-monitor natively and supports modern QML themes.
+        # qt6-qtquickcontrols2 and qt6-qtsvg are required by the catppuccin theme.
+        - sddm
+        - qt6-qtquickcontrols2
+        - qt6-qtsvg
+
     remove:
       packages:
         # wayblue currently ships tuned-ppd; remove it before adding
@@ -205,6 +212,11 @@ modules:
         - docker.socket
         - docker.service
         - podman.socket
+        # SDDM replaces greetd as the display manager; mask greetd so it can't
+        # accidentally be activated by anything pulling in the unit.
+        - sddm.service
+      masked:
+        - greetd.service
     user:
       enabled:
         - podman.socket

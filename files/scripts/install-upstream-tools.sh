@@ -2,6 +2,7 @@
 
 set -euo pipefail
 
+readonly CATPPUCCIN_SDDM_VERSION="1.1.2"
 readonly LAZYGIT_VERSION="0.61.1"
 readonly NWG_DISPLAYS_VERSION="0.3.28"
 readonly WALLUST_VERSION="3.5.2"
@@ -110,6 +111,25 @@ install_cargo_bin() {
 
 trap cleanup EXIT
 
+install_sddm_catppuccin_theme() {
+    local theme_name="catppuccin-mocha-blue"
+    local theme_zip="${WORKDIR}/${theme_name}-sddm.zip"
+
+    download \
+        "https://github.com/catppuccin/sddm/releases/download/v${CATPPUCCIN_SDDM_VERSION}/${theme_name}-sddm.zip" \
+        "${theme_zip}"
+
+    local extract_dir="${WORKDIR}/sddm-theme"
+    mkdir -p "${extract_dir}"
+    python3 -c "
+import zipfile
+with zipfile.ZipFile('${theme_zip}', 'r') as z:
+    z.extractall('${extract_dir}')
+"
+    mkdir -p /usr/share/sddm/themes
+    cp -r "${extract_dir}/${theme_name}" /usr/share/sddm/themes/
+}
+
 install_lazygit
 install_nwg_displays
 install_wallust
@@ -117,3 +137,4 @@ install_cargo_bin matugen "${MATUGEN_VERSION}"
 install_cargo_bin bluetui "${BLUETUI_VERSION}"
 install_cargo_bin eza "${EZA_VERSION}"
 install_cargo_bin impala "${IMPALA_VERSION}"
+install_sddm_catppuccin_theme
