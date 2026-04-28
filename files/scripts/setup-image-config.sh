@@ -28,9 +28,9 @@ fi
 # keep winning as display-manager.service.
 #
 # Explicitly writing the display-manager.service symlink here (image build
-# time) puts it in the new image's /etc baseline, which ostree will use as
-# the new "expected" state and will apply even to existing installations
-# where the user never manually changed the symlink.
+# time) puts it in the new image's /etc baseline.  A matching tmpfiles rule in
+# /usr/lib/tmpfiles.d keeps rebased systems aligned when their mutable /etc
+# preserves wayblue's old display-manager.service -> greetd.service link.
 mkdir -p /etc/systemd/system
 ln -sf /usr/lib/systemd/system/sddm.service \
     /etc/systemd/system/display-manager.service

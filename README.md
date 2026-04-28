@@ -119,6 +119,17 @@ rpm-ostree kargs \
 
 > **Nvidia GPU?** This recipe already uses `ghcr.io/wayblueorg/hyprland-nvidia-open`. Change `base-image` only if you want a different wayblue variant.
 
+### Updating from an older obsidian-blue image
+
+obsidian-blue uses SDDM with the Catppuccin theme instead of the wayblue Hyprland/greetd greeter. Current images force the display-manager symlink back to SDDM on boot, including for systems rebased from older deployments where `/etc/systemd/system/display-manager.service` was preserved.
+
+If you already updated and are still seeing the old Hyprland/greetd greeter on the current boot, apply the migration immediately and reboot:
+
+```bash
+sudo systemd-tmpfiles --create /usr/lib/tmpfiles.d/obsidian-blue-display-manager.conf
+sudo systemctl reboot
+```
+
 ---
 
 ## Building locally
