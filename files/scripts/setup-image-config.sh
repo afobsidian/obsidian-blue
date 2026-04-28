@@ -37,4 +37,10 @@ ln -sf /usr/lib/systemd/system/sddm.service \
 # Remove the old greetd wants symlink if it survived from the base image.
 rm -f /etc/systemd/system/multi-user.target.wants/greetd.service
 
+# Ensure SDDM uses obsidian-blue's theme even if the wayblue base ships a later
+# /etc/sddm.conf.d drop-in.
+mkdir -p /etc/sddm.conf.d
+cp -f /usr/lib/sddm/sddm.conf.d/99-obsidian-blue-theme.conf \
+    /etc/sddm.conf.d/99-obsidian-blue-theme.conf
+
 echo "Image system config applied."

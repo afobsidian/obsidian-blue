@@ -121,9 +121,9 @@ rpm-ostree kargs \
 
 ### Updating from an older obsidian-blue image
 
-obsidian-blue uses SDDM with the Catppuccin theme instead of the wayblue Hyprland/greetd greeter. Current images force the display-manager symlink back to SDDM on boot, including for systems rebased from older deployments where `/etc/systemd/system/display-manager.service` was preserved.
+obsidian-blue uses SDDM with the Catppuccin theme instead of the wayblue Hyprland/greetd greeter/theme. Current images force the display-manager symlink and high-priority SDDM theme config back to obsidian-blue defaults on boot, including for systems rebased from older deployments where `/etc/systemd/system/display-manager.service` or inherited wayblue SDDM config was preserved.
 
-If you already updated and are still seeing the old Hyprland/greetd greeter on the current boot, apply the migration immediately and reboot:
+If you already updated and are still seeing the old wayblue greeter/theme on the current boot, apply the migration immediately and reboot:
 
 ```bash
 sudo systemd-tmpfiles --create /usr/lib/tmpfiles.d/obsidian-blue-display-manager.conf
