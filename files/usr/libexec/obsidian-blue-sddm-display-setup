@@ -1,6 +1,8 @@
-#!/usr/bin/env bash
+#!/usr/bin/bash
 
 set -euo pipefail
+
+FALLBACK_LOGICAL_WIDTH=1920
 
 log() {
     local message=$*
@@ -142,7 +144,7 @@ for output in "${sorted_outputs[@]}"; do
         }
     }')
     if (( logical_width <= 0 )); then
-        logical_width=1920
+        logical_width=$FALLBACK_LOGICAL_WIDTH
     fi
     x=$((x + logical_width))
 done
