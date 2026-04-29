@@ -1,0 +1,153 @@
+#!/bin/bash
+
+set -euo pipefail
+
+FALLBACK_LOGICAL_WIDTH=1920
+
+log() {
+    local message=$*
+
+    if command -v systemd-cat >/dev/null 2>&1 \
+        && printf '%s\n' "$message" | systemd-cat -t obsidian-blue-sddm-display-setup; then
+        return 0
+    fi
+
+    printf 'obsidian-blue-sddm-display-setup: %s\n' "$message" >&2 || true
+}
+
+if ! command -v wlr-randr >/dev/null 2>&1; then
+    log "wlr-randr is not installed; leaving compositor defaults in place."
+    exit 0
+fi
+
+choose_scale() {
+    local name=$1 width=$2 height=$3 physical_width=$4 physical_height=$5
+
+    awk -v name="$name" \
+        -v width="$width" \
+        -v height="$height" \
+        -v physical_width="$physical_width" \
+        -v physical_height="$physical_height" '
+        function is_internal(output) {
+            return output ~ /^(eDP|LVDS|DSI)-/
+        }
+
+        BEGIN {
+            if (width <= 0 || height <= 0) {
+                print "1"
+                exit
+            }
+
+            if (physical_width > 0 && physical_height > 0) {
+                diagonal_px = sqrt((width * width) + (height * height))
+                diagonal_in = sqrt((physical_width * physical_width) + (physical_height * physical_height)) / 25.4
+                dpi = diagonal_px / diagonal_in
+
+                if (dpi >= 180) {
+                    print "2"
+                } else if (dpi >= 140) {
+                    print "1.5"
+                } else {
+                    print "1"
+                }
+                exit
+            }
+
+            if (is_internal(name) && width >= 3000) {
+                print "2"
+            } else {
+                print "1"
+            }
+        }'
+}
+
+if ! randr_output=$(wlr-randr); then
+    log "Unable to query outputs with wlr-randr; leaving compositor defaults in place."
+    exit 0
+fi
+
+outputs=$(
+    printf '%s\n' "$randr_output" | awk '
+        function emit() {
+            if (name != "") {
+                if (width == "") {
+                    width = 0
+                    height = 0
+                }
+                if (physical_width == "") {
+                    physical_width = 0
+                    physical_height = 0
+                }
+                printf "%s\t%s\t%s\t%s\t%s\n", name, width, height, physical_width, physical_height
+            }
+        }
+
+        /^[^[:space:]]/ {
+            emit()
+            name = $1
+            width = height = physical_width = physical_height = ""
+            next
+        }
+
+        /^[[:space:]]+Physical size:/ {
+            split($3, size, "x")
+            physical_width = size[1]
+            physical_height = size[2]
+            next
+        }
+
+        /^[[:space:]]+[0-9]+x[0-9]+ px,/ {
+            if (width == "" || $0 ~ /\(.*preferred/) {
+                split($1, dimensions, "x")
+                width = dimensions[1]
+                height = dimensions[2]
+            }
+        }
+
+        END {
+            emit()
+        }'
+)
+
+if [[ -z "$outputs" ]]; then
+    log "No outputs reported by wlr-randr; leaving compositor defaults in place."
+    exit 0
+fi
+
+mapfile -t sorted_outputs < <(
+    printf '%s\n' "$outputs" | awk -F '\t' '
+        $1 ~ /^(eDP|LVDS|DSI)-/ {
+            print "0\t" $0
+            next
+        }
+        {
+            print "1\t" $0
+        }' | sort -t $'\t' -k1,1n -k2,2 | cut -f2-
+)
+
+cmd=(wlr-randr)
+x=0
+configured=0
+
+for output in "${sorted_outputs[@]}"; do
+    IFS=$'\t' read -r name width height physical_width physical_height <<<"$output"
+    scale=$(choose_scale "$name" "$width" "$height" "$physical_width" "$physical_height")
+
+    cmd+=(--output "$name" --on --preferred --scale "$scale" --pos "${x},0")
+    configured=$((configured + 1))
+
+    logical_width=$(awk -v width="$width" -v scale="$scale" 'BEGIN {
+        if (width <= 0 || scale <= 0) {
+            print 0
+        } else {
+            printf "%d", (width / scale) + 0.5
+        }
+    }')
+    if (( logical_width <= 0 )); then
+        logical_width=$FALLBACK_LOGICAL_WIDTH
+    fi
+    x=$((x + logical_width))
+done
+
+"${cmd[@]}" || log "Failed to apply SDDM output layout with wlr-randr."
+log "Configured ${configured} SDDM Wayland output(s)."
