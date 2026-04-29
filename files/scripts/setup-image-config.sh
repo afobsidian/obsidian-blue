@@ -41,6 +41,8 @@ rm -f /etc/systemd/system/multi-user.target.wants/greetd.service
 # /etc/sddm.conf.d drop-in.  Keep /etc as a symlink to the image-owned /usr
 # config so future image updates change the theme config atomically.
 mkdir -p /etc/sddm.conf.d
+ln -sf /usr/lib/sddm/sddm.conf.d/90-obsidian-blue-wayland.conf \
+    /etc/sddm.conf.d/90-obsidian-blue-wayland.conf
 ln -sf /usr/lib/sddm/sddm.conf.d/99-obsidian-blue-theme.conf \
     /etc/sddm.conf.d/99-obsidian-blue-theme.conf
 
