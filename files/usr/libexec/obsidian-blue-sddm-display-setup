@@ -3,11 +3,14 @@
 set -euo pipefail
 
 log() {
-    if command -v systemd-cat >/dev/null 2>&1; then
-        printf '%s\n' "$*" | systemd-cat -t obsidian-blue-sddm-display-setup
-    else
-        printf 'obsidian-blue-sddm-display-setup: %s\n' "$*" >&2
+    local message=$*
+
+    if command -v systemd-cat >/dev/null 2>&1 \
+        && printf '%s\n' "$message" | systemd-cat -t obsidian-blue-sddm-display-setup; then
+        return 0
     fi
+
+    printf 'obsidian-blue-sddm-display-setup: %s\n' "$message" >&2 || true
 }
 
 if ! command -v wlr-randr >/dev/null 2>&1; then
@@ -56,8 +59,13 @@ choose_scale() {
         }'
 }
 
+if ! randr_output=$(wlr-randr); then
+    log "Unable to query outputs with wlr-randr; leaving compositor defaults in place."
+    exit 0
+fi
+
 outputs=$(
-    wlr-randr | awk '
+    printf '%s\n' "$randr_output" | awk '
         function emit() {
             if (name != "") {
                 if (width == "") {
