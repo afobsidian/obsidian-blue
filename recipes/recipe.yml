@@ -214,6 +214,10 @@ modules:
   - type: systemd
     system:
       enabled:
+        # wayblue already ships NetworkManager + the nm-applet/blueman clients
+        # that the dotfiles now use; make sure the backing services start too.
+        - NetworkManager.service
+        - bluetooth.service
         - docker.socket
         - docker.service
         - podman.socket
