@@ -18,9 +18,9 @@ Fedora Atomic
 
 > \* `dunst` is replaced by `SwayNotificationCenter` and `wlsunset` is replaced by `hyprsunset` — both removed in this image.
 
-### From wayblue hyprland image (already provided, not re-added)
+### From wayblue hyprland image
 
-`hyprland` · `waybar` · `kitty` · `hyprpaper` · `hyprlock` · `hypridle` · `xdg-desktop-portal-hyprland` · `hyprland-qtutils` — all from the `solopasha/hyprland` COPR, which wayblue enables.
+`waybar` · `kitty` · `hyprpaper` · `hyprlock` · `hypridle` · `xdg-desktop-portal-hyprland` · `hyprland-qtutils` are present in the wayblue base. During the build, obsidian-blue disables the older bundled Hyprland COPRs and upgrades the compositor itself to the newer `lionheartp/Hyprland` `hyprland-git` track.
 
 ---
 
@@ -28,13 +28,14 @@ Fedora Atomic
 
 | Package            | Purpose                                                   |
 | ------------------ | --------------------------------------------------------- |
-| `hyprland-plugins` | Official plugins (border++, hyprexpo, hyprtrails, …)      |
 | `hyprpicker`       | Colour picker                                             |
 | `hyprshot`         | Screenshot utility                                        |
 | `hyprpolkitagent`  | Polkit authentication agent                               |
 | `hyprsunset`       | Blue-light filter — replaces `wlsunset` from wayblue base |
 | `hyprland-contrib` | Community scripts (grimblast, etc.)                       |
 | `satty`            | Screenshot annotation                                     |
+
+`hyprland-plugins` is intentionally not layered from RPMs here: the published package hard-pins stable `hyprland = 0.55.x`, which blocks newer `hyprland-git` updates.
 
 ### Added: Modern Hyprland-Dots dependencies
 
