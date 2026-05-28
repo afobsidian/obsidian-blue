@@ -46,6 +46,7 @@ modules:
         - jdxcode-mise.repo # omadora: version manager
         - vscode.repo
     install:
+      skip-unavailable: true
       install-weak-deps: false
       packages:
         # ── Core Hyprland packages (upgrade from sdegler/hyprland COPR) ──────
