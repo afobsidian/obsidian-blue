@@ -44,7 +44,6 @@ modules:
         - lionheartp-hyprland.repo
         - sdegler-hyprland.repo
         - jdxcode-mise.repo # omadora: version manager
-        - vscode.repo
     install:
       install-weak-deps: false
       packages:
@@ -154,11 +153,7 @@ modules:
         - dbus-devel # bluetui/libdbus-sys build dep; removed after build
 
         # ── Bluefin DX: container runtimes ──────────────────────────────────
-        - docker-ce
-        - docker-ce-cli
-        - containerd.io
-        - docker-buildx-plugin
-        - docker-compose-plugin
+        # Docker removed: using podman instead
 
         # ── Bluefin DX: IDE & Kubernetes tooling ────────────────────────────
         - code # VS Code from Microsoft repo
@@ -218,8 +213,6 @@ modules:
         # that the dotfiles now use; make sure the backing services start too.
         - NetworkManager.service
         - bluetooth.service
-        - docker.socket
-        - docker.service
         - podman.socket
         # SDDM replaces greetd as the display manager; mask greetd so it can't
         # accidentally be activated by anything pulling in the unit.
