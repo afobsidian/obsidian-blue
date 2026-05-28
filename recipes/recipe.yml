@@ -138,6 +138,7 @@ modules:
         - yad # dialog boxes used by KooL scripts
         - yt-dlp # video downloader
         - imv # image viewer
+        - NetworkManager-tui
 
         # ── Upstream-installed extras: runtime deps ─────────────────────────
         - python3-gobject # nwg-displays GTK bindings
