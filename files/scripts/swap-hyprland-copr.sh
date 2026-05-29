@@ -3,10 +3,9 @@
 set -euo pipefail
 
 # Disable the solopasha/hyprland COPR shipped in the wayblue base image.
-# Prefer lionheartp/Hyprland COPR; use sdegler/hyprland only as a fallback.
+# Prefer lionheartp/Hyprland COPR.
 SOLOPASHA_REPO="/etc/yum.repos.d/_copr:copr.fedorainfracloud.org:solopasha:hyprland.repo"
 LION_REPO="/etc/yum.repos.d/lionheartp-hyprland.repo"
-SDEGLER_REPO="/etc/yum.repos.d/sdegler-hyprland.repo"
 
 if [[ -f "${SOLOPASHA_REPO}" ]]; then
     sed -i 's/^enabled=1/enabled=0/' "${SOLOPASHA_REPO}"
@@ -20,5 +19,5 @@ if [[ -f "${LION_REPO}" ]]; then
     sed -i 's/^enabled=.*/enabled=1/' "${LION_REPO}" || true
     echo "Ensured lionheartp/Hyprland COPR is enabled."
 else
-    echo "lionheartp/Hyprland COPR repo file not found; sdegler will be used as fallback if available."
+    echo "lionheartp/Hyprland COPR repo file not found; proceeding without a Hyprland COPR."
 fi

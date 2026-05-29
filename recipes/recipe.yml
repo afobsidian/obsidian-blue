@@ -42,14 +42,16 @@ modules:
       files:
         - https://download.docker.com/linux/fedora/docker-ce.repo
         - lionheartp-hyprland.repo
-        - sdegler-hyprland.repo
         - jdxcode-mise.repo # omadora: version manager
     install:
+      skip-unavailable: true
+      skip-broken: true
       install-weak-deps: false
       packages:
         # ── Core Hyprland packages (upgrade from lionheartp/hyprland COPR) ──────
         # wayblue base installs these from the now-abandoned solopasha COPR;
-        # listing them here ensures dnf upgrades them from sdegler.
+        # listing them here ensures dnf upgrades them from lionheartp.
+        - hyprland-git
         - hyprland
         - xdg-desktop-portal-hyprland
         - hyprpaper
@@ -136,6 +138,7 @@ modules:
         - yad # dialog boxes used by KooL scripts
         - yt-dlp # video downloader
         - imv # image viewer
+        - NetworkManager-tui
 
         # ── Upstream-installed extras: runtime deps ─────────────────────────
         - python3-gobject # nwg-displays GTK bindings
@@ -169,7 +172,6 @@ modules:
         - jq
         - yq
         - zsh
-        - fish
 
         # ── Bluefin DX: performance profiling (Brendan Gregg toolkit) ───────
         - perf
