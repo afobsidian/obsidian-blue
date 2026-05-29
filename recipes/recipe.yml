@@ -40,7 +40,6 @@ modules:
     repos:
       cleanup: true
       files:
-        - https://download.docker.com/linux/fedora/docker-ce.repo
         - lionheartp-hyprland.repo
         - jdxcode-mise.repo # omadora: version manager
     install:
