@@ -42,6 +42,7 @@ modules:
       files:
         - lionheartp-hyprland.repo
         - jdxcode-mise.repo # omadora: version manager
+        - tailscale.repo # official tailscale repository
     install:
       skip-unavailable: true
       skip-broken: true
@@ -171,6 +172,7 @@ modules:
         - jq
         - yq
         - zsh
+        - tailscale
 
         # ── Bluefin DX: performance profiling (Brendan Gregg toolkit) ───────
         - perf
@@ -215,6 +217,7 @@ modules:
         - NetworkManager.service
         - bluetooth.service
         - podman.socket
+        - tailscaled.service
         # SDDM replaces greetd as the display manager; mask greetd so it can't
         # accidentally be activated by anything pulling in the unit.
         - sddm.service
