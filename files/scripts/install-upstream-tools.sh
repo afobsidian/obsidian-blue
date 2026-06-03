@@ -4,6 +4,7 @@ set -euo pipefail
 
 readonly CATPPUCCIN_SDDM_VERSION="1.1.2"
 readonly LAZYGIT_VERSION="0.61.1"
+readonly MONIQUE_VERSION="0.6.5"
 readonly NWG_DISPLAYS_VERSION="0.3.28"
 readonly WALLUST_VERSION="3.5.2"
 readonly MATUGEN_VERSION="4.1.0"
@@ -129,6 +130,29 @@ with zipfile.ZipFile('${theme_zip}', 'r') as z:
     mkdir -p /usr/share/sddm/themes
     cp -r "${extract_dir}/${theme_name}" /usr/share/sddm/themes/
 }
+install_monique() {
+    local tarball="${WORKDIR}/monique.tar.gz"
+    local src_dir="${WORKDIR}/monique"
+
+    mkdir -p "${src_dir}"
+    download \
+        "https://github.com/ToRvaLDz/monique/archive/refs/tags/v${MONIQUE_VERSION}.tar.gz" \
+        "${tarball}"
+    tar -xzf "${tarball}" -C "${src_dir}" --strip-components=1
+
+    (
+        cd "${src_dir}"
+        python3 -m build --wheel --no-isolation
+        python3 -m installer dist/*.whl
+        install -Dm644 "data/com.github.monique.desktop" "/usr/share/applications/com.github.monique.desktop"
+        install -Dm644 "data/com.github.monique.svg" "/usr/share/pixmaps/com.github.monique.svg"
+        install -Dm644 "data/com.github.monique.rules" "/usr/share/polkit-1/rules.d/com.github.monique.rules"
+        install -Dm644 "data/moniqued.service" "/usr/lib/systemd/user/moniqued.service"
+        install -Dm644 "LICENSE" "/usr/share/licenses/monique/LICENSE"
+    )
+}
+
+install_monique
 
 install_lazygit
 install_nwg_displays

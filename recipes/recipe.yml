@@ -141,15 +141,16 @@ modules:
         - NetworkManager-tui
 
         # ── Upstream-installed extras: runtime deps ─────────────────────────
-        - python3-gobject # nwg-displays GTK bindings
+        - python3-gobject # nwg-displays / monique GTK bindings
         - python3-i3ipc # nwg-displays sway IPC integration
+        - python3-pyudev # monique Niri hotplug detection
         - gtk-layer-shell # nwg-displays overlay support
 
         # ── Upstream-installed extras: build deps ───────────────────────────
-        - python3-build # build nwg-displays wheel from source
-        - python3-installer # install nwg-displays wheel into the image
-        - python3-setuptools # nwg-displays packaging metadata
-        - python3-wheel # nwg-displays wheel build backend
+        - python3-build # build nwg-displays / monique wheels from source
+        - python3-installer # install nwg-displays / monique wheels into the image
+        - python3-setuptools # nwg-displays / monique packaging metadata
+        - python3-wheel # nwg-displays / monique wheel build backend
         - cargo # build wallust, matugen, bluetui, eza, impala from source
         - rust # build wallust, matugen, bluetui, eza, impala from source
         - gcc # linker for cargo builds
@@ -226,6 +227,8 @@ modules:
     user:
       enabled:
         - podman.socket
+        # Monique daemon: auto-applies monitor profiles on hotplug
+        - moniqued.service
         # Run-once-per-image-version omadora onboarding (first graphical login
         # after install or rebase).  The service checks a build stamp and exits
         # immediately when the image version has not changed.
