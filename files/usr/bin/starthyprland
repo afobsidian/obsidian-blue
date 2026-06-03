@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Wrapper that delegates to start-hyprland (the crash-monitoring, safe-env launcher)
+# instead of calling Hyprland directly.
+
+set -euo pipefail
+
+hyprland_conf="$HOME/.config/hypr/hyprland.conf"
+default_conf="/usr/share/hyprland/hyprland.conf"
+
+if [ -f "$hyprland_conf" ]; then
+    exec start-hyprland -- --config "$hyprland_conf"
+else
+    exec start-hyprland -- --config "$default_conf"
+fi
