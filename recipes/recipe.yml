@@ -209,7 +209,12 @@ modules:
       - source: usr
         destination: /usr
 
-  # ── 4. Enable systemd services ───────────────────────────────────────────────
+  # ── 4. Install upstream packages not shipped in enabled Fedora repos ───────
+  - type: script
+    scripts:
+      - install-upstream-tools.sh
+
+  # ── 5. Enable systemd services ───────────────────────────────────────────────
   - type: systemd
     system:
       enabled:
@@ -234,7 +239,7 @@ modules:
         # immediately when the image version has not changed.
         - obsidian-blue-onboarding.service
 
-  # ── 5. Deploy omadora submodule into /etc/skel ───────────────────────────────
+  # ── 6. Deploy omadora submodule into /etc/skel ───────────────────────────────
   # /etc/skel is applied at account creation for new users.
   # Existing users get omadora via the obsidian-blue-onboarding user service
   # which copies/refreshes ~/.local/share/omadora on first graphical login and
@@ -244,7 +249,7 @@ modules:
       - source: omadora
         destination: /etc/skel/.local/share/omadora
 
-  # ── 5b. Deploy omadora app configs into /etc/skel/.config ───────────────────
+  # ── 7. Deploy omadora app configs into /etc/skel/.config ───────────────────
   # Without this, a fresh account has no ~/.config/hypr/hyprland.conf when
   # Hyprland starts for the first time, so the user sees a blank desktop with no
   # waybar, mako, or keybindings.  Shipping these configs in /etc/skel ensures
@@ -260,7 +265,7 @@ modules:
       - source: omadora/default/plymouth
         destination: /usr/share/plymouth/themes/sliced
 
-  # ── 5c. Deploy system-level config that omadora's install script applies ────
+  # ── 8. Deploy system-level config that omadora's install script applies ────
   # On a conventional Fedora install these are written with `sudo` by
   # omadora's install script.  On an immutable image we bake them in at build
   # time instead:
@@ -272,23 +277,18 @@ modules:
       - source: etc
         destination: /etc
 
-  # ── 5d. System config that requires running commands (Nautilus icon symlinks) ─
+  # ── 9. System config that requires running commands (Nautilus icon symlinks) ─
   - type: script
     scripts:
       - setup-image-config.sh
 
-  # ── 6. Stamp the omadora skel with the image build version ───────────────────
+  # ── 10. Stamp the omadora skel with the image build version ─────────────────
   # The onboarding service compares this stamp to detect rebase/update events.
   - type: script
     scripts:
       - write-build-version.sh
 
-  # ── 7. Install upstream packages not shipped in enabled Fedora repos ───────
-  - type: script
-    scripts:
-      - install-upstream-tools.sh
-
-  # ── 8. Remove build-only deps used by upstream installers ──────────────────
+  # ── 11. Remove build-only deps used by upstream installers ─────────────────
   - type: dnf
     remove:
       packages:
@@ -303,7 +303,7 @@ modules:
         - dbus-devel
         - pipewire-devel
 
-  # ── 9. Default Flatpaks (installed on first boot, not baked in) ──────────────
+  # ── 12. Default Flatpaks (installed on first boot, not baked in) ───────────
   - type: default-flatpaks
     configurations:
       - notify: true
@@ -316,5 +316,5 @@ modules:
           - io.podman_desktop.PodmanDesktop
           - org.gnome.Boxes
 
-  # ── 10. Signing ───────────────────────────────────────────────────────────────
+  # ── 13. Signing ─────────────────────────────────────────────────────────────
   - type: signing
