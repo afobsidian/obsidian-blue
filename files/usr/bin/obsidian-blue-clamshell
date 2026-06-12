@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+#
+# obsidian-blue-clamshell — manage clamshell mode on Hyprland.
+#
+# Derived from hyprland-clamshell (https://github.com/Kore29/hyprland-clamshell)
+# with auto-detection of the internal display so no configuration is needed.
+#
+# Usage (in hyprland.conf):
+#   bindl = , switch:on:Lid Switch, exec, obsidian-blue-clamshell close
+#   bindl = , switch:off:Lid Switch, exec, obsidian-blue-clamshell open
+#   exec-once = obsidian-blue-clamshell check
+
+set -euo pipefail
+
+ICON_LAPTOP="computer-laptop"
+ICON_MONITOR="video-display"
+
+# ── Auto-detect the internal display ────────────────────────────────────────
+# Internal laptop panels are almost always named eDP-* or, increasingly on
+# newer kernels/laptops, share the connector type "LVDS" or "DSI".  We look
+# for the first monitor whose name starts with eDP — if none is found we
+# fall back to whatever `hyprctl monitors` reports as the monitor whose
+# width × height matches the highest internal-looking resolution.
+detect_internal_display() {
+    local name
+    name=$(hyprctl monitors -j 2>/dev/null \
+        | python3 -c "
+import sys, json
+monitors = json.load(sys.stdin)
+for m in monitors:
+    if m['name'].startswith('eDP') or m.get('isLaptop', False):
+        print(m['name'])
+        sys.exit(0)
+# Fallback: pick the monitor with the smallest physical size (likely the panel)
+if monitors:
+    monitors.sort(key=lambda m: m['width'] * m['height'])
+    print(monitors[0]['name'])
+" 2>/dev/null) || true
+
+    echo "${name}"
+}
+
+INTERNAL_DISPLAY="$(detect_internal_display)"
+[[ -z "${INTERNAL_DISPLAY}" ]] && { echo "obsidian-blue-clamshell: could not detect internal display" >&2; exit 1; }
+
+# ── Helpers ─────────────────────────────────────────────────────────────────
+notify_user() {
+    notify-send -u low -i "$3" "$1" "$2"
+}
+
+# ── Modes ───────────────────────────────────────────────────────────────────
+mode_close() {
+    # Only disable the internal screen if an external monitor is connected
+    local count
+    count=$(hyprctl monitors all -j 2>/dev/null | python3 -c "import sys,json;print(len(json.load(sys.stdin)))" 2>/dev/null) || count=0
+    if [[ "${count}" -gt 1 ]]; then
+        hyprctl keyword monitor "${INTERNAL_DISPLAY}, disable"
+    fi
+}
+
+mode_open() {
+    hyprctl keyword monitor "${INTERNAL_DISPLAY}, preferred, auto, 1"
+}
+
+# ── Dispatch ────────────────────────────────────────────────────────────────
+case "${1:-}" in
+    close)
+        mode_close
+        notify_user "Clamshell Mode" "External monitor active. Laptop screen disabled." "$ICON_MONITOR"
+        ;;
+    open)
+        mode_open
+        notify_user "Laptop Mode" "Laptop screen enabled." "$ICON_LAPTOP"
+        ;;
+    check)
+        # Sync state on startup / Hyprland reload (silent)
+        if grep -q "open" /proc/acpi/button/lid/*/state 2>/dev/null; then
+            mode_open
+        else
+            mode_close
+        fi
+        ;;
+    *)
+        echo "Usage: $0 [open|close|check]" >&2
+        exit 1
+        ;;
+esac
