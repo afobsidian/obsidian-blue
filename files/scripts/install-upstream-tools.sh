@@ -75,7 +75,7 @@ install_nwg_displays() {
     (
         cd "${src_dir}"
         python3 -m build --wheel --no-isolation
-        python3 -m installer dist/*.whl
+        python3 -m installer --prefix /usr dist/*.whl
         install -Dm644 "nwg-displays.desktop" "/usr/share/applications/nwg-displays.desktop"
         install -Dm644 "nwg-displays.svg" "/usr/share/pixmaps/nwg-displays.svg"
         install -Dm644 "LICENSE" "/usr/share/licenses/nwg-displays/LICENSE"
@@ -143,7 +143,7 @@ install_monique() {
     (
         cd "${src_dir}"
         python3 -m build --wheel --no-isolation
-        python3 -m installer dist/*.whl
+        python3 -m installer --prefix /usr dist/*.whl
         install -Dm644 "data/com.github.monique.desktop" "/usr/share/applications/com.github.monique.desktop"
         install -Dm644 "data/com.github.monique.svg" "/usr/share/pixmaps/com.github.monique.svg"
         install -Dm644 "data/com.github.monique.rules" "/usr/share/polkit-1/rules.d/com.github.monique.rules"
