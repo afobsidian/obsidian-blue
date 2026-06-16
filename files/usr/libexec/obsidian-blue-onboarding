@@ -218,10 +218,6 @@ if [[ -d "$OMADORA_CURRENT_THEME" ]]; then
         ln -snf "$OMADORA_CURRENT_THEME/neovim.lua" \
             "$HOME/.config/nvim/lua/plugins/theme.lua" 2>/dev/null || true
 
-    mkdir -p "$HOME/.config/mako"
-    [[ ! -f "$HOME/.config/mako/config" ]] && \
-        ln -snf "$OMADORA_CURRENT_THEME/mako.ini" \
-            "$HOME/.config/mako/config" 2>/dev/null || true
 fi
 
 # ── Step 8: LazyVim nvim starter ──────────────────────────────────────────────
@@ -358,10 +354,10 @@ if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]] && command -v hyprctl &>/dev/null
             setsid uwsm-app -- waybar >/dev/null 2>&1 & disown
             echo "  Started waybar"
         }
-        pgrep -x mako >/dev/null 2>&1 || {
-            setsid uwsm-app -- mako >/dev/null 2>&1 & disown
-            echo "  Started mako"
-        }
+        if command -v swaync &>/dev/null && ! pgrep -x swaync >/dev/null 2>&1; then
+            setsid uwsm-app -- swaync >/dev/null 2>&1 & disown
+            echo "  Started swaync"
+        fi
     fi
 fi
 

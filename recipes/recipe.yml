@@ -100,7 +100,6 @@ modules:
         - gvfs-smb # Samba/SMB network shares
         - iwd # WiFi daemon
         - libxkbcommon-utils # xkbcli inspect etc.
-        - mako # notification daemon (omadora default)
         - mise # version manager (jdxcode COPR)
         - nautilus # omadora default file manager
         - pipewire-devel # cargo build dep (impala); removed after build
@@ -193,8 +192,10 @@ modules:
         - tuned-ppd
         # wayblue ships wlsunset; hyprsunset is the Hyprland-native replacement
         - wlsunset
-        # wayblue ships dunst; swaync is what KooL dots expect
+        # wayblue ships dunst; mako is pulled by omadora but conflicts with
+        # swaync for org.freedesktop.Notifications.
         - dunst
+        - mako
         # greetd (+ its greeter frontends) is replaced by SDDM; removing the
         # package ensures it can never be started even when ostree's /etc
         # 3-way merge preserves old enable symlinks from a prior deployment.
@@ -252,7 +253,7 @@ modules:
   # ── 7. Deploy omadora app configs into /etc/skel/.config ───────────────────
   # Without this, a fresh account has no ~/.config/hypr/hyprland.conf when
   # Hyprland starts for the first time, so the user sees a blank desktop with no
-  # waybar, mako, or keybindings.  Shipping these configs in /etc/skel ensures
+  # waybar, swaync, or keybindings.  Shipping these configs in /etc/skel ensures
   # they exist before Hyprland launches.  The onboarding service still runs to
   # handle post-rebase config refreshes and interactive setup (theme, shell, …).
   #

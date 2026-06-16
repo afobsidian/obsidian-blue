@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Bridge direct Hyprland launches into the systemd user graphical session.
+
+set -euo pipefail
+
+import_vars=(
+    WAYLAND_DISPLAY
+    DISPLAY
+    XAUTHORITY
+    XDG_CURRENT_DESKTOP
+    XDG_SESSION_DESKTOP
+    XDG_SESSION_TYPE
+    XDG_RUNTIME_DIR
+    HYPRLAND_INSTANCE_SIGNATURE
+    SWAYSOCK
+)
+
+systemctl --user import-environment "${import_vars[@]}" 2>/dev/null || true
+dbus-update-activation-environment --systemd --all 2>/dev/null || true
+
+targets=(
+    wayland-session@Hyprland.target
+    hyprland-session.target
+    obsidian-blue-hyprland-session.target
+)
+
+for target in "${targets[@]}"; do
+    if systemctl --user cat "$target" >/dev/null 2>&1; then
+        systemctl --user start "$target" >/dev/null 2>&1 || true
+        exit 0
+    fi
+done
+
+systemctl --user start graphical-session.target >/dev/null 2>&1 || true
