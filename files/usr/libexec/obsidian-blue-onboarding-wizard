@@ -143,7 +143,7 @@ pick_theme() {
 # ── Shell integration ────────────────────────────────────────────────────────
 setup_shell_integration() {
     local marker="# obsidian-blue: omadora shell integration"
-    local bash_line='[[ -f ~/.local/share/omadora/default/bashrc ]] && source ~/.local/share/omadora/default/bashrc'
+    local zsh_marker="# obsidian-blue: omadora zsh integration"
 
     echo
     gum style --foreground 212 --bold "  Shell integration"
@@ -158,20 +158,29 @@ setup_shell_integration() {
     # zsh
     if command -v zsh &>/dev/null; then
         local zshrc="$HOME/.zshrc"
-        if ! grep -qF "$marker" "$zshrc" 2>/dev/null; then
+        if [[ -f "$zshrc" ]]; then
+            sed -i \
+                -e '/^# obsidian-blue: omadora shell integration$/d' \
+                -e '/^\[\[ -f ~\/.local\/share\/omadora\/default\/bashrc \]\] && source ~\/.local\/share\/omadora\/default\/bashrc$/d' \
+                "$zshrc"
+        fi
+
+        if ! grep -qF "$zsh_marker" "$zshrc" 2>/dev/null; then
             echo
-            if gum confirm "  zsh is installed — add omadora shell integration to ~/.zshrc?"; then
+            if gum confirm "  zsh is installed — add omadora PATH integration to ~/.zshrc?"; then
                 {
                     echo ""
-                    echo "$marker"
-                    echo "$bash_line"
+                    echo "$zsh_marker"
+                    echo 'export OMADORA_PATH="${OMADORA_PATH:-$HOME/.local/share/omadora}"'
+                    echo 'path=("$HOME/.local/share/omadora/bin" "$HOME/.local/bin" "$HOME/.cargo/bin" $path)'
+                    echo 'typeset -U path'
                 } >> "$zshrc"
-                check "zsh   →  omadora integration added to ~/.zshrc"
+                check "zsh   →  omadora PATH integration added to ~/.zshrc"
             else
-                info  "zsh   →  skipped (add manually: $bash_line)"
+                info  "zsh   →  skipped (bash integration is not zsh-compatible)"
             fi
         else
-            check "zsh   →  omadora integration already in ~/.zshrc"
+            check "zsh   →  omadora PATH integration already in ~/.zshrc"
         fi
     fi
 
