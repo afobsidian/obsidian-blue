@@ -239,6 +239,10 @@ modules:
         # after install or rebase).  The service checks a build stamp and exits
         # immediately when the image version has not changed.
         - obsidian-blue-onboarding.service
+      masked:
+        # omadora starts swaync via notificationctl from Hyprland autostart.
+        # Mask the package unit so systemd cannot race that daemon.
+        - swaync.service
 
   # ── 6. Deploy omadora submodule into /etc/skel ───────────────────────────────
   # /etc/skel is applied at account creation for new users.
@@ -249,6 +253,10 @@ modules:
     files:
       - source: omadora
         destination: /etc/skel/.local/share/omadora
+      # obsidian-blue overrides omadora's default Hyprland autostart to
+      # activate graphical-session.target and avoid starting removed daemons.
+      - source: obsidian-blue/omadora/default/hypr
+        destination: /etc/skel/.local/share/omadora/default/hypr
 
   # ── 7. Deploy omadora app configs into /etc/skel/.config ───────────────────
   # Without this, a fresh account has no ~/.config/hypr/hyprland.conf when

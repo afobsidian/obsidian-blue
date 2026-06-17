@@ -1,49 +1,14 @@
 #!/usr/bin/env bash
-# Wrapper that delegates to start-hyprland and makes direct Hyprland launches
-# participate in the systemd user graphical session.
+# Wrapper that delegates to start-hyprland (the crash-monitoring, safe-env launcher)
+# instead of calling Hyprland directly.
 
 set -euo pipefail
 
 hyprland_conf="$HOME/.config/hypr/hyprland.conf"
 default_conf="/usr/share/hyprland/hyprland.conf"
-session_hook="/usr/libexec/obsidian-blue-graphical-session"
-runtime_dir="${XDG_RUNTIME_DIR:-/tmp}"
-
-export XDG_CURRENT_DESKTOP="${XDG_CURRENT_DESKTOP:-Hyprland}"
-export XDG_SESSION_DESKTOP="${XDG_SESSION_DESKTOP:-Hyprland}"
-export XDG_SESSION_TYPE="${XDG_SESSION_TYPE:-wayland}"
 
 if [ -f "$hyprland_conf" ]; then
-    selected_conf="$hyprland_conf"
+    exec start-hyprland -- --config "$hyprland_conf"
 else
-    selected_conf="$default_conf"
+    exec start-hyprland -- --config "$default_conf"
 fi
-
-mkdir -p "$runtime_dir/obsidian-blue"
-generated_conf="$(mktemp "$runtime_dir/obsidian-blue/hyprland-session.XXXXXX.conf")"
-
-cleanup() {
-    rm -f "$generated_conf"
-}
-trap cleanup EXIT
-
-{
-    printf 'source = %s\n' "$selected_conf"
-    printf 'exec-once = %s\n' "$session_hook"
-} >"$generated_conf"
-
-set +e
-start-hyprland -- --config "$generated_conf"
-status=$?
-set -e
-
-for target in \
-    wayland-session@Hyprland.target \
-    hyprland-session.target \
-    obsidian-blue-hyprland-session.target \
-    graphical-session.target
-do
-    systemctl --user stop "$target" >/dev/null 2>&1 || true
-done
-
-exit "$status"
