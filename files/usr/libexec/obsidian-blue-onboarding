@@ -141,6 +141,41 @@ if [[ -d "$HYPR_SKEL_DIR" ]]; then
     done
 fi
 
+# Existing users may sync Hyprland configs across machines.  Add the
+# obsidian-blue session anchor in a guarded form so non-obsidian hosts no-op.
+SESSION_AUTOSTART_LINE="exec-once = sh -c 'systemctl --user cat obsidian-blue-session.target >/dev/null 2>&1 && systemctl --user start obsidian-blue-session.target || true'"
+ensure_obsidian_session_autostart() {
+    local autostart="$1"
+    [[ -f "$autostart" ]] || return 0
+
+    sed -i \
+        -e '/obsidian-blue-activate-session.service/d' \
+        -e '/obsidian-blue-session.target/d' \
+        "$autostart"
+
+    local tmp
+    tmp="$(mktemp "${TMPDIR:-/tmp}/obsidian-blue-autostart.XXXXXX")"
+    if grep -q 'dbus-update-activation-environment' "$autostart"; then
+        awk -v line="$SESSION_AUTOSTART_LINE" '
+            { print }
+            !inserted && /dbus-update-activation-environment/ {
+                print line
+                inserted = 1
+            }
+        ' "$autostart" > "$tmp"
+    else
+        {
+            printf '%s\n' "$SESSION_AUTOSTART_LINE"
+            cat "$autostart"
+        } > "$tmp"
+    fi
+    mv "$tmp" "$autostart"
+    echo "  Ensured obsidian-blue session autostart: $autostart"
+}
+
+ensure_obsidian_session_autostart "$HOME/.config/hypr/configs/autostart.conf"
+ensure_obsidian_session_autostart "$HOME/.config/hypr/autostart.conf"
+
 # ── Step 4: Shell integration — add omadora source to ~/.bashrc ──────────────
 OMADORA_MARKER="# obsidian-blue: omadora shell integration"
 OMADORA_RC_LINE='[[ -f ~/.local/share/omadora/default/bashrc ]] && source ~/.local/share/omadora/default/bashrc'

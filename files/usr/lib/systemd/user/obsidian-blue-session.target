@@ -1,0 +1,3 @@
+[Unit]
+Description=obsidian-blue Hyprland session anchor
+Wants=graphical-session.target
