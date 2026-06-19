@@ -196,6 +196,9 @@ modules:
         # swaync for org.freedesktop.Notifications.
         - dunst
         - mako
+        # fcitx5 is the input method for this image; ibus leaves an IBus portal
+        # D-Bus activator that fails noisily when no ibus-daemon is running.
+        - ibus
         # greetd (+ its greeter frontends) is replaced by SDDM; removing the
         # package ensures it can never be started even when ostree's /etc
         # 3-way merge preserves old enable symlinks from a prior deployment.
