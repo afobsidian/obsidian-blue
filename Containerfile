@@ -1,4 +1,4 @@
-ARG BASE_IMAGE="ghcr.io/wayblueorg/hyprland-nvidia-open@sha256:6422689457c8693351b611de963c52562ca8e1c180f22bc8db784a96575435e8"
+ARG BASE_IMAGE="ghcr.io/wayblueorg/hyprland-nvidia-open@sha256:c55a20005ca35f0a6feb3ec89e6c780e7ac355f016545eab4f5cff2e216d1f4b"
 FROM "${BASE_IMAGE}" AS obsidian-blue
 
 # This stage is responsible for holding onto
@@ -37,9 +37,6 @@ ARG CONFIG_DIRECTORY="/tmp/files"
 ARG MODULE_DIRECTORY="/tmp/modules"
 ARG IMAGE_NAME="obsidian-blue"
 ARG BASE_IMAGE="ghcr.io/wayblueorg/hyprland-nvidia-open"
-ARG FORCE_COLOR=1
-ARG CLICOLOR_FORCE=1
-ARG RUST_LOG_STYLE=always
 # Key RUN
 RUN --mount=type=bind,from=stage-keys,src=/keys,dst=/tmp/keys \
   mkdir -p /etc/pki/containers/ \
@@ -219,10 +216,10 @@ RUN \
 
 # Labels are added last since they cause cache misses with buildah
 LABEL io.artifacthub.package.readme-url="https://raw.githubusercontent.com/blue-build/cli/main/README.md"
-LABEL org.blue-build.build-id="6326e229-f209-40fc-bf32-7685e2fc7ba6"
-LABEL org.opencontainers.image.base.digest="sha256:6422689457c8693351b611de963c52562ca8e1c180f22bc8db784a96575435e8"
+LABEL org.blue-build.build-id="a5fe4063-8a84-4d86-bb2f-55d26f6a233a"
+LABEL org.opencontainers.image.base.digest="sha256:c55a20005ca35f0a6feb3ec89e6c780e7ac355f016545eab4f5cff2e216d1f4b"
 LABEL org.opencontainers.image.base.name="ghcr.io/wayblueorg/hyprland-nvidia-open:latest"
-LABEL org.opencontainers.image.created="2026-06-11T00:02:39.045000070+00:00"
+LABEL org.opencontainers.image.created="2026-06-22T08:47:54.671434042+00:00"
 LABEL org.opencontainers.image.description="Custom immutable Fedora Atomic image. wayblue hyprland base + omadora Hyprland desktop + bluefin-dx developer tooling + extra opinionated Hyprland ecosystem packages."
 LABEL org.opencontainers.image.source=""
 LABEL org.opencontainers.image.title="obsidian-blue"

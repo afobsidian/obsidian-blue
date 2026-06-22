@@ -4,7 +4,7 @@ set -euo pipefail
 
 readonly CATPPUCCIN_SDDM_VERSION="1.1.2"
 readonly LAZYGIT_VERSION="0.61.1"
-readonly MONIQUE_VERSION="0.6.5"
+readonly MONIQUE_VERSION="0.6.7"
 readonly NWG_DISPLAYS_VERSION="0.3.28"
 readonly WALLUST_VERSION="3.5.2"
 readonly MATUGEN_VERSION="4.1.0"
