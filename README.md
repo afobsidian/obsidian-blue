@@ -14,9 +14,9 @@ Fedora Atomic
 
 ### From wayblue common base (already provided, not re-added)
 
-`rofi-wayland` · `wofi` · `fzf` · `just` · `distrobox` · `wl-clipboard` · `pavucontrol` · `playerctl` · `pamixer` · `brightnessctl` · `blueman` · `slurp` · `grim` · `dunst`_· `wlsunset`_ · `kanshi` · `wlr-randr` · `thunar` · `thunar-archive-plugin` · `thunar-volman` · `xarchiver` · `wireplumber` · `pipewire` · `qt5-qtwayland` · `qt6-qtwayland` · `vim` · and more
+`rofi-wayland` · `wofi` · `fzf` · `just` · `distrobox` · `wl-clipboard` · `pavucontrol` · `playerctl` · `pamixer` · `brightnessctl` · `blueman` · `slurp` · `grim` · `dunst`_· `wlsunset`_ · `kanshi` · `wlr-randr` · `xarchiver` · `wireplumber` · `pipewire` · `qt5-qtwayland` · `qt6-qtwayland` · `vim` · and more
 
-> \* `dunst` is replaced by `SwayNotificationCenter` and `wlsunset` is replaced by `hyprsunset` — both removed in this image.
+> \* `dunst` is replaced by `SwayNotificationCenter`, `wlsunset` is replaced by `hyprsunset`, and inherited Thunar packages are replaced by Dolphin — all removed in this image where applicable.
 
 ### From wayblue hyprland image (already provided, not re-added)
 
@@ -53,7 +53,7 @@ Packages not already in the wayblue base:
 | `wlogout`                     | Logout / power menu                                        |
 | `ImageMagick`                 | Image manipulation for wallpaper scripts                   |
 | `nwg-displays`                | Monitor management GUI                                     |
-| `tumbler`                     | Thumbnail service for Thunar                               |
+| `dolphin` · `kio-extras` · `ark` · `ffmpegthumbs` | KDE file manager, protocol support, archive integration, and thumbnails |
 | `yad` · `yt-dlp`              | Dialog boxes and video downloader used by KooL scripts     |
 | `imv`                         | Image viewer                                               |
 

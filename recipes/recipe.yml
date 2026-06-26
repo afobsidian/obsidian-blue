@@ -5,7 +5,7 @@
 # wayblue common base already provides (do NOT re-add):
 #   rofi-wayland, wofi, fzf, wl-clipboard, pavucontrol, playerctl, pamixer,
 #   distrobox, just, brightnessctl, blueman, slurp, grim, dunst,
-#   thunar, thunar-archive-plugin, thunar-volman, xarchiver,
+#   xarchiver,
 #   wireplumber, pipewire, pulseaudio-utils, network-manager-applet,
 #   qt5-qtwayland, qt6-qtwayland, wlsunset, kanshi, wlr-randr, vim, ...
 #
@@ -84,6 +84,7 @@ modules:
         - clang # cargo build dep (impala/bluetui); removed after build
         - dbus-tools # dbus-send etc.
         - du-dust # dust: intuitive du alternative
+        - dolphin # KDE file manager
         - evince # PDF viewer
         - fastfetch # system info display
         - fcitx5 # input method framework
@@ -98,6 +99,10 @@ modules:
         - gum # fancy shell scripts
         - gvfs-mtp # phone MTP access via Nautilus
         - gvfs-smb # Samba/SMB network shares
+        - kio-extras # Dolphin network/archive protocol support
+        - ark # archive integration for Dolphin
+        - ffmpegthumbs # video thumbnails for Dolphin
+        - kde-cli-tools # KDE helper tools used by Dolphin/KIO
         - iwd # WiFi daemon
         - libxkbcommon-utils # xkbcli inspect etc.
         - mise # version manager (jdxcode COPR)
@@ -133,7 +138,6 @@ modules:
         - kvantum
         - wlogout # logout / power menu
         - ImageMagick # wallpaper manipulation scripts
-        - tumbler # thumbnail service for Thunar (volman already in base)
         - yad # dialog boxes used by KooL scripts
         - yt-dlp # video downloader
         - imv # image viewer
@@ -199,6 +203,10 @@ modules:
         # fcitx5 is the input method for this image; ibus leaves an IBus portal
         # D-Bus activator that fails noisily when no ibus-daemon is running.
         - ibus
+        # Dolphin replaces the Thunar file manager inherited from wayblue.
+        - Thunar
+        - thunar-archive-plugin
+        - thunar-volman
         # greetd (+ its greeter frontends) is replaced by SDDM; removing the
         # package ensures it can never be started even when ostree's /etc
         # 3-way merge preserves old enable symlinks from a prior deployment.
