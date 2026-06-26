@@ -216,10 +216,10 @@ RUN \
 
 # Labels are added last since they cause cache misses with buildah
 LABEL io.artifacthub.package.readme-url="https://raw.githubusercontent.com/blue-build/cli/main/README.md"
-LABEL org.blue-build.build-id="6bfc5195-9978-4856-917b-98573ca39189"
+LABEL org.blue-build.build-id="357559e7-a569-4bd6-9348-17bfb5232b5a"
 LABEL org.opencontainers.image.base.digest="sha256:a2ff3ca63b5a38af8ca7ea147554e67f8e727c694381838ed21ced714f581c2e"
 LABEL org.opencontainers.image.base.name="ghcr.io/wayblueorg/hyprland-nvidia-open:latest"
-LABEL org.opencontainers.image.created="2026-06-26T09:20:23.097851389+00:00"
+LABEL org.opencontainers.image.created="2026-06-26T09:44:50.500734637+00:00"
 LABEL org.opencontainers.image.description="Custom immutable Fedora Atomic image. wayblue hyprland base + omadora Hyprland desktop + bluefin-dx developer tooling + extra opinionated Hyprland ecosystem packages."
 LABEL org.opencontainers.image.source=""
 LABEL org.opencontainers.image.title="obsidian-blue"

@@ -13,6 +13,8 @@ readonly EZA_VERSION="0.20.18"
 readonly IMPALA_VERSION="0.3.0"
 readonly TARGET_BIN_DIR="/usr/local/bin"
 readonly WORKDIR="$(mktemp -d)"
+readonly CARGO_HOME_DIR="${WORKDIR}/cargo-home"
+readonly CARGO_TARGET_DIR_PATH="${WORKDIR}/cargo-target"
 
 cleanup() {
     rm -rf "${WORKDIR}"
@@ -34,6 +36,27 @@ download() {
 
     echo "Neither curl nor wget is available for downloading ${url}" >&2
     exit 1
+}
+
+retry() {
+    local attempts="$1"
+    local delay="$2"
+    shift 2
+
+    local attempt=1
+    while true; do
+        if "$@"; then
+            return 0
+        fi
+
+        if (( attempt >= attempts )); then
+            return 1
+        fi
+
+        echo "Command failed; retrying in ${delay}s (${attempt}/${attempts}): $*" >&2
+        sleep "${delay}"
+        attempt=$((attempt + 1))
+    done
 }
 
 install_lazygit() {
@@ -95,9 +118,10 @@ install_wallust() {
 
     (
         cd "${src_dir}"
-        export CARGO_HOME="${WORKDIR}/cargo-home"
-        export CARGO_TARGET_DIR="${WORKDIR}/cargo-target"
-        cargo install --path . --locked --root /usr/local
+        export CARGO_HOME="${CARGO_HOME_DIR}"
+        export CARGO_NET_RETRY=5
+        export CARGO_TARGET_DIR="${CARGO_TARGET_DIR_PATH}"
+        retry 3 10 cargo install --path . --locked --root /usr/local
     )
 }
 
@@ -105,9 +129,10 @@ install_cargo_bin() {
     local name="$1"
     local version="$2"
 
-    export CARGO_HOME="${WORKDIR}/cargo-home"
-    export CARGO_TARGET_DIR="${WORKDIR}/cargo-target"
-    cargo install "${name}" --version "${version}" --locked --root /usr/local
+    export CARGO_HOME="${CARGO_HOME_DIR}"
+    export CARGO_NET_RETRY=5
+    export CARGO_TARGET_DIR="${CARGO_TARGET_DIR_PATH}"
+    retry 3 10 cargo install "${name}" --version "${version}" --locked --root /usr/local
 }
 
 trap cleanup EXIT
