@@ -4,13 +4,16 @@
 
 set -euo pipefail
 
+hyprland_lua="$HOME/.config/hypr/hyprland.lua"
 hyprland_conf="$HOME/.config/hypr/hyprland.conf"
 default_conf="/usr/share/hyprland/hyprland.conf"
 
 export OMADORA_PATH="${OMADORA_PATH:-$HOME/.local/share/omadora}"
 export PATH="$HOME/.local/share/omadora/bin:$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 
-if [ -f "$hyprland_conf" ]; then
+if [ -f "$hyprland_lua" ]; then
+    exec start-hyprland -- --config "$hyprland_lua"
+elif [ -f "$hyprland_conf" ]; then
     exec start-hyprland -- --config "$hyprland_conf"
 else
     exec start-hyprland -- --config "$default_conf"

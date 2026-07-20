@@ -29,7 +29,7 @@ if [[ -z "${OMADORA_PATH:-}" ]]; then
 fi
 export OMADORA_PATH
 export OMADORA_INSTALL="$OMADORA_PATH/install"
-export PATH="$OMADORA_PATH/bin:$PATH"
+export PATH="$OMADORA_PATH/bin:$OMADORA_PATH/libexec:$PATH"
 
 STATE_DIR="$HOME/.local/state/obsidian-blue"
 CONTEXT_FILE="$STATE_DIR/onboarding-context"

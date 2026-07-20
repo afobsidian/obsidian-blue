@@ -135,6 +135,9 @@ sudo systemctl reboot
 ## Building locally
 
 ```bash
+# Refresh Omadora from the branch selected in .gitmodules
+git submodule update --init --remote --checkout --depth 1 files/omadora
+
 # Install BlueBuild CLI
 podman run --pull always --rm ghcr.io/blue-build/cli:latest-installer | bash
 

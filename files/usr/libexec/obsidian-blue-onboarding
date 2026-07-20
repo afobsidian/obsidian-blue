@@ -50,7 +50,7 @@ LOG_FILE="$STATE_DIR/onboarding.log"
 # Subdirectories of ~/.local/share/omadora that are owned by the image
 # (refreshed on every rebase).  The config/ subdir is intentionally excluded
 # because ~/.config/<app> dirs copied from it are considered user-editable.
-OMADORA_IMAGE_DIRS=(bin default install migrations themes applications)
+OMADORA_IMAGE_DIRS=(bin completions default install lib libexec migrations themes applications)
 
 # Version of terminaltexteffects installed for the omadora screensaver.
 # Check https://github.com/ChrisBuilds/terminaltexteffects/releases when updating.
@@ -126,7 +126,7 @@ fi
 
 export OMADORA_PATH
 export OMADORA_INSTALL="$OMADORA_PATH/install"
-export PATH="$OMADORA_PATH/bin:$PATH"
+export PATH="$OMADORA_PATH/bin:$OMADORA_PATH/libexec:$PATH"
 
 # ── Step 1b: Rebuild font cache ───────────────────────────────────────────────
 mkdir -p "$HOME/.local/share/fonts"
