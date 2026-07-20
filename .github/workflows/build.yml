@@ -30,12 +30,6 @@ jobs:
         with:
           submodules: true
 
-      # .gitmodules selects Omadora's Fedora-current default branch. Advance
-      # the checkout on every image build so scheduled rebuilds pick up fixes
-      # without waiting for a separate gitlink bump in this repository.
-      - name: Update Omadora to the tracked branch tip
-        run: git submodule update --init --remote --checkout --depth 1 files/omadora
-
       - name: Build image
         id: build
         uses: blue-build/github-action@v1
