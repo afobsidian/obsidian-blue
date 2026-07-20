@@ -9,11 +9,11 @@
 #   wireplumber, pipewire, pulseaudio-utils, network-manager-applet,
 #   qt5-qtwayland, qt6-qtwayland, wlsunset, kanshi, wlr-randr, vim, ...
 #
-# wayblue hyprland image also provides (upgraded via sdegler/hyprland COPR):
+# wayblue hyprland image also provides (currently from its Craftidore COPR):
 #   hyprland, waybar, kitty, xdg-desktop-portal-hyprland,
-#   hyprpaper, hyprlock, hypridle, hyprland-qtutils
-#   (originally from solopasha/hyprland; that COPR is abandoned — we disable it
-#    at build time and upgrade these packages from sdegler/hyprland instead)
+#   hyprpaper, hyprlock, hypridle, hyprland-guiutils
+#   The recipe disables the inherited Hyprland COPR and replaces the entire
+#   ABI-sensitive stack with one matched Lionheart git snapshot set.
 
 name: obsidian-blue
 description: >-
@@ -23,24 +23,105 @@ description: >-
   + extra opinionated Hyprland ecosystem packages.
 
 # ─── Base image ────────────────────────────────────────────────────────────────
-# Change to hyprland-nvidia / hyprland-nvidia-open if you have an Nvidia GPU.
-base-image: ghcr.io/wayblueorg/hyprland-nvidia-open
+# The default image is hardware-neutral for Intel and AMD. Publish a separately
+# named recipe/tag if an Nvidia-specific Wayblue base is needed later.
+base-image: ghcr.io/wayblueorg/hyprland
 image-version: latest # only supported tag
 
 # ─── Build modules ─────────────────────────────────────────────────────────────
 modules:
-  # ── 1. Clear stale DNF cache entries; swap to lionheartp/hyprland COPR (fallback to sdegler if needed) ───────────
+  # ── 1. Clear stale DNF cache entries and disable inherited Hyprland COPRs ──
   - type: script
     scripts:
       - clear-rpmfusion-dnf-cache.sh
       - swap-hyprland-copr.sh
 
-  # ── 2. RPM repos + installs ──────────────────────────────────────────────────
+  # ── 2. Replace the complete ABI-sensitive Hyprland stack ─────────────────
+  # Lionheart publishes stable and git compositor/plugin lines in one COPR.
+  # Select only the git line: its plugins require the exact hyprland-git
+  # snapshot, and its current Aquamarine/hyprutils SONAMEs match that snapshot.
+  # Remove inherited packages first so an equal NEVRA from Wayblue's Craftidore
+  # COPR cannot survive merely because DNF considers it already installed.
   - type: dnf
     repos:
       cleanup: true
       files:
         - lionheartp-hyprland.repo
+    remove:
+      auto-remove: false
+      packages:
+        - hyprland
+        - hyprland-git
+        - hyprland-plugins
+        - hyprland-plugins-git
+        - hyprland-plugin-borders-plus-plus
+        - hyprland-plugin-borders-plus-plus-git
+        - hyprland-plugin-csgo-vulkan-fix
+        - hyprland-plugin-csgo-vulkan-fix-git
+        - hyprland-plugin-hyprbars
+        - hyprland-plugin-hyprbars-git
+        - hyprland-plugin-hyprfocus
+        - hyprland-plugin-hyprfocus-git
+        - aquamarine
+        - hyprcursor
+        - hyprgraphics
+        - hyprlang
+        - hyprutils
+        - hyprwire
+        - hyprtoolkit
+        - xdg-desktop-portal-hyprland
+        - hyprpaper
+        - hyprlock
+        - hypridle
+        - hyprland-qtutils
+        - hyprland-guiutils
+        - hyprland-qt-support
+        - hyprpicker
+        - hyprshot
+        - hyprpolkitagent
+        - hyprsunset
+        - hyprland-contrib
+    install:
+      install-weak-deps: false
+      # Fedora remains visible for non-Hyprland dependencies (for example
+      # libeis and polkit-qt6). The inherited Hyprland COPRs are disabled, all
+      # direct stack packages are removed first, and the post-build validator
+      # requires every replacement package to report the Lionheart origin.
+      allow-erasing: true
+      packages:
+        - hyprland-git
+        - hyprland-plugins-git
+        # Weak dependencies are disabled globally, so name the packaged plugin
+        # binaries explicitly. None is auto-loaded by the shipped config.
+        - hyprland-plugin-borders-plus-plus-git
+        - hyprland-plugin-csgo-vulkan-fix-git
+        - hyprland-plugin-hyprbars-git
+        - hyprland-plugin-hyprfocus-git
+        - aquamarine
+        - hyprcursor
+        - hyprgraphics
+        - hyprlang
+        - hyprutils
+        - hyprwire
+        - hyprtoolkit
+        - xdg-desktop-portal-hyprland
+        - hyprpaper
+        - hyprlock
+        - hypridle
+        # hyprland-guiutils obsoletes the retired hyprland-qtutils name.
+        - hyprland-guiutils
+        - hyprland-qt-support
+        - hyprpicker
+        - hyprshot
+        - hyprpolkitagent
+        - hyprsunset
+        - hyprland-contrib
+
+  # ── 3. Remaining RPM repos + installs ─────────────────────────────────────
+  - type: dnf
+    repos:
+      cleanup: true
+      files:
         - jdxcode-mise.repo # omadora: version manager
         - tailscale.repo # official tailscale repository
     install:
@@ -48,27 +129,9 @@ modules:
       skip-broken: true
       install-weak-deps: false
       packages:
-        # ── Core Hyprland packages (upgrade from lionheartp/hyprland COPR) ──────
-        # wayblue base installs these from the now-abandoned solopasha COPR;
-        # listing them here ensures dnf upgrades them from lionheartp.
-        - hyprland-git
-        - hyprland
-        - xdg-desktop-portal-hyprland
-        - hyprpaper
-        - hyprlock
-        - hypridle
-        - hyprland-qtutils
-
-        # ── Extra Hyprland ecosystem (Hyprland COPRs) ────────────────────────
-        # hyprland-plugins currently comes from lionheartp/Hyprland because the
-        # sdegler COPR build still depends on hyprland 0.53.x.
-        - hyprland-plugins # official plugin set: border++, hyprexpo, hyprtrails, …
-        - hyprpicker # colour picker
-        - hyprshot # screenshot utility
-        - hyprpolkitagent # polkit authentication agent
-        # NOTE: wayblue ships wlsunset for blue-light; hyprsunset replaces it
-        - hyprsunset
-        - hyprland-contrib # community scripts: grimblast, etc.
+        # ── Hyprland-adjacent utility from Fedora ───────────────────────────
+        # The compositor, plugins, portal, and support libraries are installed
+        # strictly from Lionheart in the preceding module.
         - satty # screenshot annotation tool
 
         # ── omadora base packages ─────────────────────────────────────────────
@@ -213,7 +276,7 @@ modules:
         - greetd
         - gtkgreet
 
-  # ── 3. Deploy onboarding service and exec script into /usr ───────────────────
+  # ── 4. Deploy onboarding service and exec script into /usr ───────────────────
   # Must run before the systemd module so the service unit file exists when
   # systemctl enable is called.
   - type: files
@@ -221,12 +284,12 @@ modules:
       - source: usr
         destination: /usr
 
-  # ── 4. Install upstream packages not shipped in enabled Fedora repos ───────
+  # ── 5. Install upstream packages not shipped in enabled Fedora repos ───────
   - type: script
     scripts:
       - install-upstream-tools.sh
 
-  # ── 5. Enable systemd services ───────────────────────────────────────────────
+  # ── 6. Enable systemd services ───────────────────────────────────────────────
   - type: systemd
     system:
       enabled:
@@ -255,7 +318,7 @@ modules:
         # Mask the package unit so systemd cannot race that daemon.
         - swaync.service
 
-  # ── 6. Deploy omadora submodule into /etc/skel ───────────────────────────────
+  # ── 7. Deploy omadora submodule into /etc/skel ───────────────────────────────
   # /etc/skel is applied at account creation for new users.
   # Existing users get omadora via the obsidian-blue-onboarding user service
   # which copies/refreshes ~/.local/share/omadora on first graphical login and
@@ -269,7 +332,7 @@ modules:
       - source: obsidian-blue/omadora/default/hypr
         destination: /etc/skel/.local/share/omadora/default/hypr
 
-  # ── 7. Deploy omadora app configs into /etc/skel/.config ───────────────────
+  # ── 8. Deploy omadora app configs into /etc/skel/.config ───────────────────
   # Without this, a fresh account has no ~/.config/hypr/hyprland.conf when
   # Hyprland starts for the first time, so the user sees a blank desktop with no
   # waybar, swaync, or keybindings.  Shipping these configs in /etc/skel ensures
@@ -285,7 +348,7 @@ modules:
       - source: omadora/default/plymouth
         destination: /usr/share/plymouth/themes/sliced
 
-  # ── 8. Deploy system-level config that omadora's install script applies ────
+  # ── 9. Deploy system-level config that omadora's install script applies ────
   # On a conventional Fedora install these are written with `sudo` by
   # omadora's install script.  On an immutable image we bake them in at build
   # time instead:
@@ -297,18 +360,18 @@ modules:
       - source: etc
         destination: /etc
 
-  # ── 9. System config that requires running commands (Nautilus icon symlinks) ─
+  # ── 10. System config that requires running commands (Nautilus icon symlinks) ─
   - type: script
     scripts:
       - setup-image-config.sh
 
-  # ── 10. Stamp the omadora skel with the image build version ─────────────────
+  # ── 11. Stamp the omadora skel with the image build version ─────────────────
   # The onboarding service compares this stamp to detect rebase/update events.
   - type: script
     scripts:
       - write-build-version.sh
 
-  # ── 11. Remove build-only deps used by upstream installers ─────────────────
+  # ── 12. Remove build-only deps used by upstream installers ─────────────────
   - type: dnf
     remove:
       packages:
@@ -323,7 +386,14 @@ modules:
         - dbus-devel
         - pipewire-devel
 
-  # ── 12. Default Flatpaks (installed on first boot, not baked in) ───────────
+  # ── 13. Fail the build on a mixed or ABI-incoherent Hyprland stack ────────
+  # This also writes the exact installed NEVRA/vendor/repository manifest to
+  # /usr/share/obsidian-blue/hyprland-package-manifest.txt for later auditing.
+  - type: script
+    scripts:
+      - validate-hyprland-stack.sh
+
+  # ── 14. Default Flatpaks (installed on first boot, not baked in) ───────────
   - type: default-flatpaks
     configurations:
       - notify: true
@@ -336,5 +406,5 @@ modules:
           - io.podman_desktop.PodmanDesktop
           - org.gnome.Boxes
 
-  # ── 13. Signing ─────────────────────────────────────────────────────────────
+  # ── 15. Signing ─────────────────────────────────────────────────────────────
   - type: signing

@@ -36,6 +36,9 @@ jobs:
       - name: Update Omadora to the tracked branch tip
         run: git submodule update --init --remote --checkout --depth 1 files/omadora
 
+      - name: Validate Hyprland package request
+        run: bash files/scripts/validate-hyprland-stack.sh --recipe recipes/recipe.yml
+
       - name: Build image
         id: build
         uses: blue-build/github-action@v1
