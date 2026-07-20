@@ -30,11 +30,20 @@ jobs:
         with:
           submodules: true
 
-      # .gitmodules selects Omadora's Fedora-current default branch. Advance
-      # the checkout on every image build so scheduled rebuilds pick up fixes
-      # without waiting for a separate gitlink bump in this repository.
-      - name: Update Omadora to the tracked branch tip
-        run: git submodule update --init --remote --checkout --depth 1 files/omadora
+      # Build the exact reviewed Omadora revision recorded by this repository.
+      # Advancing to the remote branch tip here can silently replace the Lua
+      # configuration with a Hyprlang revision and make scheduled builds differ
+      # from builds made from the same obsidian-blue commit.
+      - name: Check out pinned Omadora revision
+        run: git submodule update --init --checkout --depth 1 files/omadora
+
+      - name: Validate Hyprland Lua default
+        run: |
+          test "$(git -C files/omadora rev-parse HEAD)" = "$(git rev-parse HEAD:files/omadora)"
+          test -f files/omadora/config/hypr/hyprland.lua
+          test ! -e files/omadora/config/hypr/hyprland.conf
+          bash -n files/usr/bin/starthyprland
+          grep -Fq 'if [ -f "$hyprland_lua" ]; then' files/usr/bin/starthyprland
 
       - name: Validate Hyprland package request
         run: bash files/scripts/validate-hyprland-stack.sh --recipe recipes/recipe.yml
