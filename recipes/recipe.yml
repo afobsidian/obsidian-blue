@@ -13,7 +13,8 @@
 #   hyprland, waybar, kitty, xdg-desktop-portal-hyprland,
 #   hyprpaper, hyprlock, hypridle, hyprland-guiutils
 #   The recipe disables the inherited Hyprland COPR and replaces the entire
-#   ABI-sensitive stack with one matched Lionheart git snapshot set.
+#   ABI-sensitive stack with one matched Lionheart git snapshot set. It also
+#   replaces Fedora's Waybar build with Lionheart's current upstream snapshot.
 
 name: obsidian-blue
 description: >-
@@ -36,7 +37,7 @@ modules:
       - clear-rpmfusion-dnf-cache.sh
       - swap-hyprland-copr.sh
 
-  # ── 2. Replace the complete ABI-sensitive Hyprland stack ─────────────────
+  # ── 2. Replace the Hyprland stack and affected stable Waybar build ───────
   # Lionheart publishes stable and git compositor/plugin lines in one COPR.
   # Select only the git line: its plugins require the exact hyprland-git
   # snapshot, and its current Aquamarine/hyprutils SONAMEs match that snapshot.
@@ -81,6 +82,8 @@ modules:
         - hyprpolkitagent
         - hyprsunset
         - hyprland-contrib
+        - waybar
+        - waybar-git
     install:
       install-weak-deps: false
       # Fedora remains visible for non-Hyprland dependencies (for example
@@ -116,6 +119,8 @@ modules:
         - hyprpolkitagent
         - hyprsunset
         - hyprland-contrib
+        # Includes upstream's Gtk::Button taskbar-window hitbox fix.
+        - waybar-git
 
   # ── 3. Remaining RPM repos + installs ─────────────────────────────────────
   - type: dnf

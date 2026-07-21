@@ -56,11 +56,15 @@ validate_recipe() {
     local requests_git=0
     local requests_stable_plugins=0
     local requests_git_plugins=0
+    local requests_stable_waybar=0
+    local requests_git_waybar=0
 
     recipe_requests "${recipe_path}" hyprland && requests_stable=1
     recipe_requests "${recipe_path}" hyprland-git && requests_git=1
     recipe_requests "${recipe_path}" hyprland-plugins && requests_stable_plugins=1
     recipe_requests "${recipe_path}" hyprland-plugins-git && requests_git_plugins=1
+    recipe_requests "${recipe_path}" waybar && requests_stable_waybar=1
+    recipe_requests "${recipe_path}" waybar-git && requests_git_waybar=1
 
     (( requests_stable + requests_git == 1 )) || \
         fail "recipe must request exactly one of hyprland and hyprland-git"
@@ -72,6 +76,9 @@ validate_recipe() {
         (( requests_stable_plugins == 1 && requests_git_plugins == 0 )) || \
             fail "hyprland must be paired only with hyprland-plugins"
     fi
+
+    (( requests_stable_waybar == 0 && requests_git_waybar == 1 )) || \
+        fail "recipe must replace stable waybar with waybar-git"
 
     grep -Eq '^base-image:[[:space:]]+ghcr\.io/wayblueorg/hyprland([[:space:]#]|$)' "${recipe_path}" || \
         fail "the default recipe must use the generic Wayblue Hyprland base"
@@ -190,11 +197,13 @@ validate_installed() {
         hyprpolkitagent
         hyprsunset
         hyprland-contrib
+        waybar-git
     )
 
     rpm -q hyprland >/dev/null 2>&1 && fail "stable hyprland is installed beside the selected git line"
     rpm -q hyprland-plugins >/dev/null 2>&1 && fail "stable hyprland-plugins is installed beside the selected git line"
     rpm -q hyprland-qtutils >/dev/null 2>&1 && fail "retired hyprland-qtutils survived replacement"
+    rpm -q waybar >/dev/null 2>&1 && fail "stable waybar is installed beside waybar-git"
 
     for package_name in "${required_packages[@]}"; do
         validate_package_source "${package_name}"

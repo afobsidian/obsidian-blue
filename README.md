@@ -16,7 +16,7 @@ Fedora Atomic
 
 `rofi-wayland` · `wofi` · `fzf` · `just` · `distrobox` · `wl-clipboard` · `pavucontrol` · `playerctl` · `pamixer` · `brightnessctl` · `blueman` · `slurp` · `grim` · `dunst`_· `wlsunset`_ · `kanshi` · `wlr-randr` · `xarchiver` · `wireplumber` · `pipewire` · `qt5-qtwayland` · `qt6-qtwayland` · `vim` · and more
 
-> \* `dunst` is replaced by `SwayNotificationCenter`, `wlsunset` is replaced by `hyprsunset`, and inherited Thunar packages are replaced by Dolphin — all removed in this image where applicable.
+> \* `dunst` is replaced by `SwayNotificationCenter`, `wlsunset` is replaced by `hyprsunset`, inherited Thunar packages are replaced by Dolphin, and Fedora's stable `waybar` is replaced by `waybar-git` for current Hyprland workspace-taskbar fixes.
 
 ### From wayblue hyprland image (already provided, not re-added)
 

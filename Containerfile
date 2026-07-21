@@ -1,4 +1,4 @@
-ARG BASE_IMAGE="ghcr.io/wayblueorg/hyprland@sha256:6148afc651adcec3bee760b5177287e381700262d4c0a289da0da286e684c71d"
+ARG BASE_IMAGE="ghcr.io/wayblueorg/hyprland@sha256:6723e9b1ea2b86b4b7b4fc2173b0ddf286d9cdfa5841c1e286b023c20e54056f"
 FROM "${BASE_IMAGE}" AS obsidian-blue
 
 # This stage is responsible for holding onto
@@ -76,7 +76,7 @@ RUN \
 --mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-latest-stage-obsidian-blue \
 --mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-latest-stage-obsidian-blue \
 --mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-latest-stage-obsidian-blue \
-/tmp/scripts/run_module.sh 'dnf' '{"type":"dnf","repos":{"cleanup":true,"files":["lionheartp-hyprland.repo"]},"remove":{"auto-remove":false,"packages":["hyprland","hyprland-git","hyprland-plugins","hyprland-plugins-git","hyprland-plugin-borders-plus-plus","hyprland-plugin-borders-plus-plus-git","hyprland-plugin-csgo-vulkan-fix","hyprland-plugin-csgo-vulkan-fix-git","hyprland-plugin-hyprbars","hyprland-plugin-hyprbars-git","hyprland-plugin-hyprfocus","hyprland-plugin-hyprfocus-git","aquamarine","hyprcursor","hyprgraphics","hyprlang","hyprutils","hyprwire","hyprtoolkit","xdg-desktop-portal-hyprland","hyprpaper","hyprlock","hypridle","hyprland-qtutils","hyprland-guiutils","hyprland-qt-support","hyprpicker","hyprshot","hyprpolkitagent","hyprsunset","hyprland-contrib"]},"install":{"install-weak-deps":false,"allow-erasing":true,"packages":["hyprland-git","hyprland-plugins-git","hyprland-plugin-borders-plus-plus-git","hyprland-plugin-csgo-vulkan-fix-git","hyprland-plugin-hyprbars-git","hyprland-plugin-hyprfocus-git","aquamarine","hyprcursor","hyprgraphics","hyprlang","hyprutils","hyprwire","hyprtoolkit","xdg-desktop-portal-hyprland","hyprpaper","hyprlock","hypridle","hyprland-guiutils","hyprland-qt-support","hyprpicker","hyprshot","hyprpolkitagent","hyprsunset","hyprland-contrib"]}}'
+/tmp/scripts/run_module.sh 'dnf' '{"type":"dnf","repos":{"cleanup":true,"files":["lionheartp-hyprland.repo"]},"remove":{"auto-remove":false,"packages":["hyprland","hyprland-git","hyprland-plugins","hyprland-plugins-git","hyprland-plugin-borders-plus-plus","hyprland-plugin-borders-plus-plus-git","hyprland-plugin-csgo-vulkan-fix","hyprland-plugin-csgo-vulkan-fix-git","hyprland-plugin-hyprbars","hyprland-plugin-hyprbars-git","hyprland-plugin-hyprfocus","hyprland-plugin-hyprfocus-git","aquamarine","hyprcursor","hyprgraphics","hyprlang","hyprutils","hyprwire","hyprtoolkit","xdg-desktop-portal-hyprland","hyprpaper","hyprlock","hypridle","hyprland-qtutils","hyprland-guiutils","hyprland-qt-support","hyprpicker","hyprshot","hyprpolkitagent","hyprsunset","hyprland-contrib","waybar","waybar-git"]},"install":{"install-weak-deps":false,"allow-erasing":true,"packages":["hyprland-git","hyprland-plugins-git","hyprland-plugin-borders-plus-plus-git","hyprland-plugin-csgo-vulkan-fix-git","hyprland-plugin-hyprbars-git","hyprland-plugin-hyprfocus-git","aquamarine","hyprcursor","hyprgraphics","hyprlang","hyprutils","hyprwire","hyprtoolkit","xdg-desktop-portal-hyprland","hyprpaper","hyprlock","hypridle","hyprland-guiutils","hyprland-qt-support","hyprpicker","hyprshot","hyprpolkitagent","hyprsunset","hyprland-contrib","waybar-git"]}}'
 RUN \
 --mount=type=bind,from=stage-files,src=/files,dst=/tmp/files,rw \
 --mount=type=bind,from=ghcr.io/blue-build/modules/dnf:latest,src=/modules,dst=/tmp/modules,rw \
@@ -240,10 +240,10 @@ RUN \
 
 # Labels are added last since they cause cache misses with buildah
 LABEL io.artifacthub.package.readme-url="https://raw.githubusercontent.com/blue-build/cli/main/README.md"
-LABEL org.blue-build.build-id="11ab69e8-69ad-4afa-afa7-433122bcf7e2"
-LABEL org.opencontainers.image.base.digest="sha256:6148afc651adcec3bee760b5177287e381700262d4c0a289da0da286e684c71d"
+LABEL org.blue-build.build-id="5cd5e37a-1ffd-4206-9265-08397a22ccb4"
+LABEL org.opencontainers.image.base.digest="sha256:6723e9b1ea2b86b4b7b4fc2173b0ddf286d9cdfa5841c1e286b023c20e54056f"
 LABEL org.opencontainers.image.base.name="ghcr.io/wayblueorg/hyprland:latest"
-LABEL org.opencontainers.image.created="2026-07-20T04:06:23.483598250+00:00"
+LABEL org.opencontainers.image.created="2026-07-21T03:01:34.720605208+00:00"
 LABEL org.opencontainers.image.description="Custom immutable Fedora Atomic image. wayblue hyprland base + omadora Hyprland desktop + bluefin-dx developer tooling + extra opinionated Hyprland ecosystem packages."
 LABEL org.opencontainers.image.source=""
 LABEL org.opencontainers.image.title="obsidian-blue"
