@@ -466,15 +466,30 @@ WIZARD=/usr/libexec/obsidian-blue-onboarding-wizard
 [[ "$SCRIPT_DIR" == */files/usr/libexec* ]] && \
     WIZARD="$SCRIPT_DIR/obsidian-blue-onboarding-wizard"
 
-# In --force (dev/repo-clone) mode, or when uwsm-app is unavailable, run the
-# wizard inline in the current terminal.  Otherwise spawn it in a floating
-# alacritty window within the live Wayland session.
-if [[ "$FORCE" == true ]] || ! command -v uwsm-app &>/dev/null; then
+# A forced repo-clone run is explicitly interactive, so keep it in the current
+# terminal. Image service runs must never send the TUI to the journal: launch a
+# graphical terminal when the session is ready, or log why the wizard was
+# skipped. Alacritty can still be started directly as a last-resort fallback if
+# UWSM is unexpectedly unavailable.
+if [[ "$FORCE" == true ]]; then
     if [[ -x "$WIZARD" ]]; then
         exec "$WIZARD"
     fi
-elif [[ -n "${WAYLAND_DISPLAY:-}" ]] && command -v alacritty &>/dev/null; then
+elif [[ ! -x "$WIZARD" ]]; then
+    echo "Warning: onboarding wizard is not executable: $WIZARD"
+elif [[ -z "${WAYLAND_DISPLAY:-}" ]]; then
+    echo "Warning: WAYLAND_DISPLAY is unavailable; skipping interactive onboarding wizard."
+elif ! command -v alacritty &>/dev/null; then
+    echo "Warning: alacritty is unavailable; skipping interactive onboarding wizard."
+elif command -v uwsm-app &>/dev/null; then
     setsid uwsm-app -- alacritty \
+        --class "org.obsidian-blue.Onboarding,org.obsidian-blue.Onboarding" \
+        --title "obsidian-blue Setup" \
+        -e "$WIZARD" \
+        >/dev/null 2>&1 &
+else
+    echo "Warning: uwsm-app is unavailable; launching onboarding wizard directly."
+    setsid alacritty \
         --class "org.obsidian-blue.Onboarding,org.obsidian-blue.Onboarding" \
         --title "obsidian-blue Setup" \
         -e "$WIZARD" \

@@ -111,6 +111,9 @@ modules:
         - hyprpaper
         - hyprlock
         - hypridle
+        # UWSM is shipped by Lionheart rather than Fedora. Keep it in this
+        # transaction so the repo is still available when the package resolves.
+        - uwsm
         # hyprland-guiutils obsoletes the retired hyprland-qtutils name.
         - hyprland-guiutils
         - hyprland-qt-support
@@ -184,7 +187,6 @@ modules:
         - swaybg # wallpaper setter
         - tldr # simplified man pages
         - usbutils # lsusb
-        - uwsm # Universal Wayland Session Manager
         - wf-recorder # screen recorder
         - whois # domain lookup
         - wiremix # PipeWire TUI mixer

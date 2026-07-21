@@ -190,6 +190,7 @@ validate_installed() {
         hyprpaper
         hyprlock
         hypridle
+        uwsm
         hyprland-guiutils
         hyprland-qt-support
         hyprpicker
@@ -208,6 +209,9 @@ validate_installed() {
     for package_name in "${required_packages[@]}"; do
         validate_package_source "${package_name}"
     done
+
+    [[ -x /usr/bin/uwsm-app ]] || \
+        fail "uwsm package does not provide the required /usr/bin/uwsm-app launcher"
 
     dnf5 check --dependencies --duplicates >/dev/null || \
         fail "DNF reports dependency, conflict, or duplicate-package problems"
