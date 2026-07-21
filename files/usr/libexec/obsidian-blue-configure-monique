@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+"""Apply Obsidian Blue's immutable-display-manager policy to Monique."""
+
+import json
+import os
+from pathlib import Path
+import sys
+
+
+config_home = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
+settings_path = config_home / "monique" / "settings.json"
+settings_path.parent.mkdir(parents=True, exist_ok=True)
+
+settings = {}
+if settings_path.exists():
+    try:
+        settings = json.loads(settings_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        print(f"preserving invalid Monique settings: {exc}", file=sys.stderr)
+        raise SystemExit(1)
+    if not isinstance(settings, dict):
+        print("preserving non-object Monique settings", file=sys.stderr)
+        raise SystemExit(1)
+
+settings["update_sddm"] = False
+temporary = settings_path.with_name(f"{settings_path.name}.tmp.{os.getpid()}")
+temporary.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
+os.replace(temporary, settings_path)

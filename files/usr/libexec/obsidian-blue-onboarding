@@ -167,40 +167,32 @@ if [[ -d "$HYPR_SKEL_DIR" ]]; then
     done
 fi
 
-# Existing users may sync Hyprland configs across machines.  Add the
-# obsidian-blue session anchor in a guarded form so non-obsidian hosts no-op.
-SESSION_AUTOSTART_LINE="exec-once = sh -c 'systemctl --user cat obsidian-blue-session.target >/dev/null 2>&1 && systemctl --user start obsidian-blue-session.target || true'"
-ensure_obsidian_session_autostart() {
+# Stop carrying the retired image session hook in user-owned configurations.
+# The bundled Obsidian Blue default starts the image target itself; custom
+# Hyprland configurations retain full ownership of their session lifecycle.
+remove_legacy_obsidian_session_autostart() {
     local autostart="$1"
     [[ -f "$autostart" ]] || return 0
+    grep -Eq 'obsidian-blue-(activate-session\.service|session\.target)' "$autostart" || return 0
 
     sed -i \
         -e '/obsidian-blue-activate-session.service/d' \
         -e '/obsidian-blue-session.target/d' \
         "$autostart"
-
-    local tmp
-    tmp="$(mktemp "${TMPDIR:-/tmp}/obsidian-blue-autostart.XXXXXX")"
-    if grep -q 'dbus-update-activation-environment' "$autostart"; then
-        awk -v line="$SESSION_AUTOSTART_LINE" '
-            { print }
-            !inserted && /dbus-update-activation-environment/ {
-                print line
-                inserted = 1
-            }
-        ' "$autostart" > "$tmp"
-    else
-        {
-            printf '%s\n' "$SESSION_AUTOSTART_LINE"
-            cat "$autostart"
-        } > "$tmp"
-    fi
-    mv "$tmp" "$autostart"
-    echo "  Ensured obsidian-blue session autostart: $autostart"
+    echo "  Removed legacy obsidian-blue session autostart: $autostart"
 }
 
-ensure_obsidian_session_autostart "$HOME/.config/hypr/configs/autostart.conf"
-ensure_obsidian_session_autostart "$HOME/.config/hypr/autostart.conf"
+remove_legacy_obsidian_session_autostart "$HOME/.config/hypr/configs/autostart.conf"
+remove_legacy_obsidian_session_autostart "$HOME/.config/hypr/autostart.conf"
+
+# Migrate the image's former Omadora notification default from the removed Mako
+# daemon to SwayNC. Only replace the exact inherited Wants line.
+OMADORA_SESSION_TARGET="$HOME/.config/systemd/user/omadora-session.target"
+if [[ -f "$OMADORA_SESSION_TARGET" ]] \
+    && grep -qx 'Wants=mako.service' "$OMADORA_SESSION_TARGET"; then
+    sed -i 's/^Wants=mako\.service$/Wants=swaync.service/' "$OMADORA_SESSION_TARGET"
+    echo "  Migrated Omadora notification service to SwayNC"
+fi
 
 # ── Step 4: Shell integration — add omadora source to ~/.bashrc ──────────────
 OMADORA_MARKER="# obsidian-blue: omadora shell integration"

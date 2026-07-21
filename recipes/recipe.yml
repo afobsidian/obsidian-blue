@@ -298,8 +298,8 @@ modules:
   - type: systemd
     system:
       enabled:
-        # wayblue already ships NetworkManager + the nm-applet/blueman clients
-        # that the dotfiles now use; make sure the backing services start too.
+        # wayblue already ships NetworkManager + the nm-applet/blueman clients;
+        # make sure the backing services start too.
         - NetworkManager.service
         - bluetooth.service
         - podman.socket
@@ -318,10 +318,6 @@ modules:
         # after install or rebase).  The service checks a build stamp and exits
         # immediately when the image version has not changed.
         - obsidian-blue-onboarding.service
-      masked:
-        # omadora starts swaync via notificationctl from Hyprland autostart.
-        # Mask the package unit so systemd cannot race that daemon.
-        - swaync.service
 
   # ── 7. Deploy omadora submodule into /etc/skel ───────────────────────────────
   # /etc/skel is applied at account creation for new users.
@@ -336,6 +332,8 @@ modules:
       # activate graphical-session.target and avoid starting removed daemons.
       - source: obsidian-blue/omadora/default/hypr
         destination: /etc/skel/.local/share/omadora/default/hypr
+      - source: obsidian-blue/omadora/config/systemd/user
+        destination: /etc/skel/.local/share/omadora/config/systemd/user
 
   # ── 8. Deploy omadora app configs into /etc/skel/.config ───────────────────
   # Without this, a fresh account has no ~/.config/hypr/hyprland.conf when
@@ -350,6 +348,8 @@ modules:
     files:
       - source: omadora/config
         destination: /etc/skel/.config
+      - source: obsidian-blue/omadora/config/systemd/user
+        destination: /etc/skel/.config/systemd/user
       - source: omadora/default/plymouth
         destination: /usr/share/plymouth/themes/sliced
 

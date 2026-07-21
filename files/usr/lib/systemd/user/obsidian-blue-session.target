@@ -1,3 +1,4 @@
 [Unit]
 Description=obsidian-blue Hyprland session anchor
-Wants=graphical-session.target
+Wants=graphical-session.target swaync.service
+After=graphical-session.target
