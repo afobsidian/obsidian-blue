@@ -1,4 +1,4 @@
-ARG BASE_IMAGE="ghcr.io/wayblueorg/hyprland@sha256:6723e9b1ea2b86b4b7b4fc2173b0ddf286d9cdfa5841c1e286b023c20e54056f"
+ARG BASE_IMAGE="ghcr.io/wayblueorg/hyprland@sha256:dc88f048ddf33470b4b53ee10289b35c95b70ea365733c50311a524188edc973"
 FROM "${BASE_IMAGE}" AS obsidian-blue
 
 # This stage is responsible for holding onto
@@ -13,7 +13,7 @@ COPY ./files /files
 # stage process so that adding the bins into the image
 # can be added to the ostree commits.
 FROM scratch AS stage-bins
-COPY --from=ghcr.io/sigstore/cosign/cosign:v3.0.5 \
+COPY --from=ghcr.io/sigstore/cosign/cosign:v3.1.1 \
   /ko-app/cosign /bins/cosign
 COPY --from=ghcr.io/blue-build/cli:latest-installer \
   /out/bluebuild /bins/bluebuild
@@ -25,7 +25,6 @@ COPY --from=ghcr.io/blue-build/cli:latest-installer \
 # public key.
 FROM scratch AS stage-keys
 COPY cosign.pub /keys/obsidian-blue.pub
-
 
 # Main image
 FROM obsidian-blue
@@ -41,6 +40,7 @@ ARG BASE_IMAGE="ghcr.io/wayblueorg/hyprland"
 RUN --mount=type=bind,from=stage-keys,src=/keys,dst=/tmp/keys \
   mkdir -p /etc/pki/containers/ \
   && cp /tmp/keys/* /etc/pki/containers/
+
 # Bin RUN
 RUN --mount=type=bind,from=stage-bins,src=/bins,dst=/tmp/bins \
   mkdir -p /usr/bin/ \
@@ -49,201 +49,201 @@ RUN --mount=type=bind,from=ghcr.io/blue-build/nushell-image:default,src=/nu,dst=
   mkdir -p /usr/libexec/bluebuild/nu \
   && cp -r /tmp/nu/* /usr/libexec/bluebuild/nu/
 RUN \
---mount=type=bind,src=.bluebuild-scripts_6fc443c6,dst=/scripts/,ro \
+--mount=type=bind,src=.bluebuild-scripts_0805999f,dst=/scripts/,ro \
   /scripts/pre_build.sh
 
 # Module RUNs
 RUN \
 --mount=type=bind,from=stage-files,src=/files,dst=/tmp/files,rw \
 --mount=type=bind,from=ghcr.io/blue-build/modules/script:latest,src=/modules,dst=/tmp/modules,rw \
---mount=type=bind,src=.bluebuild-scripts_6fc443c6,dst=/tmp/scripts/,ro \
---mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=bind,src=.bluebuild-scripts_0805999f,dst=/tmp/scripts/,ro \
+--mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-44-stage-obsidian-blue \
 /tmp/scripts/run_module.sh 'script' '{"type":"script","scripts":["clear-rpmfusion-dnf-cache.sh","swap-hyprland-copr.sh"]}'
 RUN \
 --mount=type=bind,from=stage-files,src=/files,dst=/tmp/files,rw \
 --mount=type=bind,from=ghcr.io/blue-build/modules/dnf:latest,src=/modules,dst=/tmp/modules,rw \
---mount=type=bind,src=.bluebuild-scripts_6fc443c6,dst=/tmp/scripts/,ro \
---mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=bind,src=.bluebuild-scripts_0805999f,dst=/tmp/scripts/,ro \
+--mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-44-stage-obsidian-blue \
 /tmp/scripts/run_module.sh 'dnf' '{"type":"dnf","repos":{"cleanup":true,"files":["lionheartp-hyprland.repo"]},"remove":{"auto-remove":false,"packages":["hyprland","hyprland-git","hyprland-plugins","hyprland-plugins-git","hyprland-plugin-borders-plus-plus","hyprland-plugin-borders-plus-plus-git","hyprland-plugin-csgo-vulkan-fix","hyprland-plugin-csgo-vulkan-fix-git","hyprland-plugin-hyprbars","hyprland-plugin-hyprbars-git","hyprland-plugin-hyprfocus","hyprland-plugin-hyprfocus-git","aquamarine","hyprcursor","hyprgraphics","hyprlang","hyprutils","hyprwire","hyprtoolkit","xdg-desktop-portal-hyprland","hyprpaper","hyprlock","hypridle","hyprland-qtutils","hyprland-guiutils","hyprland-qt-support","hyprpicker","hyprshot","hyprpolkitagent","hyprsunset","hyprland-contrib","waybar","waybar-git"]},"install":{"install-weak-deps":false,"allow-erasing":true,"packages":["hyprland-git","hyprland-plugins-git","hyprland-plugin-borders-plus-plus-git","hyprland-plugin-csgo-vulkan-fix-git","hyprland-plugin-hyprbars-git","hyprland-plugin-hyprfocus-git","aquamarine","hyprcursor","hyprgraphics","hyprlang","hyprutils","hyprwire","hyprtoolkit","xdg-desktop-portal-hyprland","hyprpaper","hyprlock","hypridle","uwsm","hyprland-guiutils","hyprland-qt-support","hyprpicker","hyprshot","hyprpolkitagent","hyprsunset","hyprland-contrib","waybar-git"]}}'
 RUN \
 --mount=type=bind,from=stage-files,src=/files,dst=/tmp/files,rw \
 --mount=type=bind,from=ghcr.io/blue-build/modules/dnf:latest,src=/modules,dst=/tmp/modules,rw \
---mount=type=bind,src=.bluebuild-scripts_6fc443c6,dst=/tmp/scripts/,ro \
---mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=bind,src=.bluebuild-scripts_0805999f,dst=/tmp/scripts/,ro \
+--mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-44-stage-obsidian-blue \
 /tmp/scripts/run_module.sh 'dnf' '{"type":"dnf","repos":{"cleanup":true,"files":["jdxcode-mise.repo","tailscale.repo"]},"install":{"skip-unavailable":true,"skip-broken":true,"install-weak-deps":false,"packages":["satty","alacritty","bat","bind-utils","btop","bluez","cascadia-code-nf-fonts","cascadia-mono-nf-fonts","chromium","clang","dbus-tools","du-dust","dolphin","evince","fastfetch","fcitx5","fcitx5-configtool","fcitx5-gtk","fcitx5-qt","fontawesome-fonts-all","gnome-calculator","gnome-keyring","gnome-themes-extra","google-noto-fonts-common","gum","gvfs-mtp","gvfs-smb","kio-extras","ark","ffmpegthumbs","kde-cli-tools","iwd","libxkbcommon-utils","mise","nautilus","pipewire-devel","pipx","plocate","plymouth","power-profiles-daemon","sushi","swaybg","tldr","usbutils","wf-recorder","whois","wiremix","xdg-desktop-portal-gtk","xdg-terminal-exec","xdg-user-dirs","xmlstarlet","yaru-icon-theme","zoxide","swappy","cliphist","SwayNotificationCenter","mpv","nwg-look","qt5ct","qt6ct","kvantum","wlogout","ImageMagick","yad","yt-dlp","imv","NetworkManager-tui","python3-gobject","python3-i3ipc","python3-pyudev","gtk-layer-shell","python3-build","python3-installer","python3-setuptools","python3-wheel","cargo","rust","gcc","dbus-devel","code","kubectl","helm","gh","neovim","ripgrep","fd-find","jq","yq","zsh","tailscale","perf","sysprof","sddm","qt6-qtquickcontrols2","qt6-qtsvg"]},"remove":{"packages":["tuned-ppd","wlsunset","dunst","mako","ibus","Thunar","thunar-archive-plugin","thunar-volman","greetd","gtkgreet"]}}'
 RUN \
 --mount=type=bind,from=stage-files,src=/files,dst=/tmp/files,rw \
 --mount=type=bind,from=ghcr.io/blue-build/modules/files:latest,src=/modules,dst=/tmp/modules,rw \
---mount=type=bind,src=.bluebuild-scripts_6fc443c6,dst=/tmp/scripts/,ro \
---mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=bind,src=.bluebuild-scripts_0805999f,dst=/tmp/scripts/,ro \
+--mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-44-stage-obsidian-blue \
 /tmp/scripts/run_module.sh 'files' '{"type":"files","files":[{"source":"usr","destination":"/usr"}]}'
 RUN \
 --mount=type=bind,from=stage-files,src=/files,dst=/tmp/files,rw \
 --mount=type=bind,from=ghcr.io/blue-build/modules/script:latest,src=/modules,dst=/tmp/modules,rw \
---mount=type=bind,src=.bluebuild-scripts_6fc443c6,dst=/tmp/scripts/,ro \
---mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=bind,src=.bluebuild-scripts_0805999f,dst=/tmp/scripts/,ro \
+--mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-44-stage-obsidian-blue \
 /tmp/scripts/run_module.sh 'script' '{"type":"script","scripts":["install-upstream-tools.sh"]}'
 RUN \
 --mount=type=bind,from=stage-files,src=/files,dst=/tmp/files,rw \
 --mount=type=bind,from=ghcr.io/blue-build/modules/systemd:latest,src=/modules,dst=/tmp/modules,rw \
---mount=type=bind,src=.bluebuild-scripts_6fc443c6,dst=/tmp/scripts/,ro \
---mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=bind,src=.bluebuild-scripts_0805999f,dst=/tmp/scripts/,ro \
+--mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-44-stage-obsidian-blue \
 /tmp/scripts/run_module.sh 'systemd' '{"type":"systemd","system":{"enabled":["NetworkManager.service","bluetooth.service","podman.socket","tailscaled.service","sddm.service"],"masked":["greetd.service"]},"user":{"enabled":["podman.socket","moniqued.service","obsidian-blue-onboarding.service"]}}'
 RUN \
 --mount=type=bind,from=stage-files,src=/files,dst=/tmp/files,rw \
 --mount=type=bind,from=ghcr.io/blue-build/modules/files:latest,src=/modules,dst=/tmp/modules,rw \
---mount=type=bind,src=.bluebuild-scripts_6fc443c6,dst=/tmp/scripts/,ro \
---mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=bind,src=.bluebuild-scripts_0805999f,dst=/tmp/scripts/,ro \
+--mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-44-stage-obsidian-blue \
 /tmp/scripts/run_module.sh 'files' '{"type":"files","files":[{"source":"omadora","destination":"/etc/skel/.local/share/omadora"},{"source":"obsidian-blue/omadora/default/hypr","destination":"/etc/skel/.local/share/omadora/default/hypr"},{"source":"obsidian-blue/omadora/config/systemd/user","destination":"/etc/skel/.local/share/omadora/config/systemd/user"}]}'
 RUN \
 --mount=type=bind,from=stage-files,src=/files,dst=/tmp/files,rw \
 --mount=type=bind,from=ghcr.io/blue-build/modules/files:latest,src=/modules,dst=/tmp/modules,rw \
---mount=type=bind,src=.bluebuild-scripts_6fc443c6,dst=/tmp/scripts/,ro \
---mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=bind,src=.bluebuild-scripts_0805999f,dst=/tmp/scripts/,ro \
+--mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-44-stage-obsidian-blue \
 /tmp/scripts/run_module.sh 'files' '{"type":"files","files":[{"source":"omadora/config","destination":"/etc/skel/.config"},{"source":"obsidian-blue/omadora/config/systemd/user","destination":"/etc/skel/.config/systemd/user"},{"source":"omadora/default/plymouth","destination":"/usr/share/plymouth/themes/sliced"}]}'
 RUN \
 --mount=type=bind,from=stage-files,src=/files,dst=/tmp/files,rw \
 --mount=type=bind,from=ghcr.io/blue-build/modules/files:latest,src=/modules,dst=/tmp/modules,rw \
---mount=type=bind,src=.bluebuild-scripts_6fc443c6,dst=/tmp/scripts/,ro \
---mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=bind,src=.bluebuild-scripts_0805999f,dst=/tmp/scripts/,ro \
+--mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-44-stage-obsidian-blue \
 /tmp/scripts/run_module.sh 'files' '{"type":"files","files":[{"source":"etc","destination":"/etc"}]}'
 RUN \
 --mount=type=bind,from=stage-files,src=/files,dst=/tmp/files,rw \
 --mount=type=bind,from=ghcr.io/blue-build/modules/script:latest,src=/modules,dst=/tmp/modules,rw \
---mount=type=bind,src=.bluebuild-scripts_6fc443c6,dst=/tmp/scripts/,ro \
---mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=bind,src=.bluebuild-scripts_0805999f,dst=/tmp/scripts/,ro \
+--mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-44-stage-obsidian-blue \
 /tmp/scripts/run_module.sh 'script' '{"type":"script","scripts":["setup-image-config.sh"]}'
 RUN \
 --mount=type=bind,from=stage-files,src=/files,dst=/tmp/files,rw \
 --mount=type=bind,from=ghcr.io/blue-build/modules/script:latest,src=/modules,dst=/tmp/modules,rw \
---mount=type=bind,src=.bluebuild-scripts_6fc443c6,dst=/tmp/scripts/,ro \
---mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=bind,src=.bluebuild-scripts_0805999f,dst=/tmp/scripts/,ro \
+--mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-44-stage-obsidian-blue \
 /tmp/scripts/run_module.sh 'script' '{"type":"script","scripts":["write-build-version.sh"]}'
 RUN \
 --mount=type=bind,from=stage-files,src=/files,dst=/tmp/files,rw \
 --mount=type=bind,from=ghcr.io/blue-build/modules/dnf:latest,src=/modules,dst=/tmp/modules,rw \
---mount=type=bind,src=.bluebuild-scripts_6fc443c6,dst=/tmp/scripts/,ro \
---mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=bind,src=.bluebuild-scripts_0805999f,dst=/tmp/scripts/,ro \
+--mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-44-stage-obsidian-blue \
 /tmp/scripts/run_module.sh 'dnf' '{"type":"dnf","remove":{"packages":["python3-build","python3-installer","python3-setuptools","python3-wheel","cargo","rust","gcc","clang","dbus-devel","pipewire-devel"]}}'
 RUN \
 --mount=type=bind,from=stage-files,src=/files,dst=/tmp/files,rw \
 --mount=type=bind,from=ghcr.io/blue-build/modules/script:latest,src=/modules,dst=/tmp/modules,rw \
---mount=type=bind,src=.bluebuild-scripts_6fc443c6,dst=/tmp/scripts/,ro \
---mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=bind,src=.bluebuild-scripts_0805999f,dst=/tmp/scripts/,ro \
+--mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-44-stage-obsidian-blue \
 /tmp/scripts/run_module.sh 'script' '{"type":"script","scripts":["validate-hyprland-stack.sh"]}'
 RUN \
 --mount=type=bind,from=stage-files,src=/files,dst=/tmp/files,rw \
 --mount=type=bind,from=ghcr.io/blue-build/modules/default-flatpaks:latest,src=/modules,dst=/tmp/modules,rw \
---mount=type=bind,src=.bluebuild-scripts_6fc443c6,dst=/tmp/scripts/,ro \
---mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=bind,src=.bluebuild-scripts_0805999f,dst=/tmp/scripts/,ro \
+--mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-44-stage-obsidian-blue \
 /tmp/scripts/run_module.sh 'default-flatpaks' '{"type":"default-flatpaks","configurations":[{"notify":true,"scope":"system","repo":{"url":"https://dl.flathub.org/repo/flathub.flatpakrepo","name":"flathub"},"install":["com.github.wwmm.easyeffects","io.podman_desktop.PodmanDesktop","org.gnome.Boxes"]}]}'
 RUN \
 --mount=type=bind,from=stage-files,src=/files,dst=/tmp/files,rw \
 --mount=type=bind,from=ghcr.io/blue-build/modules/signing:latest,src=/modules,dst=/tmp/modules,rw \
---mount=type=bind,src=.bluebuild-scripts_6fc443c6,dst=/tmp/scripts/,ro \
---mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-latest-stage-obsidian-blue \
---mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=bind,src=.bluebuild-scripts_0805999f,dst=/tmp/scripts/,ro \
+--mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-44-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-44-stage-obsidian-blue \
 /tmp/scripts/run_module.sh 'signing' '{"type":"signing"}'
 
 RUN \
---mount=type=bind,src=.bluebuild-scripts_6fc443c6,dst=/scripts/,ro \
+--mount=type=bind,src=.bluebuild-scripts_0805999f,dst=/scripts/,ro \
   /scripts/post_build.sh
 
 # Labels are added last since they cause cache misses with buildah
 LABEL io.artifacthub.package.readme-url="https://raw.githubusercontent.com/blue-build/cli/main/README.md"
-LABEL org.blue-build.build-id="692f0312-11d7-4450-8c5f-c766b6282fe7"
-LABEL org.opencontainers.image.base.digest="sha256:6723e9b1ea2b86b4b7b4fc2173b0ddf286d9cdfa5841c1e286b023c20e54056f"
+LABEL org.blue-build.build-id="a386acc2-5650-413a-a32e-cc8d703d95a3"
+LABEL org.opencontainers.image.base.digest="sha256:dc88f048ddf33470b4b53ee10289b35c95b70ea365733c50311a524188edc973"
 LABEL org.opencontainers.image.base.name="ghcr.io/wayblueorg/hyprland:latest"
-LABEL org.opencontainers.image.created="2026-07-21T05:20:02.745578274+00:00"
+LABEL org.opencontainers.image.created="2026-08-04T01:16:02.507477047+00:00"
 LABEL org.opencontainers.image.description="Custom immutable Fedora Atomic image. wayblue hyprland base + omadora Hyprland desktop + bluefin-dx developer tooling + extra opinionated Hyprland ecosystem packages."
 LABEL org.opencontainers.image.source=""
 LABEL org.opencontainers.image.title="obsidian-blue"

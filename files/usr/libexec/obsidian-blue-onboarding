@@ -48,9 +48,8 @@ CONTEXT_FILE="$STATE_DIR/onboarding-context"
 LOG_FILE="$STATE_DIR/onboarding.log"
 
 # Subdirectories of ~/.local/share/omadora that are owned by the image
-# (refreshed on every rebase).  The config/ subdir is intentionally excluded
-# because ~/.config/<app> dirs copied from it are considered user-editable.
-OMADORA_IMAGE_DIRS=(bin completions default install lib libexec migrations themes applications)
+# (refreshed on every rebase). User edits remain in ~/.config/<app>.
+OMADORA_IMAGE_DIRS=(bin completions config default install lib libexec migrations themes applications)
 
 # Version of terminaltexteffects installed for the omadora screensaver.
 # Check https://github.com/ChrisBuilds/terminaltexteffects/releases when updating.
@@ -148,6 +147,20 @@ while IFS= read -r -d '' src; do
         SKIPPED_CONFIGS+=("$name")
     fi
 done < <(find "$OMADORA_PATH/config" -maxdepth 1 -mindepth 1 -print0)
+
+OMADORA_SYSTEMD_SRC="$OMADORA_PATH/config/systemd/user"
+OMADORA_SYSTEMD_DST="$HOME/.config/systemd/user"
+if [[ -d "$OMADORA_SYSTEMD_SRC" ]]; then
+    mkdir -p "$OMADORA_SYSTEMD_DST"
+    while IFS= read -r -d '' src; do
+        unit="$(basename "$src")"
+        if [[ ! -e "$OMADORA_SYSTEMD_DST/$unit" ]]; then
+            cp "$src" "$OMADORA_SYSTEMD_DST/$unit"
+            echo "  Installed omadora user unit: $unit"
+        fi
+    done < <(find "$OMADORA_SYSTEMD_SRC" -maxdepth 1 -type f -name 'omadora-*' -print0)
+    systemctl --user daemon-reload 2>/dev/null || true
+fi
 
 # ── Step 3b: Ensure all hyprland user-override files exist ───────────────────
 # hyprland.conf sources 6 user-editable files from ~/.config/hypr/.  Step 3
