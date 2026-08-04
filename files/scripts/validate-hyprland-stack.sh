@@ -216,6 +216,15 @@ validate_installed() {
     dnf5 check --dependencies --duplicates >/dev/null || \
         fail "DNF reports dependency, conflict, or duplicate-package problems"
 
+    grep -Eq '^hl\.monitor\(\{ output = "", mode = "preferred", position = "auto", scale = 1 \}\)$' \
+        /usr/lib/sddm/obsidian-blue-hyprland.conf || \
+        fail "SDDM greeter config is not Lua-based Hyprland syntax"
+    grep -Eq '^hl\.on\("hyprland\.start", function\(\)\)$' \
+        /usr/lib/sddm/obsidian-blue-hyprland.conf || \
+        fail "SDDM greeter config must run the display setup on hyprland.start"
+    grep -Eq '^hl\.window_rule\(\{' /usr/lib/sddm/obsidian-blue-hyprland.conf || \
+        fail "SDDM greeter config must use Lua window rules"
+
     validate_exact_plugin_abi
     validate_soname_providers
     validate_dynamic_links
