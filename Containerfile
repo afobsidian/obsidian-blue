@@ -1,4 +1,4 @@
-ARG BASE_IMAGE="ghcr.io/wayblueorg/hyprland@sha256:dc88f048ddf33470b4b53ee10289b35c95b70ea365733c50311a524188edc973"
+ARG BASE_IMAGE="ghcr.io/wayblueorg/hyprland@sha256:464af622df5e6512dd82180f1aee089fec338c9885336a065f4c9ac1515d771b"
 FROM "${BASE_IMAGE}" AS obsidian-blue
 
 # This stage is responsible for holding onto
@@ -124,7 +124,7 @@ RUN \
 --mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-44-stage-obsidian-blue \
 --mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-44-stage-obsidian-blue \
 --mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-44-stage-obsidian-blue \
-/tmp/scripts/run_module.sh 'systemd' '{"type":"systemd","system":{"enabled":["NetworkManager.service","bluetooth.service","podman.socket","tailscaled.service","sddm.service"],"masked":["greetd.service"]},"user":{"enabled":["podman.socket","moniqued.service","obsidian-blue-onboarding.service"]}}'
+/tmp/scripts/run_module.sh 'systemd' '{"type":"systemd","system":{"enabled":["NetworkManager.service","bluetooth.service","podman.socket","tailscaled.service","sddm.service"],"masked":["greetd.service","systemd-remount-fs.service"]},"user":{"enabled":["podman.socket","moniqued.service","obsidian-blue-onboarding.service"]}}'
 RUN \
 --mount=type=bind,from=stage-files,src=/files,dst=/tmp/files,rw \
 --mount=type=bind,from=ghcr.io/blue-build/modules/files:latest,src=/modules,dst=/tmp/modules,rw \
@@ -240,10 +240,10 @@ RUN \
 
 # Labels are added last since they cause cache misses with buildah
 LABEL io.artifacthub.package.readme-url="https://raw.githubusercontent.com/blue-build/cli/main/README.md"
-LABEL org.blue-build.build-id="a386acc2-5650-413a-a32e-cc8d703d95a3"
-LABEL org.opencontainers.image.base.digest="sha256:dc88f048ddf33470b4b53ee10289b35c95b70ea365733c50311a524188edc973"
+LABEL org.blue-build.build-id="d2a5ebad-eb5e-45de-bfc2-0d0aa9402934"
+LABEL org.opencontainers.image.base.digest="sha256:464af622df5e6512dd82180f1aee089fec338c9885336a065f4c9ac1515d771b"
 LABEL org.opencontainers.image.base.name="ghcr.io/wayblueorg/hyprland:latest"
-LABEL org.opencontainers.image.created="2026-08-04T01:16:02.507477047+00:00"
+LABEL org.opencontainers.image.created="2026-08-05T23:50:14.429536098+00:00"
 LABEL org.opencontainers.image.description="Custom immutable Fedora Atomic image. wayblue hyprland base + omadora Hyprland desktop + bluefin-dx developer tooling + extra opinionated Hyprland ecosystem packages."
 LABEL org.opencontainers.image.source=""
 LABEL org.opencontainers.image.title="obsidian-blue"

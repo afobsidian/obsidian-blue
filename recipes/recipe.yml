@@ -311,6 +311,9 @@ modules:
         - sddm.service
       masked:
         - greetd.service
+        # ComposeFS owns the immutable root mount. Remounting it from the
+        # installer-generated Btrfs / entry fails on every boot.
+        - systemd-remount-fs.service
     user:
       enabled:
         - podman.socket

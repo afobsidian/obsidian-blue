@@ -219,7 +219,7 @@ validate_installed() {
     grep -Eq '^hl\.monitor\(\{ output = "", mode = "preferred", position = "auto", scale = 1 \}\)$' \
         /usr/lib/sddm/obsidian-blue-hyprland.conf || \
         fail "SDDM greeter config is not Lua-based Hyprland syntax"
-    grep -Eq '^hl\.on\("hyprland\.start", function\(\)\)$' \
+    grep -Eq '^hl\.on\("hyprland\.start", function\(\)$' \
         /usr/lib/sddm/obsidian-blue-hyprland.conf || \
         fail "SDDM greeter config must run the display setup on hyprland.start"
     grep -Eq '^hl\.window_rule\(\{' /usr/lib/sddm/obsidian-blue-hyprland.conf || \
