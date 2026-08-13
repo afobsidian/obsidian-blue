@@ -1,4 +1,4 @@
-ARG BASE_IMAGE="ghcr.io/wayblueorg/hyprland@sha256:464af622df5e6512dd82180f1aee089fec338c9885336a065f4c9ac1515d771b"
+ARG BASE_IMAGE="ghcr.io/wayblueorg/hyprland@sha256:84a233ba84c6977b6bb4e256ab54b2ac07a32d8bd87471c64f9ec6b419a4f0b7"
 FROM "${BASE_IMAGE}" AS obsidian-blue
 
 # This stage is responsible for holding onto
@@ -240,10 +240,10 @@ RUN \
 
 # Labels are added last since they cause cache misses with buildah
 LABEL io.artifacthub.package.readme-url="https://raw.githubusercontent.com/blue-build/cli/main/README.md"
-LABEL org.blue-build.build-id="d2a5ebad-eb5e-45de-bfc2-0d0aa9402934"
-LABEL org.opencontainers.image.base.digest="sha256:464af622df5e6512dd82180f1aee089fec338c9885336a065f4c9ac1515d771b"
+LABEL org.blue-build.build-id="f0f8190c-7101-46ea-9c82-c6cba130895d"
+LABEL org.opencontainers.image.base.digest="sha256:84a233ba84c6977b6bb4e256ab54b2ac07a32d8bd87471c64f9ec6b419a4f0b7"
 LABEL org.opencontainers.image.base.name="ghcr.io/wayblueorg/hyprland:latest"
-LABEL org.opencontainers.image.created="2026-08-05T23:50:14.429536098+00:00"
+LABEL org.opencontainers.image.created="2026-08-13T03:10:40.149153217+00:00"
 LABEL org.opencontainers.image.description="Custom immutable Fedora Atomic image. wayblue hyprland base + omadora Hyprland desktop + bluefin-dx developer tooling + extra opinionated Hyprland ecosystem packages."
 LABEL org.opencontainers.image.source=""
 LABEL org.opencontainers.image.title="obsidian-blue"
