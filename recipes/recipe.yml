@@ -131,6 +131,7 @@ modules:
       cleanup: true
       files:
         - jdxcode-mise.repo # omadora: version manager
+        - starship.repo # omadora: shell prompt
         - tailscale.repo # official tailscale repository
     install:
       skip-unavailable: true
@@ -246,6 +247,7 @@ modules:
         - jq
         - yq
         - zsh
+        - starship # Omadora shell prompt
         - tailscale
 
         # ── Bluefin DX: performance profiling (Brendan Gregg toolkit) ───────
