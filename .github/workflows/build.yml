@@ -48,12 +48,17 @@ jobs:
       - name: Validate Hyprland package request
         run: bash files/scripts/validate-hyprland-stack.sh --recipe recipes/recipe.yml
 
+      - name: Verify signing secret
+        env:
+          SIGNING_SECRET: ${{ secrets.SIGNING_SECRET }}
+        run: test -n "$SIGNING_SECRET"
+
       - name: Build image
         id: build
         uses: blue-build/github-action@v1
         with:
           recipe: recipe.yml
-          cli_version: v0.9.36
+          cli_version: v0.9.37
           cosign_private_key: ${{ secrets.SIGNING_SECRET }}
           registry_token: ${{ github.token }}
           pr_event_number: ${{ github.event.number }}
