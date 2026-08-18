@@ -11,11 +11,7 @@ Wants=omadora-battery-monitor.timer
 Wants=omadora-update-check.timer
 Wants=omadora-weather-check.timer
 
-Wants=hypridle.service
-Wants=hyprpaper.service
 Wants=hyprsunset.service
-Wants=swaync.service
-Wants=waybar.service
 
 [Install]
 WantedBy=graphical-session.target
