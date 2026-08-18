@@ -186,6 +186,7 @@ modules:
         - power-profiles-daemon # power profile switching
         - sushi # Nautilus file previewer
         - swaybg # wallpaper setter
+        - swaylock # fallback locker if hyprlock regresses
         - tldr # simplified man pages
         - usbutils # lsusb
         - wf-recorder # screen recorder
