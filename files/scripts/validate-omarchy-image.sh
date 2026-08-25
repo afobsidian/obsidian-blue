@@ -34,6 +34,13 @@ done
 
 grep -Fqx 'auth include login' /etc/pam.d/omarchy-lock-password || \
   fail "Fedora lock PAM stack is absent"
+grep -Fqx 'NAME="obsidian-blue"' /usr/lib/os-release || fail "image name is not branded"
+grep -Fqx 'DEFAULT_HOSTNAME="obsidian-blue"' /usr/lib/os-release || \
+  fail "default hostname is not branded"
+grep -Eq '^127\.0\.0\.1[[:space:]]+obsidian-blue[[:space:]]' /etc/hosts || \
+  fail "hostname is absent from hosts"
+[[ ! -e /usr/lib/systemd/user/wayblue-update-verification.service ]] || \
+  fail "Wayblue update notifier remains"
 grep -Fqx 'SHELL=/bin/bash' /etc/default/useradd || fail "Bash is not the default user shell"
 grep -Fq 'source "${OMARCHY_PATH:-/usr/share/omarchy}/default/bash/rc"' \
   /etc/profile.d/99-omarchy-bash.sh || \

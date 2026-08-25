@@ -103,6 +103,18 @@ RUN \
 /tmp/scripts/run_module.sh 'brew' '{"type":"brew","brew-analytics":false}'
 RUN \
 --mount=type=bind,from=stage-files,src=/files,dst=/tmp/files,rw \
+--mount=type=bind,from=ghcr.io/blue-build/modules/os-release:latest,src=/modules,dst=/tmp/modules,rw \
+--mount=type=bind,src=.bluebuild-scripts_6fc443c6,dst=/tmp/scripts/,Z \
+--mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-latest-stage-obsidian-blue \
+/tmp/scripts/run_module.sh 'os-release' '{"type":"os-release","properties":{"NAME":"obsidian-blue","ID_LIKE":"fedora","PRETTY_NAME":"Obsidian Blue (powered by Fedora Atomic)","CPE_NAME":"cpe:/o:afobsidian:obsidian-blue","DEFAULT_HOSTNAME":"obsidian-blue","HOME_URL":"https://github.com/afobsidian/obsidian-blue","DOCUMENTATION_URL":"https://github.com/afobsidian/obsidian-blue","SUPPORT_URL":"https://github.com/afobsidian/obsidian-blue/issues","BUG_REPORT_URL":"https://github.com/afobsidian/obsidian-blue/issues","VARIANT":"Omarchy Quattro","VARIANT_ID":"obsidian-blue","IMAGE_ID":"obsidian-blue"}}'
+RUN \
+--mount=type=bind,from=stage-files,src=/files,dst=/tmp/files,rw \
 --mount=type=bind,from=ghcr.io/blue-build/modules/files:latest,src=/modules,dst=/tmp/modules,rw \
 --mount=type=bind,src=.bluebuild-scripts_6fc443c6,dst=/tmp/scripts/,Z \
 --mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-latest-stage-obsidian-blue \
@@ -168,10 +180,10 @@ RUN \
 
 # Labels are added last since they cause cache misses with buildah
 LABEL io.artifacthub.package.readme-url="https://raw.githubusercontent.com/blue-build/cli/main/README.md"
-LABEL org.blue-build.build-id="9f1d69f9-1997-4f51-8bb4-eb68e77eda5a"
+LABEL org.blue-build.build-id="d246ccee-df58-4507-b567-18e4a0137704"
 LABEL org.opencontainers.image.base.digest="sha256:efc40c3544c7a9a379b75561c22a50d7342c7d72c30452d26fde8ef6d3ffb436"
 LABEL org.opencontainers.image.base.name="ghcr.io/wayblueorg/hyprland:latest"
-LABEL org.opencontainers.image.created="2026-08-25T04:48:32.451339877+00:00"
+LABEL org.opencontainers.image.created="2026-08-25T04:59:21.254360083+00:00"
 LABEL org.opencontainers.image.description="Omarchy Quattro on Fedora Atomic with a mutable user configuration layer."
 LABEL org.opencontainers.image.source=""
 LABEL org.opencontainers.image.title="obsidian-blue"

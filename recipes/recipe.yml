@@ -176,6 +176,21 @@ modules:
   - type: brew
     brew-analytics: false
 
+  - type: os-release
+    properties:
+      NAME: obsidian-blue
+      ID_LIKE: fedora
+      PRETTY_NAME: Obsidian Blue (powered by Fedora Atomic)
+      CPE_NAME: cpe:/o:afobsidian:obsidian-blue
+      DEFAULT_HOSTNAME: obsidian-blue
+      HOME_URL: https://github.com/afobsidian/obsidian-blue
+      DOCUMENTATION_URL: https://github.com/afobsidian/obsidian-blue
+      SUPPORT_URL: https://github.com/afobsidian/obsidian-blue/issues
+      BUG_REPORT_URL: https://github.com/afobsidian/obsidian-blue/issues
+      VARIANT: Omarchy Quattro
+      VARIANT_ID: obsidian-blue
+      IMAGE_ID: obsidian-blue
+
   - type: files
     files:
       - source: usr
