@@ -21,13 +21,17 @@ for path in \
   /usr/share/omarchy/themes/tokyo-night/colors.toml \
   /etc/profile.d/omarchy.sh \
   /etc/bashrc.d/99-omarchy.sh \
-  /etc/skel/.local/state/obsidian-blue/quattro-4.0.0-image-config-v2 \
+  /etc/pam.d/omarchy-lock-password \
+  /etc/skel/.local/state/obsidian-blue/quattro-4.0.0-image-config-v3 \
   /usr/share/wayland-sessions/omarchy.desktop \
   /usr/share/applications/Basecamp.desktop \
   /usr/share/applications/Alacritty.desktop \
   /usr/share/nautilus-python/extensions/localsend.py; do
   [[ -e "$path" ]] || fail "missing path: $path"
 done
+
+grep -Fqx 'auth include login' /etc/pam.d/omarchy-lock-password || \
+  fail "Fedora lock PAM stack is absent"
 
 for session in omarchy.desktop hyprland.desktop hyprland-uwsm.desktop; do
   grep -Fqx 'Exec=/usr/bin/obsidian-blue-quattro-session' \
@@ -50,6 +54,10 @@ grep -Fq '$OMARCHY_PATH/config/?.lua' /usr/bin/obsidian-blue-quattro-session || 
   fail "baked Lua config path is absent"
 grep -Fq '$OMARCHY_PATH/icon.txt' /usr/bin/omarchy-launch-about || fail "About branding has no fallback"
 grep -Fq '$OMARCHY_PATH/logo.txt' /usr/bin/omarchy-screensaver || fail "screensaver has no fallback"
+grep -Fq '"install.package": {"icon":"󰏗","label":"Flatpak"' \
+  /usr/share/omarchy/default/omarchy/omarchy-menu.jsonc || fail "Flatpak install menu is absent"
+grep -Fq '"install.aur": {"icon":"󰣇","label":"AUR","when":"omarchy-cmd-present pacman"' \
+  /usr/share/omarchy/default/omarchy/omarchy-menu.jsonc || fail "AUR menu is visible on Fedora"
 fc-match 'JetBrainsMono Nerd Font' --format '%{family}\n' | \
   grep -Fq 'JetBrainsMono Nerd Font' || fail "JetBrainsMono Nerd Font is absent"
 

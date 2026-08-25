@@ -6,7 +6,7 @@ version="${OMARCHY_VERSION:-4.0.0}"
 config_root="${OMARCHY_CONFIG_ROOT:-/usr/share/omarchy/config}"
 applications_root="${OMARCHY_APPLICATIONS_ROOT:-/usr/share/omarchy/applications}"
 state_root="${XDG_STATE_HOME:-$HOME/.local/state}"
-marker="$state_root/obsidian-blue/quattro-$version-image-config-v2"
+marker="$state_root/obsidian-blue/quattro-$version-image-config-v3"
 [[ -e "$marker" ]] && exit 0
 
 backup="$state_root/obsidian-blue/backups/quattro-$version-$(date -u +%Y%m%dT%H%M%SZ)"
@@ -38,7 +38,11 @@ for source in "$config_root"/*; do
   archive "$HOME/.config/$(basename "$source")"
 done
 
-for legacy in "$HOME/.config/omadora" "$HOME/.config/waybar" "$HOME/.local/share/omadora"; do
+for legacy in \
+  "$HOME/.config/omadora" \
+  "$HOME/.config/uwsm" \
+  "$HOME/.config/waybar" \
+  "$HOME/.local/share/omadora"; do
   archive "$legacy"
 done
 

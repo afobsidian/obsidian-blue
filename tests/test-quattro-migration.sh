@@ -10,11 +10,12 @@ defaults="$root/defaults"
 apps="$root/apps"
 omarchy="$root/omarchy"
 mkdir -p "$home/.config/hypr" "$home/.config/omadora" "$home/.local/share/omadora" \
-  "$home/.config/waybar" "$home/.config/systemd/user" "$home/.config/unrelated" \
+  "$home/.config/uwsm" "$home/.config/waybar" "$home/.config/systemd/user" "$home/.config/unrelated" \
   "$home/.local/share/applications" "$home/.local/state/omarchy/done" \
   "$defaults/hypr" "$defaults/kitty" "$apps" "$omarchy/migrations"
 printf 'old\n' >"$home/.config/hypr/value"
 printf 'legacy\n' >"$home/.config/omadora/value"
+printf 'legacy uwsm\n' >"$home/.config/uwsm/env"
 printf 'waybar\n' >"$home/.config/waybar/value"
 printf 'unit\n' >"$home/.config/systemd/user/omadora-session.target"
 printf 'keep\n' >"$home/.config/unrelated/value"
@@ -33,12 +34,13 @@ HOME="$home" XDG_STATE_HOME="$home/.local/state" OMARCHY_CONFIG_ROOT="$defaults"
 test ! -e "$home/.config/hypr"
 test ! -e "$home/.config/kitty"
 test ! -e "$home/.config/omadora"
+test ! -e "$home/.config/uwsm"
 test ! -e "$home/.config/waybar"
 test ! -e "$home/.config/systemd/user/omadora-session.target"
 test ! -e "$home/.local/share/applications/Test.desktop"
 test ! -e "$home/.local/state/omarchy/done/first-run-user"
 test "$(cat "$home/.config/unrelated/value")" = keep
-test -f "$home/.local/state/obsidian-blue/quattro-4.0.0-image-config-v2"
+test -f "$home/.local/state/obsidian-blue/quattro-4.0.0-image-config-v3"
 test -f "$home/.local/state/omarchy/migrations/001.sh"
 test "$(find "$home/.local/state/obsidian-blue/backups" -path '*/.config/hypr/value' -exec cat {} \;)" = old
 test "$(find "$home/.local/state/obsidian-blue/backups" -path '*/applications/Test.desktop' -exec cat {} \;)" = 'old desktop'
@@ -62,4 +64,4 @@ if HOME="$home" XDG_STATE_HOME="$home/.local/state" OMARCHY_VERSION=4.0.1 \
 fi
 test "$(cat "$home/.config/hypr/hyprland.lua")" = mutable
 test "$(cat "$home/.config/omadora/value")" = legacy-again
-test ! -e "$home/.local/state/obsidian-blue/quattro-4.0.1-image-config-v2"
+test ! -e "$home/.local/state/obsidian-blue/quattro-4.0.1-image-config-v3"

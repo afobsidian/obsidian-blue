@@ -26,6 +26,14 @@ install -d /usr/share/omarchy /usr/bin /usr/share/applications /usr/share/waylan
 cp -a "$source_dir"/{applications,config,default,install,migrations,shell,themes} /usr/share/omarchy/
 install -m 0644 "$source_dir"/{icon.png,icon.txt,logo.svg,logo.txt,version} /usr/share/omarchy/
 
+menu=/usr/share/omarchy/default/omarchy/omarchy-menu.jsonc
+sed -i \
+  -e 's/"install.package": {"icon":"󰣇","label":"Package"/"install.package": {"icon":"󰏗","label":"Flatpak"/' \
+  -e 's/"install.aur": {"icon":"󰣇","label":"AUR"/"install.aur": {"icon":"󰣇","label":"AUR","when":"omarchy-cmd-present pacman"/' \
+  "$menu"
+grep -Fq '"install.package": {"icon":"󰏗","label":"Flatpak"' "$menu"
+grep -Fq '"install.aur": {"icon":"󰣇","label":"AUR","when":"omarchy-cmd-present pacman"' "$menu"
+
 for executable in "$source_dir"/bin/*; do
   [[ -f "$executable" ]] || continue
   install -m 0755 "$executable" "/usr/bin/$(basename "$executable")"
@@ -139,7 +147,7 @@ install -d /etc/skel/.local/state/omarchy/migrations /etc/skel/.local/state/obsi
 for migration in "$source_dir"/migrations/*.sh; do
   touch "/etc/skel/.local/state/omarchy/migrations/$(basename "$migration")"
 done
-touch /etc/skel/.local/state/obsidian-blue/quattro-4.0.0-image-config-v2
+touch /etc/skel/.local/state/obsidian-blue/quattro-4.0.0-image-config-v3
 
 install -Dm644 "$script_dir/omarchy-version.env" /usr/share/obsidian-blue/omarchy-version.env
 

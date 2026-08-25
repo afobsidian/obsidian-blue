@@ -18,10 +18,15 @@ grep -Fq '/usr/share/wayland-sessions/omarchy.desktop' \
   "$repo/files/scripts/install-omarchy-quattro.sh"
 ! grep -Fq '/usr/local/share/wayland-sessions/omarchy.desktop' \
   "$repo/files/scripts/install-omarchy-quattro.sh"
-grep -Fq 'quattro-$version-image-config-v2' \
+grep -Fq 'quattro-$version-image-config-v3' \
   "$repo/files/usr/libexec/obsidian-blue/quattro-migrate"
+grep -Fq '"install.package": {"icon":"󰏗","label":"Flatpak"' \
+  "$repo/files/scripts/install-omarchy-quattro.sh"
+grep -Fq '"install.aur": {"icon":"󰣇","label":"AUR","when":"omarchy-cmd-present pacman"' \
+  "$repo/files/scripts/install-omarchy-quattro.sh"
 grep -Fq 'JETBRAINS_MONO_NERD_SHA256=' "$repo/files/scripts/omarchy-version.env"
 test ! -e "$repo/.gitmodules"
+grep -Fqx 'auth include login' "$repo/files/etc/pam.d/omarchy-lock-password"
 
 find "$repo/files" "$repo/scripts" "$repo/tests" -type f -name '*.sh' -print0 | \
   xargs -0 -n1 bash -n
