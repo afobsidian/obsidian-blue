@@ -31,6 +31,8 @@ grep -Fq '"install.aur": {"icon":"󰣇","label":"AUR","when":"omarchy-cmd-presen
 grep -Fq 'JETBRAINS_MONO_NERD_SHA256=' "$repo/files/scripts/omarchy-version.env"
 test ! -e "$repo/.gitmodules"
 grep -Fqx 'auth include login' "$repo/files/etc/pam.d/omarchy-lock-password"
+grep -Fq 'omarchy-browser-launcher.patch' "$repo/files/scripts/install-omarchy-quattro.sh"
+grep -Fq 'Private browser binding is absent' "$repo/files/scripts/validate-omarchy-image.sh"
 
 find "$repo/files" "$repo/scripts" "$repo/tests" -type f -name '*.sh' -print0 | \
   xargs -0 -n1 bash -n

@@ -13,6 +13,7 @@ trap 'rm -f "$archive" "$font_archive"; rm -rf "$source_dir"' EXIT
 curl -fsSL "https://codeload.github.com/basecamp/omarchy/tar.gz/$OMARCHY_COMMIT" -o "$archive"
 echo "$OMARCHY_SHA256  $archive" | sha256sum --check --status
 tar -xzf "$archive" --strip-components=1 -C "$source_dir"
+(cd "$source_dir" && git apply --recount <"$script_dir/../patches/omarchy-browser-launcher.patch")
 
 curl -fsSL \
   "https://github.com/ryanoasis/nerd-fonts/releases/download/v$NERD_FONTS_VERSION/JetBrainsMono.tar.xz" \

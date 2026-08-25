@@ -73,6 +73,10 @@ grep -Fq '/omarchy/hypr/monitors.lua' /usr/bin/omarchy-hyprland-monitor-scaling 
   fail "monitor scaling does not persist in Omarchy config"
 grep -Fq '$OMARCHY_PATH/icon.txt' /usr/bin/omarchy-launch-about || fail "About branding has no fallback"
 grep -Fq '$OMARCHY_PATH/logo.txt' /usr/bin/omarchy-screensaver || fail "screensaver has no fallback"
+grep -Fq 'omarchy = "browser"' /usr/share/omarchy/default/hypr/bindings/applications.lua || \
+  fail "Browser binding is absent"
+grep -Fq 'omarchy = "browser --private"' /usr/share/omarchy/default/hypr/bindings/applications.lua || \
+  fail "Private browser binding is absent"
 grep -Fq '"install.package": {"icon":"󰏗","label":"Flatpak"' \
   /usr/share/omarchy/default/omarchy/omarchy-menu.jsonc || fail "Flatpak install menu is absent"
 grep -Fq '"install.aur": {"icon":"󰣇","label":"AUR","when":"omarchy-cmd-present pacman"' \
