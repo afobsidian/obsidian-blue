@@ -1,48 +1,15 @@
-# recipe.yml
-# Based on: ghcr.io/wayblueorg/hyprland
-# DX layer inspired by: ublue-os/bluefin-dx
-#
-# wayblue common base already provides (do NOT re-add):
-#   rofi-wayland, wofi, fzf, wl-clipboard, pavucontrol, playerctl, pamixer,
-#   distrobox, just, brightnessctl, blueman, slurp, grim, dunst,
-#   xarchiver,
-#   wireplumber, pipewire, pulseaudio-utils, network-manager-applet,
-#   qt5-qtwayland, qt6-qtwayland, wlsunset, kanshi, wlr-randr, vim, ...
-#
-# wayblue hyprland image also provides (currently from its Craftidore COPR):
-#   hyprland, waybar, kitty, xdg-desktop-portal-hyprland,
-#   hyprpaper, hyprlock, hypridle, hyprland-guiutils
-#   The recipe disables the inherited Hyprland COPR and replaces the entire
-#   ABI-sensitive stack with one matched Lionheart git snapshot set. It also
-#   replaces Fedora's Waybar build with Lionheart's current upstream snapshot.
-
 name: obsidian-blue
-description: >-
-  Custom immutable Fedora Atomic image.
-  wayblue hyprland base + omadora Hyprland desktop
-  + bluefin-dx developer tooling
-  + extra opinionated Hyprland ecosystem packages.
+description: Omarchy Quattro on Fedora Atomic with a mutable user configuration layer.
 
-# ─── Base image ────────────────────────────────────────────────────────────────
-# The default image is hardware-neutral for Intel and AMD. Publish a separately
-# named recipe/tag if an Nvidia-specific Wayblue base is needed later.
 base-image: ghcr.io/wayblueorg/hyprland
-image-version: latest # only supported tag
+image-version: latest
 
-# ─── Build modules ─────────────────────────────────────────────────────────────
 modules:
-  # ── 1. Clear stale DNF cache entries and disable inherited Hyprland COPRs ──
   - type: script
     scripts:
       - clear-rpmfusion-dnf-cache.sh
       - swap-hyprland-copr.sh
 
-  # ── 2. Replace the Hyprland stack and affected stable Waybar build ───────
-  # Lionheart publishes stable and git compositor/plugin lines in one COPR.
-  # Select only the git line: its plugins require the exact hyprland-git
-  # snapshot, and its current Aquamarine/hyprutils SONAMEs match that snapshot.
-  # Remove inherited packages first so an equal NEVRA from Wayblue's Craftidore
-  # COPR cannot survive merely because DNF considers it already installed.
   - type: dnf
     repos:
       cleanup: true
@@ -55,357 +22,185 @@ modules:
         - hyprland-git
         - hyprland-plugins
         - hyprland-plugins-git
-        - hyprland-plugin-borders-plus-plus
-        - hyprland-plugin-borders-plus-plus-git
-        - hyprland-plugin-csgo-vulkan-fix
-        - hyprland-plugin-csgo-vulkan-fix-git
-        - hyprland-plugin-hyprbars
-        - hyprland-plugin-hyprbars-git
-        - hyprland-plugin-hyprfocus
-        - hyprland-plugin-hyprfocus-git
-        - aquamarine
-        - hyprcursor
-        - hyprgraphics
-        - hyprlang
-        - hyprutils
-        - hyprwire
-        - hyprtoolkit
-        - xdg-desktop-portal-hyprland
-        - hyprpaper
-        - hyprlock
-        - hypridle
-        - hyprland-qtutils
-        - hyprland-guiutils
-        - hyprland-qt-support
-        - hyprpicker
-        - hyprshot
-        - hyprpolkitagent
-        - hyprsunset
-        - hyprland-contrib
         - waybar
         - waybar-git
+        - dunst
+        - mako
+        - greetd
+        - gtkgreet
     install:
-      install-weak-deps: false
-      # Fedora remains visible for non-Hyprland dependencies (for example
-      # libeis and polkit-qt6). The inherited Hyprland COPRs are disabled, all
-      # direct stack packages are removed first, and the post-build validator
-      # requires every replacement package to report the Lionheart origin.
       allow-erasing: true
+      install-weak-deps: false
       packages:
-        - hyprland-git
-        - hyprland-plugins-git
-        # Weak dependencies are disabled globally, so name the packaged plugin
-        # binaries explicitly. None is auto-loaded by the shipped config.
-        - hyprland-plugin-borders-plus-plus-git
-        - hyprland-plugin-csgo-vulkan-fix-git
-        - hyprland-plugin-hyprbars-git
-        - hyprland-plugin-hyprfocus-git
-        - aquamarine
-        - hyprcursor
-        - hyprgraphics
-        - hyprlang
-        - hyprutils
-        - hyprwire
-        - hyprtoolkit
-        - xdg-desktop-portal-hyprland
-        - hyprpaper
-        - hyprlock
-        - hypridle
-        # UWSM is shipped by Lionheart rather than Fedora. Keep it in this
-        # transaction so the repo is still available when the package resolves.
+        - hyprland
+        - hyprland-uwsm
         - uwsm
-        # hyprland-guiutils obsoletes the retired hyprland-qtutils name.
-        - hyprland-guiutils
-        - hyprland-qt-support
+        - quickshell
+        - hypridle
         - hyprpicker
-        - hyprshot
         - hyprpolkitagent
         - hyprsunset
-        - hyprland-contrib
-        # Includes upstream's Gtk::Button taskbar-window hitbox fix.
-        - waybar-git
+        - hyprland-guiutils
+        - hyprland-qt-support
+        - xdg-desktop-portal-hyprland
 
-  # ── 3. Remaining RPM repos + installs ─────────────────────────────────────
   - type: dnf
     repos:
       cleanup: true
       files:
-        - jdxcode-mise.repo # omadora: version manager
-        - starship.repo # omadora: shell prompt
-        - tailscale.repo # official tailscale repository
+        - jdxcode-mise.repo
+        - starship.repo
     install:
       skip-unavailable: true
       skip-broken: true
       install-weak-deps: false
       packages:
-        # ── Hyprland-adjacent utility from Fedora ───────────────────────────
-        # The compositor, plugins, portal, and support libraries are installed
-        # strictly from Lionheart in the preceding module.
-        - satty # screenshot annotation tool
-
-        # ── omadora base packages ─────────────────────────────────────────────
-        # (packages already provided by wayblue base or recipe above are omitted)
-        - alacritty # omadora default terminal
-        - bat # cat with syntax highlighting
-        - bind-utils # DNS tools (dig, nslookup)
-        - btop # resource monitor
-        - bluez # bluetui runtime dependency (Bluetooth daemon and tooling)
-        - cascadia-code-nf-fonts # terminal Nerd Font
-        - cascadia-mono-nf-fonts # monospace variant
-        - chromium # default browser
-        - clang # cargo build dep (impala/bluetui); removed after build
-        - dbus-tools # dbus-send etc.
-        - du-dust # dust: intuitive du alternative
-        - dolphin # KDE file manager
-        - evince # PDF viewer
-        - fastfetch # system info display
-        - fcitx5 # input method framework
+        - ImageMagick
+        - NetworkManager-tui
+        - alacritty
+        - alsa-utils
+        - avahi
+        - bash-completion
+        - bat
+        - bluez
+        - bluez-tools
+        - bolt
+        - brightnessctl
+        - btop
+        - chromium
+        - clang
+        - cups
+        - cups-browsed
+        - cups-filters
+        - cups-pdf
+        - dbus-tools
+        - ddcutil
+        - dosfstools
+        - dua-cli
+        - evince
+        - exfatprogs
+        - eza
+        - fastfetch
+        - fcitx5
         - fcitx5-configtool
         - fcitx5-gtk
         - fcitx5-qt
-        - fontawesome-fonts-all # icon fonts
-        - gnome-calculator
-        - gnome-keyring
-        - gnome-themes-extra # Adwaita-dark GTK theme
-        - google-noto-fonts-common # base Noto fonts
-        - gum # fancy shell scripts
-        - gvfs-mtp # phone MTP access via Nautilus
-        - gvfs-smb # Samba/SMB network shares
-        - kio-extras # Dolphin network/archive protocol support
-        - ark # archive integration for Dolphin
-        - ffmpegthumbs # video thumbnails for Dolphin
-        - kde-cli-tools # KDE helper tools used by Dolphin/KIO
-        - iwd # WiFi daemon
-        - libxkbcommon-utils # xkbcli inspect etc.
-        - mise # version manager (jdxcode COPR)
-        - nautilus # omadora default file manager
-        - pipewire-devel # cargo build dep (impala); removed after build
-        - pipx # user-level Python app installer
-        - plocate # fast locate
-        - plymouth # boot splash
-        - power-profiles-daemon # power profile switching
-        - sushi # Nautilus file previewer
-        - swaybg # wallpaper setter
-        - tldr # simplified man pages
-        - usbutils # lsusb
-        - wf-recorder # screen recorder
-        - whois # domain lookup
-        - wiremix # PipeWire TUI mixer
-        - xdg-desktop-portal-gtk # GTK portal backend
-        - xdg-terminal-exec # default terminal selector
-        - xdg-user-dirs # XDG user directory management
-        - xmlstarlet # XML CLI tools
-        - yaru-icon-theme # Yaru icon set (omadora default)
-        - zoxide # smart cd replacement
-
-        # ── KooL Hyprland-Dots deps not already in wayblue common ────────────
-        - swappy # screenshot editor (grim + slurp already in base)
-        - cliphist # clipboard manager (wl-clipboard backend already in base)
-        - SwayNotificationCenter # swaync; replaces dunst which wayblue ships
-        - mpv # media player
-        - nwg-look # GTK settings GUI
-        - qt5ct
-        - qt6ct
-        - kvantum
-        - wlogout # logout / power menu
-        - ImageMagick # wallpaper manipulation scripts
-        - yad # dialog boxes used by KooL scripts
-        - yt-dlp # video downloader
-        - imv # image viewer
-        - NetworkManager-tui
-
-        # ── Upstream-installed extras: runtime deps ─────────────────────────
-        - python3-gobject # nwg-displays / monique GTK bindings
-        - python3-i3ipc # nwg-displays sway IPC integration
-        - python3-pyudev # monique Niri hotplug detection
-        - gtk-layer-shell # nwg-displays overlay support
-
-        # ── Upstream-installed extras: build deps ───────────────────────────
-        - python3-build # build nwg-displays / monique wheels from source
-        - python3-installer # install nwg-displays / monique wheels into the image
-        - python3-setuptools # nwg-displays / monique packaging metadata
-        - python3-wheel # nwg-displays / monique wheel build backend
-        - cargo # build wallust, matugen, bluetui, eza, impala from source
-        - rust # build wallust, matugen, bluetui, eza, impala from source
-        - gcc # linker for cargo builds
-        - dbus-devel # bluetui/libdbus-sys build dep; removed after build
-
-        # ── Bluefin DX: container runtimes ──────────────────────────────────
-        # Docker removed: using podman instead
-
-        # ── Bluefin DX: IDE & Kubernetes tooling ────────────────────────────
-        - code # VS Code from Microsoft repo
-        - kubectl
-        - helm
-
-        # ── Bluefin DX: dev quality-of-life CLIs ────────────────────────────
-        # (distrobox, fzf, just already in wayblue base)
-        - gh # GitHub CLI
-        - neovim
-        - ripgrep
         - fd-find
+        - ffmpeg-free
+        - ffmpegthumbnailer
+        - foot
+        - fzf
+        - gh
+        - git
+        - gnome-disk-utility
+        - gnome-keyring
+        - gnome-themes-extra
+        - google-noto-color-emoji-fonts
+        - google-noto-sans-cjk-fonts
+        - grim
+        - gum
+        - gvfs-mtp
+        - gvfs-nfs
+        - gvfs-smb
+        - imv
+        - inetutils
+        - inotify-tools
+        - inxi
+        - iwd
         - jq
-        - yq
-        - zsh
-        - starship # Omadora shell prompt
-        - tailscale
-
-        # ── Bluefin DX: performance profiling (Brendan Gregg toolkit) ───────
+        - kitty
+        - less
+        - libsecret
+        - lua
+        - luarocks
+        - man-db
+        - mise
+        - mpv
+        - nautilus
+        - nautilus-python
+        - neovim
+        - nmap-ncat
+        - pamixer
         - perf
-        - sysprof
-
-        # ── SDDM greeter (replaces wayblue's greetd + gtkgreet/cage) ─────
-        # SDDM handles multi-monitor natively and supports modern QML themes.
-        # qt6-qtquickcontrols2 and qt6-qtsvg are required by the catppuccin theme.
+        - playerctl
+        - plocate
+        - plymouth
+        - podman
+        - podman-compose
+        - podman-docker
+        - podman-tui
+        - power-profiles-daemon
+        - python3-gobject
+        - qrencode
+        - ripgrep
+        - ruby
         - sddm
-        - qt6-qtquickcontrols2
-        - qt6-qtsvg
-
+        - slurp
+        - socat
+        - starship
+        - sushi
+        - sysprof
+        - system-config-printer
+        - tailscale
+        - tesseract
+        - tesseract-langpack-eng
+        - tldr
+        - tmux
+        - udiskie
+        - unzip
+        - usbutils
+        - whois
+        - wireplumber
+        - wl-clipboard
+        - wtype
+        - xdg-desktop-portal-gtk
+        - xdg-terminal-exec
+        - xdg-user-dirs
+        - xdg-utils
+        - yaru-icon-theme
+        - yq
+        - yt-dlp
+        - zbar
+        - zoxide
+        - zsh
     remove:
       packages:
-        # wayblue currently ships tuned-ppd; remove it before adding
-        # power-profiles-daemon, which provides the same ppd-service.
-        - tuned-ppd
-        # wayblue ships wlsunset; hyprsunset is the Hyprland-native replacement
-        - wlsunset
-        # wayblue ships dunst; mako is pulled by omadora but conflicts with
-        # swaync for org.freedesktop.Notifications.
-        - dunst
-        - mako
-        # fcitx5 is the input method for this image; ibus leaves an IBus portal
-        # D-Bus activator that fails noisily when no ibus-daemon is running.
-        - ibus
-        # Dolphin replaces the Thunar file manager inherited from wayblue.
         - Thunar
         - thunar-archive-plugin
         - thunar-volman
-        # greetd (+ its greeter frontends) is replaced by SDDM; removing the
-        # package ensures it can never be started even when ostree's /etc
-        # 3-way merge preserves old enable symlinks from a prior deployment.
-        - greetd
-        - gtkgreet
+        - tuned-ppd
+        - wlsunset
 
-  # ── 4. Deploy onboarding service and exec script into /usr ───────────────────
-  # Must run before the systemd module so the service unit file exists when
-  # systemctl enable is called.
   - type: files
     files:
       - source: usr
         destination: /usr
+      - source: etc
+        destination: /etc
 
-  # ── 5. Install upstream packages not shipped in enabled Fedora repos ───────
   - type: script
     scripts:
-      - install-upstream-tools.sh
+      - install-omarchy-quattro.sh
+      - setup-image-config.sh
+      - validate-omarchy-image.sh
 
-  # ── 6. Enable systemd services ───────────────────────────────────────────────
   - type: systemd
     system:
       enabled:
-        # wayblue already ships NetworkManager + the nm-applet/blueman clients;
-        # make sure the backing services start too.
         - NetworkManager.service
+        - avahi-daemon.service
         - bluetooth.service
+        - cups.service
         - podman.socket
-        - tailscaled.service
-        # SDDM replaces greetd as the display manager; mask greetd so it can't
-        # accidentally be activated by anything pulling in the unit.
         - sddm.service
+        - tailscaled.service
       masked:
         - greetd.service
-        # ComposeFS owns the immutable root mount. Remounting it from the
-        # installer-generated Btrfs / entry fails on every boot.
         - systemd-remount-fs.service
     user:
       enabled:
         - podman.socket
-        # Monique daemon: auto-applies monitor profiles on hotplug
-        - moniqued.service
-        # Run-once-per-image-version omadora onboarding (first graphical login
-        # after install or rebase).  The service checks a build stamp and exits
-        # immediately when the image version has not changed.
-        - obsidian-blue-onboarding.service
 
-  # ── 7. Deploy omadora submodule into /etc/skel ───────────────────────────────
-  # /etc/skel is applied at account creation for new users.
-  # Existing users get omadora via the obsidian-blue-onboarding user service
-  # which copies/refreshes ~/.local/share/omadora on first graphical login and
-  # again whenever the image is rebased (the build stamp changes).
-  - type: files
-    files:
-      - source: omadora
-        destination: /etc/skel/.local/share/omadora
-      # obsidian-blue overrides omadora's default Hyprland autostart to
-      # activate graphical-session.target and avoid starting removed daemons.
-      - source: obsidian-blue/omadora/default/hypr
-        destination: /etc/skel/.local/share/omadora/default/hypr
-      - source: obsidian-blue/omadora/config/systemd/user
-        destination: /etc/skel/.local/share/omadora/config/systemd/user
-
-  # ── 8. Deploy omadora app configs into /etc/skel/.config ───────────────────
-  # Without this, a fresh account has no ~/.config/hypr/hyprland.conf when
-  # Hyprland starts for the first time, so the user sees a blank desktop with no
-  # waybar, swaync, or keybindings.  Shipping these configs in /etc/skel ensures
-  # they exist before Hyprland launches.  The onboarding service still runs to
-  # handle post-rebase config refreshes and interactive setup (theme, shell, …).
-  #
-  # Also ship the Plymouth "sliced" boot-splash theme files into the image so
-  # the theme can be activated by plymouthd.conf without any sudo at runtime.
-  - type: files
-    files:
-      - source: omadora/config
-        destination: /etc/skel/.config
-      - source: obsidian-blue/omadora/config/systemd/user
-        destination: /etc/skel/.config/systemd/user
-      - source: omadora/default/plymouth
-        destination: /usr/share/plymouth/themes/sliced
-
-  # ── 9. Deploy system-level config that omadora's install script applies ────
-  # On a conventional Fedora install these are written with `sudo` by
-  # omadora's install script.  On an immutable image we bake them in at build
-  # time instead:
-  #   • /etc/gnupg/dirmngr.conf  — GPG keyserver list for reliable key lookup
-  #   • /etc/sysctl.d/99-omadora.conf — TCP MTU probing to reduce SSH flakiness
-  #   • /etc/plymouth/plymouthd.conf  — Sets the default Plymouth theme to "sliced"
-  - type: files
-    files:
-      - source: etc
-        destination: /etc
-
-  # ── 10. System config that requires running commands (Nautilus icon symlinks) ─
-  - type: script
-    scripts:
-      - setup-image-config.sh
-
-  # ── 11. Stamp the omadora skel with the image build version ─────────────────
-  # The onboarding service compares this stamp to detect rebase/update events.
-  - type: script
-    scripts:
-      - write-build-version.sh
-
-  # ── 12. Remove build-only deps used by upstream installers ─────────────────
-  - type: dnf
-    remove:
-      packages:
-        - python3-build
-        - python3-installer
-        - python3-setuptools
-        - python3-wheel
-        - cargo
-        - rust
-        - gcc
-        - clang
-        - dbus-devel
-        - pipewire-devel
-
-  # ── 13. Fail the build on a mixed or ABI-incoherent Hyprland stack ────────
-  # This also writes the exact installed NEVRA/vendor/repository manifest to
-  # /usr/share/obsidian-blue/hyprland-package-manifest.txt for later auditing.
-  - type: script
-    scripts:
-      - validate-hyprland-stack.sh
-
-  # ── 14. Default Flatpaks (installed on first boot, not baked in) ───────────
   - type: default-flatpaks
     configurations:
       - notify: true
@@ -414,9 +209,14 @@ modules:
           url: https://dl.flathub.org/repo/flathub.flatpakrepo
           name: flathub
         install:
-          - com.github.wwmm.easyeffects
+          - com.github.PintaProject.Pinta
+          - com.github.xournalpp.xournalpp
+          - com.moonlight_stream.Moonlight
+          - com.obsproject.Studio
           - io.podman_desktop.PodmanDesktop
-          - org.gnome.Boxes
+          - md.obsidian.Obsidian
+          - org.kde.kdenlive
+          - org.libreoffice.LibreOffice
+          - org.localsend.localsend_app
 
-  # ── 15. Signing ─────────────────────────────────────────────────────────────
   - type: signing

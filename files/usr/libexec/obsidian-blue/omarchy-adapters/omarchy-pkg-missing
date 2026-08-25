@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+omarchy-pkg-present "$@" && exit 1
+exit 0

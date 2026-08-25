@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+for package in "$@"; do
+  if [[ "$package" == *.* ]]; then
+    flatpak install --user --noninteractive -y flathub "$package"
+  elif ! rpm -q "$package" >/dev/null 2>&1 && ! command -v "$package" >/dev/null 2>&1; then
+    echo "RPM '$package' belongs in recipes/recipe.yml; rebuild the image after adding it." >&2
+    exit 2
+  fi
+done

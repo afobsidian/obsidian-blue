@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+/usr/libexec/obsidian-blue/quattro-migrate
+export OMARCHY_PATH=/usr/share/omarchy
+exec uwsm start -g -1 -e -D Hyprland hyprland.desktop

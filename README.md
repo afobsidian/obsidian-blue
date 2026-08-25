@@ -1,157 +1,50 @@
 # obsidian-blue
 
-A custom immutable Fedora Atomic OS image built with [BlueBuild](https://blue-build.org/).
+An immutable Fedora Atomic image with the Omarchy Quattro desktop and a developer workstation layer.
 
-**Lineage:**
+## Model
 
-```text
-Fedora Atomic
-  └── ghcr.io/wayblueorg/hyprland-nvidia-open   (wayblue base)
-        └── obsidian-blue              (this image)
+- Omarchy `v4.0.0` is fetched from its pinned commit and verified by SHA-256 during the image build.
+- Canonical Omarchy defaults live in `/usr/share/omarchy` and `/etc/skel`.
+- User copies live under `~/.config` and remain mutable after the first migration.
+- Image updates use `ujust update`; Omarchy's Arch package updater is replaced by an image adapter.
+- Weekly automation opens a pull request when a new stable Omarchy release exists.
+
+Existing users get a one-time backup under `~/.local/state/obsidian-blue/backups/` before Quattro replaces
+desktop configuration.
+Later image upgrades do not replace user edits.
+
+## Developer tools
+
+The image includes Podman with a Docker-compatible CLI, Podman Compose, GitHub CLI, Neovim, `fd`, `rg`,
+`nmtui`, Tailscale, `perf`, `nc`, compilers, Mise, tmux, and common diagnostics.
+VS Code, kubectl, and Helm are intentionally absent.
+
+## Flatpaks
+
+Flathub is configured at system scope and curated defaults are installed on first boot.
+Existing system and user Flatpaks are never removed, and more can be installed normally:
+
+```bash
+flatpak install flathub APP_ID
 ```
 
-## What's included
-
-### From wayblue common base (already provided, not re-added)
-
-`rofi-wayland` · `wofi` · `fzf` · `just` · `distrobox` · `wl-clipboard` · `pavucontrol` · `playerctl` · `pamixer` · `brightnessctl` · `blueman` · `slurp` · `grim` · `dunst`_· `wlsunset`_ · `kanshi` · `wlr-randr` · `xarchiver` · `wireplumber` · `pipewire` · `qt5-qtwayland` · `qt6-qtwayland` · `vim` · and more
-
-> \* `dunst` is replaced by `SwayNotificationCenter`, `wlsunset` is replaced by `hyprsunset`, inherited Thunar packages are replaced by Dolphin, and Fedora's stable `waybar` is replaced by `waybar-git` for current Hyprland workspace-taskbar fixes.
-
-### From wayblue hyprland image (already provided, not re-added)
-
-`hyprland` · `waybar` · `kitty` · `hyprpaper` · `hyprlock` · `hypridle` · `xdg-desktop-portal-hyprland` · `hyprland-qtutils` — all from the `solopasha/hyprland` COPR, which wayblue enables.
-
----
-
-### Added: Extra Hyprland ecosystem
-
-| Package            | Purpose                                                   |
-| ------------------ | --------------------------------------------------------- |
-| `hyprland-plugins` | Official plugins (border++, hyprexpo, hyprtrails, …)      |
-| `hyprpicker`       | Colour picker                                             |
-| `hyprshot`         | Screenshot utility                                        |
-| `hyprpolkitagent`  | Polkit authentication agent                               |
-| `hyprsunset`       | Blue-light filter — replaces `wlsunset` from wayblue base |
-| `hyprland-contrib` | Community scripts (grimblast, etc.)                       |
-| `satty`            | Screenshot annotation                                     |
-
-### Added: Modern Hyprland-Dots dependencies
-
-Packages not already in the wayblue base:
-
-| Package(s)                    | Purpose                                                    |
-| ----------------------------- | ---------------------------------------------------------- |
-| `swappy`                      | Screenshot editor (`grim` + `slurp` already in base)       |
-| `cliphist`                    | Clipboard manager (`wl-clipboard` backend already in base) |
-| `SwayNotificationCenter`      | Notification daemon — replaces `dunst` from wayblue base   |
-| `mpv`                         | Media player                                               |
-| `nwg-look`                    | GTK settings GUI                                           |
-| `qt6ct` · `qt5ct` · `kvantum` | QT app theming                                             |
-| `wallust`                     | Colour palette generator from wallpaper                    |
-| `matugen`                     | Material You and base16 palette generator                  |
-| `wlogout`                     | Logout / power menu                                        |
-| `ImageMagick`                 | Image manipulation for wallpaper scripts                   |
-| `nwg-displays`                | Monitor management GUI                                     |
-| `dolphin` · `kio-extras` · `ark` · `ffmpegthumbs` | KDE file manager, protocol support, archive integration, and thumbnails |
-| `yad` · `yt-dlp`              | Dialog boxes and video downloader used by KooL scripts     |
-| `imv`                         | Image viewer                                               |
-
-`wallust`, `matugen`, and `nwg-displays` are installed from upstream source during the image build because they are not available from the enabled Fedora repos used by this recipe.
-
-### Added: Developer tooling (inspired by bluefin-dx)
-
-| Package(s)                          | Purpose                                               |
-| ----------------------------------- | ----------------------------------------------------- |
-| `docker-ce` + compose + buildx      | Container runtime (default for VS Code devcontainers) |
-| `code`                              | VS Code with devcontainers extension                  |
-| `kubectl` · `helm`                  | Kubernetes tooling                                    |
-| `gh` · `lazygit` · `neovim`         | Git and editor tooling                                |
-| `ripgrep` · `fd-find` · `jq` · `yq` | CLI utilities (`fzf` already in base)                 |
-| `zsh` · `fish`                      | Shells                                                |
-| `perf` · `sysprof`                  | System performance profiling                          |
-
-`lazygit` is installed from the upstream GitHub release during the image build because it is not available from the enabled Fedora repos used by this recipe.
-
-> `distrobox` and `just` are already provided by the wayblue base.
-
-### Flatpaks (installed on first boot)
-
-EasyEffects, Podman Desktop, GNOME Boxes.
-
----
-
-## Builds
-
-Images are built and pushed automatically every **Monday at 04:00 UTC** via GitHub Actions, as well as on every push to `main`. This ensures base-image and package updates are picked up weekly.
-
----
-
-## Installation
-
-### First rebase (unsigned, to get signing keys)
+## Install
 
 ```bash
 rpm-ostree rebase ostree-unverified-registry:ghcr.io/afobsidian/obsidian-blue:latest
 systemctl reboot
-```
-
-### Second rebase (signed)
-
-```bash
 rpm-ostree rebase ostree-image-signed:docker://ghcr.io/afobsidian/obsidian-blue:latest
 systemctl reboot
 ```
 
-### Post-install (one-time)
+Select `Omarchy (Hyprland uwsm)` in SDDM.
+
+## Build
 
 ```bash
-# Add yourself to the docker group
-sudo usermod -aG docker $USER
-
-# Nvidia GPU only — add kernel args:
-rpm-ostree kargs \
-  --append-if-missing=rd.driver.blacklist=nouveau \
-  --append-if-missing=modprobe.blacklist=nouveau \
-  --append-if-missing=nvidia-drm.modeset=1 \
-  --append-if-missing=nvidia-drm.fbdev=1
-```
-
-> **Nvidia GPU?** This recipe already uses `ghcr.io/wayblueorg/hyprland-nvidia-open`. Change `base-image` only if you want a different wayblue variant.
-
-### Updating from an older obsidian-blue image
-
-obsidian-blue uses SDDM with the Catppuccin theme instead of the wayblue Hyprland/greetd greeter/theme. Current images force the display-manager symlink and high-priority SDDM theme config back to obsidian-blue defaults on boot, including for systems rebased from older deployments where `/etc/systemd/system/display-manager.service` or inherited wayblue SDDM config was preserved.
-
-If you already updated and are still seeing the old wayblue greeter/theme on the current boot, apply the migration immediately and reboot:
-
-```bash
-sudo systemd-tmpfiles --create /usr/lib/tmpfiles.d/obsidian-blue-display-manager.conf
-sudo systemctl reboot
-```
-
----
-
-## Building locally
-
-```bash
-# Refresh Omadora from the branch selected in .gitmodules
-git submodule update --init --remote --checkout --depth 1 files/omadora
-
-# Install BlueBuild CLI
-podman run --pull always --rm ghcr.io/blue-build/cli:latest-installer | bash
-
-# Generate Containerfile and build
 bluebuild generate -o Containerfile recipes/recipe.yml
 podman build -t obsidian-blue .
 ```
 
----
-
-## Repository setup
-
-1. Create a new repo from the [BlueBuild template](https://github.com/blue-build/template)
-2. Replace `recipe.yml` with the one from this project
-3. Add `.github/workflows/build.yml`
-4. Generate a cosign keypair (`cosign generate-key-pair`) and add the private key as `SIGNING_SECRET` in your repo secrets
-5. Push to `main` — GitHub Actions will build and push to `ghcr.io/afobsidian/obsidian-blue:latest`
+Update the Omarchy pin with `scripts/update-omarchy.sh VERSION`.

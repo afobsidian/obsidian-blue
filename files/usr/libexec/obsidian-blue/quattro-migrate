@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+version="${OMARCHY_VERSION:-4.0.0}"
+config_root="${OMARCHY_CONFIG_ROOT:-/usr/share/omarchy/config}"
+applications_root="${OMARCHY_APPLICATIONS_ROOT:-/usr/share/omarchy/applications}"
+state_root="${XDG_STATE_HOME:-$HOME/.local/state}"
+marker="$state_root/obsidian-blue/quattro-$version"
+[[ -e "$marker" ]] && exit 0
+
+backup="$state_root/obsidian-blue/backups/quattro-$version-$(date -u +%Y%m%dT%H%M%SZ)"
+mkdir -p "$backup/config" "$backup/applications" "$HOME/.config" "$HOME/.local/share/applications"
+config_names=()
+application_names=()
+legacy_paths=()
+
+restore() {
+  local name relative
+  for name in "${config_names[@]}"; do
+    rm -rf "$HOME/.config/$name"
+    [[ -e "$backup/config/$name" || -L "$backup/config/$name" ]] && \
+      cp -a "$backup/config/$name" "$HOME/.config/$name"
+  done
+  for name in "${application_names[@]}"; do
+    rm -f "$HOME/.local/share/applications/$name"
+    [[ -e "$backup/applications/$name" || -L "$backup/applications/$name" ]] && \
+      cp -a "$backup/applications/$name" "$HOME/.local/share/applications/$name"
+  done
+  for relative in "${legacy_paths[@]}"; do
+    [[ -e "$backup/$relative" || -L "$backup/$relative" ]] && cp -a "$backup/$relative" "$HOME/$relative"
+  done
+}
+trap 'restore' ERR
+
+for source in "$config_root"/*; do
+  [[ -e "$source" ]] || continue
+  name="$(basename "$source")"
+  config_names+=("$name")
+  target="$HOME/.config/$name"
+  if [[ -e "$target" || -L "$target" ]]; then
+    cp -a "$target" "$backup/config/"
+    rm -rf "$target"
+  fi
+  cp -a "$source" "$target"
+done
+
+for legacy in "$HOME/.config/omadora" "$HOME/.local/share/omadora"; do
+  if [[ -e "$legacy" || -L "$legacy" ]]; then
+    relative="${legacy#"$HOME"/}"
+    legacy_paths+=("$relative")
+    mkdir -p "$backup/$(dirname "$relative")"
+    cp -a "$legacy" "$backup/$relative"
+    rm -rf "$legacy"
+  fi
+done
+
+for source in "$applications_root"/*.desktop; do
+  [[ -e "$source" ]] || continue
+  name="$(basename "$source")"
+  application_names+=("$name")
+  target="$HOME/.local/share/applications/$name"
+  if [[ -e "$target" || -L "$target" ]]; then
+    cp -a "$target" "$backup/applications/"
+    rm -f "$target"
+  fi
+  cp -a "$source" "$target"
+done
+
+export OMARCHY_PATH="${OMARCHY_PATH:-/usr/share/omarchy}"
+export PATH="$OMARCHY_PATH/bin:$PATH"
+if [[ ${OMARCHY_SKIP_THEME:-0} != 1 ]]; then
+  OMARCHY_THEME_HEADLESS=1 OMARCHY_THEME_SKIP_BACKGROUND=1 omarchy-theme-set "Tokyo Night"
+fi
+
+mkdir -p "$state_root/omarchy/migrations" "$(dirname "$marker")"
+for migration in "$OMARCHY_PATH"/migrations/*.sh; do
+  [[ -e "$migration" ]] && touch "$state_root/omarchy/migrations/$(basename "$migration")"
+done
+touch "$marker"
+trap - ERR
