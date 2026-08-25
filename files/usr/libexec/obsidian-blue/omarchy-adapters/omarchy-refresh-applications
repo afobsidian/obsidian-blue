@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+mkdir -p "$HOME/.local/share/applications"
+if [[ -f "$OMARCHY_PATH/install/user/mise.sh" ]]; then
+  bash "$OMARCHY_PATH/install/user/mise.sh"
+fi
+update-desktop-database "$HOME/.local/share/applications"

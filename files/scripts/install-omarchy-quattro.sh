@@ -6,14 +6,23 @@ script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$script_dir/omarchy-version.env"
 
 archive="$(mktemp)"
+font_archive="$(mktemp)"
 source_dir="$(mktemp -d)"
-trap 'rm -f "$archive"; rm -rf "$source_dir"' EXIT
+trap 'rm -f "$archive" "$font_archive"; rm -rf "$source_dir"' EXIT
 
 curl -fsSL "https://codeload.github.com/basecamp/omarchy/tar.gz/$OMARCHY_COMMIT" -o "$archive"
 echo "$OMARCHY_SHA256  $archive" | sha256sum --check --status
 tar -xzf "$archive" --strip-components=1 -C "$source_dir"
 
-install -d /usr/share/omarchy /usr/bin /etc/skel/.config /etc/skel/.local/share/applications
+curl -fsSL \
+  "https://github.com/ryanoasis/nerd-fonts/releases/download/v$NERD_FONTS_VERSION/JetBrainsMono.tar.xz" \
+  -o "$font_archive"
+echo "$JETBRAINS_MONO_NERD_SHA256  $font_archive" | sha256sum --check --status
+install -d /usr/share/fonts/jetbrains-mono-nerd
+tar -xJf "$font_archive" -C /usr/share/fonts/jetbrains-mono-nerd \
+  --wildcards 'JetBrainsMonoNerdFont-*.ttf'
+
+install -d /usr/share/omarchy /usr/bin /usr/share/applications /usr/share/wayland-sessions
 cp -a "$source_dir"/{applications,config,default,install,migrations,shell,themes} /usr/share/omarchy/
 install -m 0644 "$source_dir"/{icon.png,icon.txt,logo.svg,logo.txt,version} /usr/share/omarchy/
 
@@ -22,17 +31,39 @@ for executable in "$source_dir"/bin/*; do
   install -m 0755 "$executable" "/usr/bin/$(basename "$executable")"
 done
 
+sed -i '/^LOGO_FILE=/a [[ -f "$LOGO_FILE" ]] || LOGO_FILE="$OMARCHY_PATH/icon.txt"' \
+  /usr/bin/omarchy-launch-about
+sed -i \
+  -e '/^while true; do$/i screensaver_file="$HOME/.config/omarchy/branding/screensaver.txt"\n[[ -f "$screensaver_file" ]] || screensaver_file="$OMARCHY_PATH/logo.txt"\n' \
+  -e 's|ttfx -i ~/.config/omarchy/branding/screensaver.txt|ttfx -i "$screensaver_file"|' \
+  /usr/bin/omarchy-screensaver
+for command in /usr/bin/omarchy-branding-about /usr/bin/omarchy-branding-screensaver; do
+  sed -i '/^set -euo pipefail$/a mkdir -p "$HOME/.config/omarchy/branding"' "$command"
+done
+
 install -d /usr/share/omarchy/bin
 for executable in /usr/bin/omarchy*; do
   [[ -f "$executable" ]] || continue
   ln -sfn "$executable" "/usr/share/omarchy/bin/$(basename "$executable")"
 done
 
-cp -a "$source_dir/config/." /etc/skel/.config/
-cp -a "$source_dir/applications"/*.desktop /etc/skel/.local/share/applications/
+for source in "$source_dir"/config/*; do
+  rm -rf "/etc/skel/.config/$(basename "$source")"
+done
+rm -rf /etc/skel/.config/omadora /etc/skel/.config/waybar /etc/skel/.local/share/omadora
+
+for desktop in "$source_dir"/applications/*.desktop; do
+  install -m 0644 "$desktop" "/usr/share/applications/$(basename "$desktop")"
+  rm -f "/etc/skel/.local/share/applications/$(basename "$desktop")"
+done
 if compgen -G "$source_dir/applications/hidden/*.desktop" >/dev/null; then
-  cp -a "$source_dir/applications/hidden"/*.desktop /etc/skel/.local/share/applications/
+  for desktop in "$source_dir"/applications/hidden/*.desktop; do
+    install -m 0644 "$desktop" "/usr/share/applications/$(basename "$desktop")"
+    rm -f "/etc/skel/.local/share/applications/$(basename "$desktop")"
+  done
 fi
+install -m 0644 "$source_dir/default/alacritty/Alacritty.desktop" \
+  /usr/share/applications/Alacritty.desktop
 for icon in "$source_dir"/applications/icons/*; do
   [[ -f "$icon" ]] || continue
   name="$(basename "${icon%.*}" | tr '[:upper:]' '[:lower:]' | sed 's/[^[:alnum:]]\+/-/g')"
@@ -44,8 +75,9 @@ for icon in "$source_dir"/applications/icons/*; do
       "PNG32:/usr/share/icons/hicolor/256x256/apps/$name.png"
   fi
 done
-install -Dm644 "$source_dir/default/bashrc" /etc/skel/.bashrc
+install -Dm644 "$source_dir/default/bashrc" /etc/bashrc.d/99-omarchy.sh
 install -Dm644 "$source_dir/default/uwsm/env.d/10-omarchy" /usr/share/uwsm/env.d/10-omarchy
+install -Dm644 "$source_dir/default/bash/env-bootstrap" /etc/profile.d/omarchy.sh
 install -Dm644 "$source_dir/default/environment.d/10-omarchy-fcitx.conf" \
   /usr/lib/environment.d/10-omarchy-fcitx.conf
 install -Dm644 "$source_dir/default/fontconfig/conf.avail/50-omarchy.conf" \
@@ -69,37 +101,45 @@ install -Dm644 "$source_dir/default/sddm/hyprland.lua" /usr/share/sddm/hyprland.
 install -Dm644 "$source_dir/etc/sddm.conf.d/10-theme.conf" /etc/sddm.conf.d/10-theme.conf
 install -Dm644 "$source_dir/etc/sddm.conf.d/10-wayland.conf" /etc/sddm.conf.d/10-wayland.conf
 install -Dm644 "$source_dir/default/wayland-sessions/omarchy.desktop" \
-  /usr/local/share/wayland-sessions/omarchy.desktop
-sed -i 's|^Exec=.*|Exec=/usr/bin/obsidian-blue-quattro-session|' \
-  /usr/local/share/wayland-sessions/omarchy.desktop
+  /usr/share/wayland-sessions/omarchy.desktop
+rm -f /etc/sddm.conf.d/theme.conf
+for session in omarchy.desktop hyprland.desktop hyprland-uwsm.desktop; do
+  [[ -f "/usr/share/wayland-sessions/$session" ]] || continue
+  sed -i 's|^Exec=.*|Exec=/usr/bin/obsidian-blue-quattro-session|' \
+    "/usr/share/wayland-sessions/$session"
+done
 
 install -d /usr/share/plymouth/themes/omarchy
 cp -a "$source_dir/default/plymouth/." /usr/share/plymouth/themes/omarchy/
 install -Dm644 "$source_dir/default/fonts/omarchy/omarchy.ttf" /usr/share/fonts/omarchy/omarchy.ttf
+fc-cache -f
 install -Dm755 "$source_dir/default/systemd/system-sleep/unmount-fuse" \
   /usr/lib/systemd/system-sleep/unmount-fuse
 install -Dm644 "$source_dir/etc/fastfetch/config.jsonc" /etc/fastfetch/config.jsonc
 install -Dm644 "$source_dir/icon.png" /usr/share/pixmaps/omarchy.png
 install -Dm644 "$source_dir/icon.png" /usr/share/icons/hicolor/256x256/apps/omarchy.png
 
-install -Dm644 "$source_dir/logo.txt" /etc/skel/.config/omarchy/branding/screensaver.txt
-install -Dm644 "$source_dir/icon.txt" /etc/skel/.config/omarchy/branding/about.txt
 install -Dm644 "$source_dir/default/hypr/toggles/flags.lua" \
   /etc/skel/.local/state/omarchy/toggles/hypr/flags.lua
 install -Dm644 "$source_dir/default/nautilus-python/extensions/localsend.py" \
-  /etc/skel/.local/share/nautilus-python/extensions/localsend.py
+  /usr/share/nautilus-python/extensions/localsend.py
 install -Dm644 "$source_dir/default/nautilus-python/extensions/transcode.py" \
-  /etc/skel/.local/share/nautilus-python/extensions/transcode.py
+  /usr/share/nautilus-python/extensions/transcode.py
 
 HOME=/etc/skel XDG_RUNTIME_DIR=/tmp OMARCHY_PATH=/usr/share/omarchy \
   OMARCHY_THEME_HEADLESS=1 PATH=/usr/share/omarchy/bin:/usr/bin:/bin \
   omarchy-theme-set "Tokyo Night"
 
+for source in "$source_dir"/config/*; do
+  rm -rf "/etc/skel/.config/$(basename "$source")"
+done
+rm -rf /etc/skel/.config/omadora /etc/skel/.config/waybar
+
 install -d /etc/skel/.local/state/omarchy/migrations /etc/skel/.local/state/obsidian-blue
 for migration in "$source_dir"/migrations/*.sh; do
   touch "/etc/skel/.local/state/omarchy/migrations/$(basename "$migration")"
 done
-touch /etc/skel/.local/state/obsidian-blue/quattro-4.0.0
+touch /etc/skel/.local/state/obsidian-blue/quattro-4.0.0-image-config-v2
 
 install -Dm644 "$script_dir/omarchy-version.env" /usr/share/obsidian-blue/omarchy-version.env
 

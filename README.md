@@ -5,14 +5,14 @@ An immutable Fedora Atomic image with the Omarchy Quattro desktop and a develope
 ## Model
 
 - Omarchy `v4.0.0` is fetched from its pinned commit and verified by SHA-256 during the image build.
-- Canonical Omarchy defaults live in `/usr/share/omarchy` and `/etc/skel`.
-- User copies live under `~/.config` and remain mutable after the first migration.
+- Canonical Omarchy defaults live in `/usr/share/omarchy` and are not copied into user config.
+- User files under `~/.config` override the baked defaults.
 - Image updates use `ujust update`; Omarchy's Arch package updater is replaced by an image adapter.
 - Weekly automation opens a pull request when a new stable Omarchy release exists.
+- JetBrainsMono Nerd Font is fetched from its pinned release and checksum for visual parity.
 
-Existing users get a one-time backup under `~/.local/state/obsidian-blue/backups/` before Quattro replaces
-desktop configuration.
-Later image upgrades do not replace user edits.
+Existing desktop configuration is archived once under `~/.local/state/obsidian-blue/backups/`.
+Quattro then starts from the image defaults until the user creates an override.
 
 ## Developer tools
 
@@ -38,7 +38,7 @@ rpm-ostree rebase ostree-image-signed:docker://ghcr.io/afobsidian/obsidian-blue:
 systemctl reboot
 ```
 
-Select `Omarchy (Hyprland uwsm)` in SDDM.
+Every Hyprland entry in SDDM starts the Omarchy session.
 
 ## Build
 
