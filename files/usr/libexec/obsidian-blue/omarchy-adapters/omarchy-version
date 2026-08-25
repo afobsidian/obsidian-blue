@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+source /usr/share/obsidian-blue/omarchy-version.env
+printf 'Omarchy %s (%s) on obsidian-blue\n' "$OMARCHY_VERSION" "${OMARCHY_COMMIT:0:12}"

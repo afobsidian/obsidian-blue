@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+selection="$(flatpak remote-ls flathub --app --columns=application,name | fzf --multi)"
+[[ -n "$selection" ]] || exit 0
+cut -f1 <<<"$selection" | xargs -r flatpak install --user --noninteractive -y flathub

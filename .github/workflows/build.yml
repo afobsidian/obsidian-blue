@@ -27,26 +27,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-        with:
-          submodules: true
 
-      # Build the exact reviewed Omadora revision recorded by this repository.
-      # Advancing to the remote branch tip here can silently replace the Lua
-      # configuration with a Hyprlang revision and make scheduled builds differ
-      # from builds made from the same obsidian-blue commit.
-      - name: Check out pinned Omadora revision
-        run: git submodule update --init --checkout --depth 1 files/omadora
-
-      - name: Validate Hyprland Lua default
+      - name: Test image definition
         run: |
-          test "$(git -C files/omadora rev-parse HEAD)" = "$(git rev-parse HEAD:files/omadora)"
-          test -f files/omadora/config/hypr/hyprland.lua
-          test ! -e files/omadora/config/hypr/hyprland.conf
-          bash -n files/usr/bin/starthyprland
-          grep -Fq 'if [ -f "$hyprland_lua" ]; then' files/usr/bin/starthyprland
-
-      - name: Validate Hyprland package request
-        run: bash files/scripts/validate-hyprland-stack.sh --recipe recipes/recipe.yml
+          bash tests/validate-recipe.sh
+          bash tests/test-quattro-migration.sh
 
       - name: Verify signing secret
         env:

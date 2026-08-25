@@ -1,0 +1,29 @@
+name: Update Omarchy
+
+on:
+  schedule:
+    - cron: "30 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Pin latest stable release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="$(gh api repos/basecamp/omarchy/releases/latest --jq .tag_name)"
+          scripts/update-omarchy.sh "${version#v}"
+      - uses: peter-evans/create-pull-request@v8
+        with:
+          branch: automation/update-omarchy
+          delete-branch: true
+          commit-message: "chore: update Omarchy"
+          title: "chore: update Omarchy"
+          body: "Pins the latest stable Omarchy release and verified source checksum."

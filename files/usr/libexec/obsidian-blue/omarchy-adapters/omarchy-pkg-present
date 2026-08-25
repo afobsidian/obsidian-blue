@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+for package in "$@"; do
+  if [[ "$package" == *.* ]]; then
+    flatpak info --user "$package" >/dev/null 2>&1 || flatpak info --system "$package" >/dev/null 2>&1 || exit 1
+  else
+    rpm -q "$package" >/dev/null 2>&1 || command -v "$package" >/dev/null 2>&1 || exit 1
+  fi
+done

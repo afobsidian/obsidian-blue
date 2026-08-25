@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+for package in "$@"; do
+  if flatpak info --user "$package" >/dev/null 2>&1; then
+    flatpak uninstall --user --noninteractive -y "$package"
+  elif flatpak info --system "$package" >/dev/null 2>&1 || rpm -q "$package" >/dev/null 2>&1; then
+    echo "Image-owned package '$package' cannot be removed from user space." >&2
+    exit 2
+  fi
+done
