@@ -24,15 +24,17 @@ grep -Fq '/usr/share/wayland-sessions/omarchy.desktop' \
   "$repo/files/scripts/install-omarchy-quattro.sh"
 grep -Fq 'quattro-$version-image-config-v3' \
   "$repo/files/usr/libexec/obsidian-blue/quattro-migrate"
-grep -Fq '"install.package": {"icon":"󰏗","label":"Flatpak"' \
-  "$repo/files/scripts/install-omarchy-quattro.sh"
-grep -Fq '"install.aur": {"icon":"󰣇","label":"AUR","when":"omarchy-cmd-present pacman"' \
-  "$repo/files/scripts/install-omarchy-quattro.sh"
+grep -Fq 'omarchy-default-browser-select' "$repo/files/scripts/install-omarchy-quattro.sh"
+grep -Fq 'omarchy-menu-monitors' "$repo/files/scripts/install-omarchy-quattro.sh"
+grep -Fq 'Open OBS Studio' "$repo/files/scripts/install-omarchy-quattro.sh"
+grep -Fq 'Open LocalSend' "$repo/files/scripts/install-omarchy-quattro.sh"
 grep -Fq 'JETBRAINS_MONO_NERD_SHA256=' "$repo/files/scripts/omarchy-version.env"
 test ! -e "$repo/.gitmodules"
 grep -Fqx 'auth include login' "$repo/files/etc/pam.d/omarchy-lock-password"
 grep -Fq 'omarchy-browser-launcher.patch' "$repo/files/scripts/install-omarchy-quattro.sh"
 grep -Fq 'Private browser binding is absent' "$repo/files/scripts/validate-omarchy-image.sh"
+grep -Fq 'install-omarchy-nvim.sh' "$recipe"
+grep -Fq 'OMARCHY_NVIM_SHA256=' "$repo/files/scripts/omarchy-nvim-version.env"
 
 find "$repo/files" "$repo/scripts" "$repo/tests" -type f -name '*.sh' -print0 | \
   xargs -0 -n1 bash -n

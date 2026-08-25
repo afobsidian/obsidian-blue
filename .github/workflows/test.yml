@@ -11,4 +11,5 @@ jobs:
       - uses: actions/checkout@v6
       - run: bash tests/validate-recipe.sh
       - run: bash tests/test-omarchy-browser-launcher.sh
+      - run: bash tests/test-omarchy-menu.sh
       - run: bash tests/test-quattro-migration.sh

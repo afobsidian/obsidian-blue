@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+declare -A browsers=()
+data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
+desktop_dirs=(
+  "$data_home/applications"
+  "$data_home/flatpak/exports/share/applications"
+  /var/lib/flatpak/exports/share/applications
+  /usr/local/share/applications
+  /usr/share/applications
+)
+
+for desktop_dir in "${desktop_dirs[@]}"; do
+  for desktop in "$desktop_dir"/*.desktop; do
+    [[ -f $desktop ]] || continue
+    grep -Eq '^MimeType=.*(x-scheme-handler/http|x-scheme-handler/https|text/html)' "$desktop" || continue
+    grep -Fqx 'NoDisplay=true' "$desktop" && continue
+    desktop_id="$(basename "$desktop")"
+    name="$(sed -n 's/^Name=//p' "$desktop" | head -n 1)"
+    [[ -n $name ]] || name="${desktop_id%.desktop}"
+    browsers["$desktop_id"]="$name"$'\t'"$desktop_id"
+  done
+done
+
+if (( ${#browsers[@]} == 0 )); then
+  echo 'No installed web browser desktop entry was found.' >&2
+  exit 1
+fi
+
+mapfile -t choices < <(printf '%s\n' "${browsers[@]}" | sort -f)
+selection="$(omarchy-menu-select 'Default Browser' "${choices[@]}" -- --width 520 --maxheight 520)" || exit 0
+desktop_id="${selection#*$'\t'}"
+name="${selection%%$'\t'*}"
+
+env -u BROWSER xdg-settings set default-web-browser "$desktop_id"
+xdg-mime default "$desktop_id" x-scheme-handler/http
+xdg-mime default "$desktop_id" x-scheme-handler/https
+xdg-mime default "$desktop_id" text/html
+omarchy-notification-send -g  "$name is now the default browser"

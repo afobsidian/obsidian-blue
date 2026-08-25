@@ -28,12 +28,42 @@ cp -a "$source_dir"/{applications,config,default,install,migrations,shell,themes
 install -m 0644 "$source_dir"/{icon.png,icon.txt,logo.svg,logo.txt,version} /usr/share/omarchy/
 
 menu=/usr/share/omarchy/default/omarchy/omarchy-menu.jsonc
-sed -i \
-  -e 's/"install.package": {"icon":"󰣇","label":"Package"/"install.package": {"icon":"󰏗","label":"Flatpak"/' \
-  -e 's/"install.aur": {"icon":"󰣇","label":"AUR"/"install.aur": {"icon":"󰣇","label":"AUR","when":"omarchy-cmd-present pacman"/' \
-  "$menu"
+perl -0pi -e '
+  s{^[ ]{2}"(?:
+    trigger\.capture\.screenrecord\.(?:stop|no-audio|desktop-audio|microphone|webcam)|
+    trigger\.share\.(?:clipboard|file|folder|receive)|
+    style\.unlock|
+    setup\.default\.browser\..*|
+    setup\.security\.(?:fingerprint|fido2)|
+    install\.aur|
+    install\.style\.font(?:\..*)?|
+    install\.(?:service|editor|terminal|browser|ai|gaming)(?:\..*)?|
+    install\.(?:windows|preinstalls)|
+    install\.development\.(?:php(?:\..*)?|clojure)|
+    remove\.(?:browser|dictation|gaming|service|windows|preinstalls)(?:\..*)?|
+    remove\.security\.(?:fingerprint|fido2)|
+    remove\.development\.(?:php(?:\..*)?|clojure)|
+    update\.channel(?:\..*)?|
+    update\.config\.plymouth
+  )":.*\n}{}mgx;
+  s{^[ ]{2}"learn\.arch":.*\n}{  "learn.fedora": {"icon":"󰣇","label":"Fedora","action":"omarchy-launch-webapp '\''https://docs.fedoraproject.org/'\''"},\n}mg;
+  s{^[ ]{2}"trigger\.capture\.screenrecord":.*\n}{  "trigger.capture.screenrecord": {"icon":"","label":"Open OBS Studio","when":"flatpak info com.obsproject.Studio","action":"uwsm-app -- flatpak run com.obsproject.Studio"},\n}mg;
+  s{^[ ]{2}"trigger\.share":.*\n}{  "trigger.share": {"icon":"","label":"Open LocalSend","aliases":["share"],"when":"flatpak info org.localsend.localsend_app","action":"uwsm-app -- flatpak run org.localsend.localsend_app"},\n}mg;
+  s{^[ ]{2}"setup\.monitors":.*\n}{  "setup.monitors": {"icon":"󰍹","label":"Monitors","action":"omarchy-menu-monitors"},\n}mg;
+  s{^[ ]{2}"setup\.default\.browser":.*\n}{  "setup.default.browser": {"icon":"","label":"Browser","title":"Default Browser","action":"omarchy-default-browser-select"},\n}mg;
+  s{^[ ]{2}"setup\.default\.editor\.zed":.*\n}{  "setup.default.editor.zed": {"icon":"","label":"Zed","when":"omarchy-cmd-present zed","checked":"[[ \"$(omarchy-default-editor)\" == \"zed\" ]]","action":"omarchy-default-editor zed"},\n}mg;
+  s{^[ ]{2}"install\.package":.*\n}{  "install.package": {"icon":"󰏗","label":"Flatpak","action":"xdg-terminal-exec --app-id=org.omarchy.terminal omarchy-pkg-install"},\n}mg;
+  s{^[ ]{2}"remove\.package":.*\n}{  "remove.package": {"icon":"󰏗","label":"Flatpak","action":"xdg-terminal-exec --app-id=org.omarchy.terminal omarchy-pkg-remove"},\n}mg;
+' "$menu"
+grep -Fq '"learn.fedora"' "$menu"
+grep -Fq '"setup.default.browser"' "$menu"
 grep -Fq '"install.package": {"icon":"󰏗","label":"Flatpak"' "$menu"
-grep -Fq '"install.aur": {"icon":"󰣇","label":"AUR","when":"omarchy-cmd-present pacman"' "$menu"
+if grep -Eq '"install\.(aur|style\.font|service|editor|terminal|browser|ai|gaming|windows|preinstalls)(\.|"|\})' "$menu" || \
+  grep -Eq '"remove\.(browser|dictation|gaming|service|windows|preinstalls)(\.|"|\})' "$menu" || \
+  grep -Eq '"(update\.channel|trigger\.capture\.screenrecord\.)' "$menu"; then
+  echo 'Unsupported Arch menu routes remain.' >&2
+  exit 1
+fi
 sed -i '/require("hypr.monitors")/a dofile("/usr/share/obsidian-blue/load-user-monitors.lua")' \
   /usr/share/omarchy/config/hypr/hyprland.lua
 

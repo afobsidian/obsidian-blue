@@ -201,6 +201,7 @@ modules:
   - type: script
     scripts:
       - install-omarchy-quattro.sh
+      - install-omarchy-nvim.sh
       - setup-image-config.sh
       - validate-omarchy-image.sh
 

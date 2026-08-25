@@ -19,6 +19,11 @@ for path in \
   /usr/share/omarchy/shell/shell.qml \
   /usr/share/omarchy/config/hypr/hyprland.lua \
   /usr/share/omarchy/themes/tokyo-night/colors.toml \
+  /usr/share/omarchy-nvim/config/lua/config/lazy.lua \
+  /etc/skel/.config/nvim/lua/plugins/theme.lua \
+  /usr/bin/omarchy-nvim-setup \
+  /usr/bin/omarchy-default-browser-select \
+  /usr/bin/omarchy-menu-monitors \
   /etc/profile.d/omarchy.sh \
   /etc/profile.d/99-omarchy-bash.sh \
   /etc/pam.d/omarchy-lock-password \
@@ -77,10 +82,27 @@ grep -Fq 'omarchy = "browser"' /usr/share/omarchy/default/hypr/bindings/applicat
   fail "Browser binding is absent"
 grep -Fq 'omarchy = "browser --private"' /usr/share/omarchy/default/hypr/bindings/applications.lua || \
   fail "Private browser binding is absent"
+test -L /etc/skel/.config/nvim/lua/plugins/theme.lua || fail "Neovim theme link is absent"
 grep -Fq '"install.package": {"icon":"󰏗","label":"Flatpak"' \
   /usr/share/omarchy/default/omarchy/omarchy-menu.jsonc || fail "Flatpak install menu is absent"
-grep -Fq '"install.aur": {"icon":"󰣇","label":"AUR","when":"omarchy-cmd-present pacman"' \
-  /usr/share/omarchy/default/omarchy/omarchy-menu.jsonc || fail "AUR menu is visible on Fedora"
+for route in learn.fedora setup.default.browser setup.monitors trigger.capture.screenrecord trigger.share; do
+  grep -Fq "\"$route\"" /usr/share/omarchy/default/omarchy/omarchy-menu.jsonc || \
+    fail "Fedora menu route is absent: $route"
+done
+grep -Fq 'Open OBS Studio' /usr/share/omarchy/default/omarchy/omarchy-menu.jsonc || \
+  fail "OBS capture menu is absent"
+grep -Fq 'Open LocalSend' /usr/share/omarchy/default/omarchy/omarchy-menu.jsonc || \
+  fail "LocalSend menu is absent"
+grep -Fq 'omarchy-cmd-present zed' /usr/share/omarchy/default/omarchy/omarchy-menu.jsonc || \
+  fail "Zed editor detection is absent"
+if grep -Eq '"install\.(aur|style\.font|service|editor|terminal|browser|ai|gaming|windows|preinstalls)(\.|"|\})' \
+  /usr/share/omarchy/default/omarchy/omarchy-menu.jsonc || \
+  grep -Eq '"remove\.(browser|dictation|gaming|service|windows|preinstalls)(\.|"|\})' \
+  /usr/share/omarchy/default/omarchy/omarchy-menu.jsonc || \
+  grep -Eq '"(update\.channel|trigger\.capture\.screenrecord\.)' \
+  /usr/share/omarchy/default/omarchy/omarchy-menu.jsonc; then
+  fail "Arch-only menu routes remain"
+fi
 fc-match 'JetBrainsMono Nerd Font' --format '%{family}\n' | \
   grep -Fq 'JetBrainsMono Nerd Font' || fail "JetBrainsMono Nerd Font is absent"
 
@@ -95,5 +117,6 @@ HOME="$home" OMARCHY_PATH=/usr/share/omarchy \
     --config /usr/share/omarchy/config/hypr/hyprland.lua >/dev/null
 
 bash -n /usr/bin/obsidian-blue-quattro-session /usr/libexec/obsidian-blue/quattro-migrate \
-  /usr/bin/omarchy-refresh-applications
+  /usr/bin/omarchy-refresh-applications /usr/bin/omarchy-default-browser-select \
+  /usr/bin/omarchy-menu-monitors
 echo "Omarchy Quattro image validated."

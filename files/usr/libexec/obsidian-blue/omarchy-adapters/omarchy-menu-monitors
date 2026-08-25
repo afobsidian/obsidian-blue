@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
+monitor_config="$config_home/omarchy/hypr/monitors.lua"
+
+if [[ ! -e $monitor_config ]]; then
+  mkdir -p "$(dirname "$monitor_config")"
+  cp "${OMARCHY_CONFIG_ROOT:-/usr/share/omarchy/config}/hypr/monitors.lua" "$monitor_config"
+fi
+
+exec omarchy-launch-config-editor "$monitor_config"
