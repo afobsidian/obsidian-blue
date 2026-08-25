@@ -37,7 +37,7 @@ grep -Fqx 'auth include login' /etc/pam.d/omarchy-lock-password || \
 grep -Fqx 'NAME="obsidian-blue"' /usr/lib/os-release || fail "image name is not branded"
 grep -Fqx 'DEFAULT_HOSTNAME="obsidian-blue"' /usr/lib/os-release || \
   fail "default hostname is not branded"
-grep -Eq '^127\.0\.0\.1[[:space:]]+obsidian-blue[[:space:]]' /etc/hosts || \
+grep -Eq '^127\.0\.0\.1[[:space:]]+obsidian-blue[[:space:]]' /usr/etc/hosts || \
   fail "hostname is absent from hosts"
 [[ ! -e /usr/lib/systemd/user/wayblue-update-verification.service ]] || \
   fail "Wayblue update notifier remains"

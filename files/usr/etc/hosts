@@ -1,0 +1,3 @@
+# Loopback entries; do not change.
+127.0.0.1   obsidian-blue localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         obsidian-blue localhost localhost.localdomain localhost6 localhost6.localdomain6
