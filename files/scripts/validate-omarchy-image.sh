@@ -7,10 +7,12 @@ fail() {
   exit 1
 }
 
-for command in Hyprland flatpak hyprlock quickshell uwsm omarchy podman docker gh nvim fd rg nmtui \
+for command in Hyprland flatpak hyprlock quickshell uwsm omarchy podman docker gh nvim fd rg nmtui xkbcli \
   tailscale perf nc; do
   command -v "$command" >/dev/null || fail "missing command: $command"
 done
+
+perl -MJSON::PP -e 1 || fail "missing Perl JSON::PP module"
 
 for path in \
   /usr/share/omarchy/version \

@@ -111,6 +111,7 @@ modules:
         - kitty
         - less
         - libsecret
+        - libxkbcommon-utils
         - lua
         - luarocks
         - man-db
@@ -122,6 +123,7 @@ modules:
         - nmap-ncat
         - pamixer
         - perf
+        - perl-JSON-PP
         - playerctl
         - plocate
         - plymouth
