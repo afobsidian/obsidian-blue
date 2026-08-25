@@ -33,11 +33,18 @@ sed -i \
   "$menu"
 grep -Fq '"install.package": {"icon":"󰏗","label":"Flatpak"' "$menu"
 grep -Fq '"install.aur": {"icon":"󰣇","label":"AUR","when":"omarchy-cmd-present pacman"' "$menu"
+sed -i '/require("hypr.monitors")/a dofile("/usr/share/obsidian-blue/load-user-monitors.lua")' \
+  /usr/share/omarchy/config/hypr/hyprland.lua
 
 for executable in "$source_dir"/bin/*; do
   [[ -f "$executable" ]] || continue
   install -m 0755 "$executable" "/usr/bin/$(basename "$executable")"
 done
+
+sed -i \
+  's|local monitor_lua="$HOME/.config/hypr/monitors.lua"|local monitor_lua="${XDG_CONFIG_HOME:-$HOME/.config}/omarchy/hypr/monitors.lua"|' \
+  /usr/bin/omarchy-hyprland-monitor-scaling
+grep -Fq '/omarchy/hypr/monitors.lua' /usr/bin/omarchy-hyprland-monitor-scaling
 
 sed -i '/^LOGO_FILE=/a [[ -f "$LOGO_FILE" ]] || LOGO_FILE="$OMARCHY_PATH/icon.txt"' \
   /usr/bin/omarchy-launch-about
@@ -150,6 +157,8 @@ done
 touch /etc/skel/.local/state/obsidian-blue/quattro-4.0.0-image-config-v3
 
 install -Dm644 "$script_dir/omarchy-version.env" /usr/share/obsidian-blue/omarchy-version.env
+install -Dm755 /usr/bin/omarchy-hyprland-monitor-scaling \
+  /usr/libexec/obsidian-blue/omarchy-hyprland-monitor-scaling
 
 for adapter in /usr/libexec/obsidian-blue/omarchy-adapters/*; do
   install -m 0755 "$adapter" "/usr/bin/$(basename "$adapter")"

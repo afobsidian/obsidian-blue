@@ -26,6 +26,8 @@ for path in \
   /usr/share/wayland-sessions/omarchy.desktop \
   /usr/share/applications/Basecamp.desktop \
   /usr/share/applications/Alacritty.desktop \
+  /usr/libexec/obsidian-blue/omarchy-hyprland-monitor-scaling \
+  /usr/share/obsidian-blue/load-user-monitors.lua \
   /usr/share/nautilus-python/extensions/localsend.py; do
   [[ -e "$path" ]] || fail "missing path: $path"
 done
@@ -52,6 +54,12 @@ done
 grep -Fqx 'Current=omarchy' /etc/sddm.conf.d/10-theme.conf || fail "Omarchy SDDM theme is inactive"
 grep -Fq '$OMARCHY_PATH/config/?.lua' /usr/bin/obsidian-blue-quattro-session || \
   fail "baked Lua config path is absent"
+grep -Fq 'start-hyprland -- --config "$config"' /usr/bin/obsidian-blue-quattro-session || \
+  fail "session launcher bypasses start-hyprland"
+grep -Fq 'load-user-monitors.lua' /usr/share/omarchy/config/hypr/hyprland.lua || \
+  fail "mutable monitor config is absent"
+grep -Fq '/omarchy/hypr/monitors.lua' /usr/bin/omarchy-hyprland-monitor-scaling || \
+  fail "monitor scaling does not persist in Omarchy config"
 grep -Fq '$OMARCHY_PATH/icon.txt' /usr/bin/omarchy-launch-about || fail "About branding has no fallback"
 grep -Fq '$OMARCHY_PATH/logo.txt' /usr/bin/omarchy-screensaver || fail "screensaver has no fallback"
 grep -Fq '"install.package": {"icon":"󰏗","label":"Flatpak"' \

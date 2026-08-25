@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+case "${1:-}" in
+"" | -h | --help) ;;
+*)
+  config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
+  monitor_config="$config_home/omarchy/hypr/monitors.lua"
+  if [[ ! -e "$monitor_config" ]]; then
+    mkdir -p "$(dirname "$monitor_config")"
+    cp "${OMARCHY_CONFIG_ROOT:-/usr/share/omarchy/config}/hypr/monitors.lua" "$monitor_config"
+  fi
+  ;;
+esac
+
+exec "${OMARCHY_SCALING_COMMAND:-/usr/libexec/obsidian-blue/omarchy-hyprland-monitor-scaling}" "$@"

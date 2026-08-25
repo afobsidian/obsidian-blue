@@ -10,4 +10,4 @@ export LUA_PATH="$OMARCHY_PATH/config/?.lua;${LUA_PATH:-;}"
 
 config="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/hyprland.lua"
 [[ -f "$config" ]] || config="$OMARCHY_PATH/config/hypr/hyprland.lua"
-exec uwsm start -g -1 -e -D Hyprland -- Hyprland --config "$config"
+exec uwsm start -g -1 -e -D Hyprland -- start-hyprland -- --config "$config"
