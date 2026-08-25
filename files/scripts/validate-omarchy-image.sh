@@ -20,7 +20,7 @@ for path in \
   /usr/share/omarchy/config/hypr/hyprland.lua \
   /usr/share/omarchy/themes/tokyo-night/colors.toml \
   /etc/profile.d/omarchy.sh \
-  /etc/bashrc.d/99-omarchy.sh \
+  /etc/profile.d/99-omarchy-bash.sh \
   /etc/pam.d/omarchy-lock-password \
   /etc/skel/.local/state/obsidian-blue/quattro-4.0.0-image-config-v3 \
   /usr/share/wayland-sessions/omarchy.desktop \
@@ -34,6 +34,10 @@ done
 
 grep -Fqx 'auth include login' /etc/pam.d/omarchy-lock-password || \
   fail "Fedora lock PAM stack is absent"
+grep -Fqx 'SHELL=/bin/bash' /etc/default/useradd || fail "Bash is not the default user shell"
+grep -Fq 'source "${OMARCHY_PATH:-/usr/share/omarchy}/default/bash/rc"' \
+  /etc/profile.d/99-omarchy-bash.sh || \
+  fail "Omarchy Bash environment is absent"
 
 for session in omarchy.desktop hyprland.desktop hyprland-uwsm.desktop; do
   grep -Fqx 'Exec=/usr/bin/obsidian-blue-quattro-session' \

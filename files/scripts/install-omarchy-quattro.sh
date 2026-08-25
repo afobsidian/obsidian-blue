@@ -90,7 +90,6 @@ for icon in "$source_dir"/applications/icons/*; do
       "PNG32:/usr/share/icons/hicolor/256x256/apps/$name.png"
   fi
 done
-install -Dm644 "$source_dir/default/bashrc" /etc/bashrc.d/99-omarchy.sh
 install -Dm644 "$source_dir/default/uwsm/env.d/10-omarchy" /usr/share/uwsm/env.d/10-omarchy
 install -Dm644 "$source_dir/default/bash/env-bootstrap" /etc/profile.d/omarchy.sh
 install -Dm644 "$source_dir/default/environment.d/10-omarchy-fcitx.conf" \

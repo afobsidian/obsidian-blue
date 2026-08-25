@@ -173,6 +173,9 @@ modules:
         - tuned-ppd
         - wlsunset
 
+  - type: brew
+    brew-analytics: false
+
   - type: files
     files:
       - source: usr

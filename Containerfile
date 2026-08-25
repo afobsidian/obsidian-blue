@@ -91,6 +91,18 @@ RUN \
 /tmp/scripts/run_module.sh 'dnf' '{"type":"dnf","repos":{"cleanup":true,"files":["jdxcode-mise.repo","starship.repo"]},"install":{"skip-unavailable":true,"skip-broken":true,"install-weak-deps":false,"packages":["ImageMagick","NetworkManager-tui","alacritty","alsa-utils","avahi","bash-completion","bat","bluez","bluez-tools","bolt","brightnessctl","btop","chromium","clang","cups","cups-browsed","cups-filters","cups-pdf","dbus-tools","ddcutil","dosfstools","dua-cli","evince","exfatprogs","eza","fastfetch","fcitx5","fcitx5-configtool","fcitx5-gtk","fcitx5-qt","fd-find","ffmpeg-free","ffmpegthumbnailer","foot","fzf","gh","git","gnome-disk-utility","gnome-keyring","gnome-themes-extra","google-noto-color-emoji-fonts","google-noto-sans-cjk-fonts","grim","gum","gvfs-mtp","gvfs-nfs","gvfs-smb","imv","inetutils","inotify-tools","inxi","iwd","jq","kitty","less","libsecret","libxkbcommon-utils","lua","luarocks","man-db","mise","mpv","nautilus","nautilus-python","neovim","nmap-ncat","pamixer","perf","perl-JSON-PP","playerctl","plocate","plymouth","podman","podman-compose","podman-docker","podman-tui","power-profiles-daemon","python3-gobject","qrencode","ripgrep","ruby","sddm","slurp","socat","starship","sushi","sysprof","system-config-printer","tailscale","tesseract","tesseract-langpack-eng","tldr","tmux","udiskie","unzip","usbutils","whois","wireplumber","wl-clipboard","wtype","xdg-desktop-portal-gtk","xdg-terminal-exec","xdg-user-dirs","xdg-utils","yaru-icon-theme","yq","yt-dlp","zbar","zoxide","zsh"]},"remove":{"packages":["Thunar","thunar-archive-plugin","thunar-volman","tuned-ppd","wlsunset"]}}'
 RUN \
 --mount=type=bind,from=stage-files,src=/files,dst=/tmp/files,rw \
+--mount=type=bind,from=ghcr.io/blue-build/modules/brew:latest,src=/modules,dst=/tmp/modules,rw \
+--mount=type=bind,src=.bluebuild-scripts_6fc443c6,dst=/tmp/scripts/,Z \
+--mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/libdnf5,id=dnf-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/zypp,id=zypper-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apk,id=apk-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-latest-stage-obsidian-blue \
+--mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-latest-stage-obsidian-blue \
+/tmp/scripts/run_module.sh 'brew' '{"type":"brew","brew-analytics":false}'
+RUN \
+--mount=type=bind,from=stage-files,src=/files,dst=/tmp/files,rw \
 --mount=type=bind,from=ghcr.io/blue-build/modules/files:latest,src=/modules,dst=/tmp/modules,rw \
 --mount=type=bind,src=.bluebuild-scripts_6fc443c6,dst=/tmp/scripts/,Z \
 --mount=type=cache,sharing=locked,dst=/var/cache/rpm-ostree,id=rpm-ostree-cache-obsidian-blue-latest-stage-obsidian-blue \
@@ -156,10 +168,10 @@ RUN \
 
 # Labels are added last since they cause cache misses with buildah
 LABEL io.artifacthub.package.readme-url="https://raw.githubusercontent.com/blue-build/cli/main/README.md"
-LABEL org.blue-build.build-id="f28f3edb-fbb2-4651-9f2f-eb6a94328f99"
+LABEL org.blue-build.build-id="9f1d69f9-1997-4f51-8bb4-eb68e77eda5a"
 LABEL org.opencontainers.image.base.digest="sha256:efc40c3544c7a9a379b75561c22a50d7342c7d72c30452d26fde8ef6d3ffb436"
 LABEL org.opencontainers.image.base.name="ghcr.io/wayblueorg/hyprland:latest"
-LABEL org.opencontainers.image.created="2026-08-25T04:31:58.122685355+00:00"
+LABEL org.opencontainers.image.created="2026-08-25T04:48:32.451339877+00:00"
 LABEL org.opencontainers.image.description="Omarchy Quattro on Fedora Atomic with a mutable user configuration layer."
 LABEL org.opencontainers.image.source=""
 LABEL org.opencontainers.image.title="obsidian-blue"

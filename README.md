@@ -17,8 +17,11 @@ Quattro then starts from the image defaults until the user creates an override.
 ## Developer tools
 
 The image includes Podman with a Docker-compatible CLI, Podman Compose, GitHub CLI, Neovim, `fd`, `rg`,
-`nmtui`, Tailscale, `perf`, `nc`, compilers, Mise, tmux, and common diagnostics.
+`nmtui`, Tailscale, `perf`, `nc`, Homebrew, compilers, Mise, tmux, and common diagnostics.
 VS Code, kubectl, and Helm are intentionally absent.
+
+Omarchy's Bash environment is the default. Add personal exports, aliases, and functions as separate
+`~/.bashrc.d/*.sh` files; Fedora's stock `~/.bashrc` loads them after the baked system defaults.
 
 ## Flatpaks
 
