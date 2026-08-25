@@ -97,10 +97,11 @@ printf '%s\n' "$1" >"$EDITOR_PATH"
 EOF
 chmod +x "$mock"/*
 
-PATH="$mock:$PATH" HOME="$home" SELECT_ARGS="$root/select" SETTINGS_ARGS="$root/settings" \
-  MIME_ARGS="$root/mime" "$repo/files/usr/libexec/obsidian-blue/omarchy-adapters/omarchy-default-browser-select"
+PATH="$mock:$PATH" HOME="$home" XDG_DATA_HOME="$home/.local/share" SELECT_ARGS="$root/select" \
+  SETTINGS_ARGS="$root/settings" MIME_ARGS="$root/mime" \
+  "$repo/files/usr/libexec/obsidian-blue/omarchy-adapters/omarchy-default-browser-select"
 grep -Fq 'Zen Browser' "$root/select"
-grep -Fqx 'app.zen_browser.zen.desktop' "$root/select"
+grep -Fqx $'Zen Browser\tapp.zen_browser.zen.desktop' "$root/select"
 grep -Fqx 'set' "$root/settings"
 grep -Fqx 'default-web-browser' "$root/settings"
 grep -Fqx 'app.zen_browser.zen.desktop' "$root/settings"
@@ -109,7 +110,8 @@ grep -Fqx 'x-scheme-handler/https' "$root/mime"
 config_root="$root/config"
 mkdir -p "$config_root/hypr"
 printf 'monitor config\n' >"$config_root/hypr/monitors.lua"
-PATH="$mock:$PATH" HOME="$home" OMARCHY_CONFIG_ROOT="$config_root" EDITOR_PATH="$root/editor" \
+PATH="$mock:$PATH" HOME="$home" XDG_CONFIG_HOME="$home/.config" \
+  OMARCHY_CONFIG_ROOT="$config_root" EDITOR_PATH="$root/editor" \
   "$repo/files/usr/libexec/obsidian-blue/omarchy-adapters/omarchy-menu-monitors"
 test "$(cat "$home/.config/omarchy/hypr/monitors.lua")" = 'monitor config'
 test "$(cat "$root/editor")" = "$home/.config/omarchy/hypr/monitors.lua"
