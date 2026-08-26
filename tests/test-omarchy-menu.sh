@@ -45,8 +45,11 @@ cat >"$menu" <<'EOF'
 }
 EOF
 
-sed -n '30,66p' "$repo/files/scripts/install-omarchy-quattro.sh" |
-  sed "s|menu=/usr/share/omarchy/default/omarchy/omarchy-menu.jsonc|menu=$menu|" | bash
+sed -n "/^perl -0pi -e '/,/^' \"\\\$menu\"$/p" \
+  "$repo/files/scripts/install-omarchy-quattro.sh" |
+  sed \
+    -e "s|menu=/usr/share/omarchy/default/omarchy/omarchy-menu.jsonc|menu=$menu|" \
+    -e "s|\"\$menu\"|\"$menu\"|" | bash
 
 grep -Fq '"learn.fedora"' "$menu"
 grep -Fq 'Open OBS Studio' "$menu"
