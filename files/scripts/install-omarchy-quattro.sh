@@ -5,6 +5,10 @@ set -euo pipefail
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$script_dir/omarchy-version.env"
 
+if rpm -q libcurl-minimal >/dev/null 2>&1; then
+  dnf -y swap libcurl-minimal libcurl
+fi
+
 archive="$(mktemp)"
 font_archive="$(mktemp)"
 source_dir="$(mktemp -d)"

@@ -38,6 +38,8 @@ grep -Fq 'JETBRAINS_MONO_NERD_SHA256=' "$repo/files/scripts/omarchy-version.env"
 test ! -e "$repo/.gitmodules"
 grep -Fqx 'auth include login' "$repo/files/etc/pam.d/omarchy-lock-password"
 grep -Fq 'omarchy-browser-launcher.patch' "$repo/files/scripts/install-omarchy-quattro.sh"
+grep -Fq 'dnf -y swap libcurl-minimal libcurl' \
+  "$repo/files/scripts/install-omarchy-quattro.sh"
 grep -Fq 'Private browser binding is absent' "$repo/files/scripts/validate-omarchy-image.sh"
 grep -Fq 'install-omarchy-nvim.sh' "$recipe"
 grep -Fq 'OMARCHY_NVIM_SHA256=' "$repo/files/scripts/omarchy-nvim-version.env"
