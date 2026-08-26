@@ -74,6 +74,7 @@ modules:
         - cups-filters
         - cups-pdf
         - curl
+        - libcurl
         - dbus-tools
         - ddcutil
         - dosfstools
@@ -169,6 +170,7 @@ modules:
     remove:
       packages:
         - curl-minimal
+        - libcurl-minimal
         - Thunar
         - thunar-archive-plugin
         - thunar-volman
