@@ -8,11 +8,14 @@ fail() {
 }
 
 for command in Hyprland flatpak hyprlock quickshell uwsm omarchy podman docker gh nvim fd rg nmtui xkbcli \
-  tailscale perf nc; do
+  tailscale perf nc curl; do
   command -v "$command" >/dev/null || fail "missing command: $command"
 done
 
 perl -MJSON::PP -e 1 || fail "missing Perl JSON::PP module"
+curl_protocols="$(curl --version | sed -n 's/^Protocols: //p')"
+grep -Eq '(^| )imap( |$)' <<<"$curl_protocols" || fail "curl IMAP support is absent"
+grep -Eq '(^| )imaps( |$)' <<<"$curl_protocols" || fail "curl IMAPS support is absent"
 
 for path in \
   /usr/share/omarchy/version \
