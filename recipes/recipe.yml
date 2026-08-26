@@ -51,6 +51,7 @@ modules:
         - jdxcode-mise.repo
         - starship.repo
     install:
+      allow-erasing: true
       skip-unavailable: true
       skip-broken: true
       install-weak-deps: false
@@ -74,7 +75,7 @@ modules:
         - cups-filters
         - cups-pdf
         - curl
-        - libcurl
+        - libcurl.x86_64
         - dbus-tools
         - ddcutil
         - dosfstools
@@ -170,7 +171,6 @@ modules:
     remove:
       packages:
         - curl-minimal
-        - libcurl-minimal
         - Thunar
         - thunar-archive-plugin
         - thunar-volman
