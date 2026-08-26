@@ -82,6 +82,8 @@ grep -Fq 'omarchy = "browser"' /usr/share/omarchy/default/hypr/bindings/applicat
   fail "Browser binding is absent"
 grep -Fq 'omarchy = "browser --private"' /usr/share/omarchy/default/hypr/bindings/applications.lua || \
   fail "Private browser binding is absent"
+grep -Fq 'browser="chromium-browser.desktop"' /usr/bin/omarchy-launch-webapp || \
+  fail "Fedora Chromium web-app fallback is absent"
 test -L /etc/skel/.config/nvim/lua/plugins/theme.lua || fail "Neovim theme link is absent"
 grep -Fq '"install.package": {"icon":"󰏗","label":"Flatpak"' \
   /usr/share/omarchy/default/omarchy/omarchy-menu.jsonc || fail "Flatpak install menu is absent"

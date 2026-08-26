@@ -71,6 +71,9 @@ for executable in "$source_dir"/bin/*; do
   [[ -f "$executable" ]] || continue
   install -m 0755 "$executable" "/usr/bin/$(basename "$executable")"
 done
+sed -i 's/browser="chromium\.desktop"/browser="chromium-browser.desktop"/' \
+  /usr/bin/omarchy-launch-webapp
+grep -Fq 'browser="chromium-browser.desktop"' /usr/bin/omarchy-launch-webapp
 
 sed -i \
   's|local monitor_lua="$HOME/.config/hypr/monitors.lua"|local monitor_lua="${XDG_CONFIG_HOME:-$HOME/.config}/omarchy/hypr/monitors.lua"|' \

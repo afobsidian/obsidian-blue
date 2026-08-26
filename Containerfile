@@ -180,10 +180,10 @@ RUN \
 
 # Labels are added last since they cause cache misses with buildah
 LABEL io.artifacthub.package.readme-url="https://raw.githubusercontent.com/blue-build/cli/main/README.md"
-LABEL org.blue-build.build-id="e92f5aa2-370a-4e1e-ac0d-2476ebe28932"
+LABEL org.blue-build.build-id="4e89ea54-059d-4a10-a852-6c115b0a7f0d"
 LABEL org.opencontainers.image.base.digest="sha256:6bcb5820932611d56b447497b27ec8e3b2cb36ad31d6ddb7cb2e212039204689"
 LABEL org.opencontainers.image.base.name="ghcr.io/wayblueorg/hyprland:latest"
-LABEL org.opencontainers.image.created="2026-08-26T02:42:21.985514008+00:00"
+LABEL org.opencontainers.image.created="2026-08-26T02:45:53.237032503+00:00"
 LABEL org.opencontainers.image.description="Omarchy Quattro on Fedora Atomic with a mutable user configuration layer."
 LABEL org.opencontainers.image.source=""
 LABEL org.opencontainers.image.title="obsidian-blue"

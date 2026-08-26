@@ -40,6 +40,7 @@ if [[ -n $url && -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]]; then
 fi
 EOF
 (cd "$root" && git apply --recount <"$repo/files/patches/omarchy-browser-launcher.patch")
+grep -Fq 'browser="chromium-browser.desktop"' "$repo/files/scripts/install-omarchy-quattro.sh"
 
 mock="$root/mock"
 mkdir -p "$mock"
