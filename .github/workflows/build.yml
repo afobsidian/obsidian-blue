@@ -30,9 +30,9 @@ jobs:
 
       - name: Test image definition
         run: |
-          bash tests/validate-recipe.sh
-          bash tests/test-omarchy-menu.sh
-          bash tests/test-quattro-migration.sh
+          bash -x tests/validate-recipe.sh
+          bash -x tests/test-omarchy-menu.sh
+          bash -x tests/test-quattro-migration.sh
 
       - name: Verify signing secret
         env:
