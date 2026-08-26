@@ -3,74 +3,14 @@
 set -euo pipefail
 
 version="${OMARCHY_VERSION:-4.0.0}"
-config_root="${OMARCHY_CONFIG_ROOT:-/usr/share/omarchy/config}"
-applications_root="${OMARCHY_APPLICATIONS_ROOT:-/usr/share/omarchy/applications}"
 state_root="${XDG_STATE_HOME:-$HOME/.local/state}"
 marker="$state_root/obsidian-blue/quattro-$version-image-config-v3"
 [[ -e "$marker" ]] && exit 0
 
-backup="$state_root/obsidian-blue/backups/quattro-$version-$(date -u +%Y%m%dT%H%M%SZ)"
-mkdir -p "$backup" "$HOME/.config" "$HOME/.local/share/applications"
-moved_paths=()
-
-archive() {
-  local target="$1" relative
-  [[ -e "$target" || -L "$target" ]] || return 0
-  relative="${target#"$HOME"/}"
-  mkdir -p "$backup/$(dirname "$relative")"
-  cp -a "$target" "$backup/$relative"
-  rm -rf "$target"
-  moved_paths+=("$relative")
-}
-
-restore() {
-  local relative
-  for relative in "${moved_paths[@]}"; do
-    rm -rf "$HOME/$relative"
-    mkdir -p "$HOME/$(dirname "$relative")"
-    cp -a "$backup/$relative" "$HOME/$relative"
-  done
-}
-trap 'restore' ERR
-
-for source in "$config_root"/*; do
-  [[ -e "$source" ]] || continue
-  archive "$HOME/.config/$(basename "$source")"
-done
-
-for legacy in \
-  "$HOME/.config/omadora" \
-  "$HOME/.config/uwsm" \
-  "$HOME/.config/waybar" \
-  "$HOME/.local/share/omadora"; do
-  archive "$legacy"
-done
-
-for source in "$applications_root"/*.desktop; do
-  [[ -e "$source" ]] || continue
-  archive "$HOME/.local/share/applications/$(basename "$source")"
-done
-
-for legacy in \
-  "$HOME/.config/systemd/user"/omadora-* \
-  "$HOME/.config/systemd/user"/hyprland-* \
-  "$HOME/.config/systemd/user"/mako.service \
-  "$HOME/.config/systemd/user"/swaync.service \
-  "$HOME/.config/systemd/user"/moniqued.service* \
-  "$HOME/.local/state/omarchy/done/finalize-user" \
-  "$HOME/.local/state/omarchy/done/first-run-user"; do
-  archive "$legacy"
-done
-
 export OMARCHY_PATH="${OMARCHY_PATH:-/usr/share/omarchy}"
-export PATH="$OMARCHY_PATH/bin:$PATH"
-if [[ ${OMARCHY_SKIP_THEME:-0} != 1 ]]; then
-  OMARCHY_THEME_HEADLESS=1 OMARCHY_THEME_SKIP_BACKGROUND=1 omarchy-theme-set "Tokyo Night"
-fi
 
 mkdir -p "$state_root/omarchy/migrations" "$(dirname "$marker")"
 for migration in "$OMARCHY_PATH"/migrations/*.sh; do
   [[ -e "$migration" ]] && touch "$state_root/omarchy/migrations/$(basename "$migration")"
 done
 touch "$marker"
-trap - ERR
