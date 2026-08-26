@@ -1,4 +1,4 @@
-ARG BASE_IMAGE="ghcr.io/wayblueorg/hyprland@sha256:efc40c3544c7a9a379b75561c22a50d7342c7d72c30452d26fde8ef6d3ffb436"
+ARG BASE_IMAGE="ghcr.io/wayblueorg/hyprland@sha256:6bcb5820932611d56b447497b27ec8e3b2cb36ad31d6ddb7cb2e212039204689"
 FROM "${BASE_IMAGE}" AS obsidian-blue
 
 # This stage is responsible for holding onto
@@ -136,7 +136,7 @@ RUN \
 --mount=type=cache,sharing=locked,dst=/var/cache/apt,id=apt-cache-obsidian-blue-latest-stage-obsidian-blue \
 --mount=type=cache,sharing=locked,dst=/var/cache/pacman,id=pacman-cache-obsidian-blue-latest-stage-obsidian-blue \
 --mount=type=cache,sharing=locked,dst=/usr/lib/sysimage/cache/pacman,id=pacman-sysimage-cache-obsidian-blue-latest-stage-obsidian-blue \
-/tmp/scripts/run_module.sh 'script' '{"type":"script","scripts":["install-omarchy-quattro.sh","setup-image-config.sh","validate-omarchy-image.sh"]}'
+/tmp/scripts/run_module.sh 'script' '{"type":"script","scripts":["install-omarchy-quattro.sh","install-omarchy-nvim.sh","setup-image-config.sh","validate-omarchy-image.sh"]}'
 RUN \
 --mount=type=bind,from=stage-files,src=/files,dst=/tmp/files,rw \
 --mount=type=bind,from=ghcr.io/blue-build/modules/systemd:latest,src=/modules,dst=/tmp/modules,rw \
@@ -180,10 +180,10 @@ RUN \
 
 # Labels are added last since they cause cache misses with buildah
 LABEL io.artifacthub.package.readme-url="https://raw.githubusercontent.com/blue-build/cli/main/README.md"
-LABEL org.blue-build.build-id="6f9bc423-c39a-4d2d-a793-27b8df1e0886"
-LABEL org.opencontainers.image.base.digest="sha256:efc40c3544c7a9a379b75561c22a50d7342c7d72c30452d26fde8ef6d3ffb436"
+LABEL org.blue-build.build-id="00e39991-3866-476f-890d-7bbdcac8b729"
+LABEL org.opencontainers.image.base.digest="sha256:6bcb5820932611d56b447497b27ec8e3b2cb36ad31d6ddb7cb2e212039204689"
 LABEL org.opencontainers.image.base.name="ghcr.io/wayblueorg/hyprland:latest"
-LABEL org.opencontainers.image.created="2026-08-25T05:03:42.271176130+00:00"
+LABEL org.opencontainers.image.created="2026-08-26T01:22:23.379663728+00:00"
 LABEL org.opencontainers.image.description="Omarchy Quattro on Fedora Atomic with a mutable user configuration layer."
 LABEL org.opencontainers.image.source=""
 LABEL org.opencontainers.image.title="obsidian-blue"

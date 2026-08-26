@@ -95,6 +95,9 @@ grep -Fq 'Open LocalSend' /usr/share/omarchy/default/omarchy/omarchy-menu.jsonc 
   fail "LocalSend menu is absent"
 grep -Fq 'omarchy-cmd-present zed' /usr/share/omarchy/default/omarchy/omarchy-menu.jsonc || \
   fail "Zed editor detection is absent"
+perl -0777 -pe 's/^\s*\/\/[^\n]*(\n|$)//gm; s/,(\s*[}\]])/$1/g' \
+  /usr/share/omarchy/default/omarchy/omarchy-menu.jsonc | jq -e . >/dev/null || \
+  fail "Omarchy menu JSONC is invalid"
 if grep -Eq '"install\.(aur|style\.font|service|editor|terminal|browser|ai|gaming|windows|preinstalls)(\.|"|\})' \
   /usr/share/omarchy/default/omarchy/omarchy-menu.jsonc || \
   grep -Eq '"remove\.(browser|dictation|gaming|service|windows|preinstalls)(\.|"|\})' \
