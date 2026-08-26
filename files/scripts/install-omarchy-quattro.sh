@@ -51,7 +51,7 @@ perl -0pi -e '
   s{^[ ]{2}"trigger\.share":.*\n}{  "trigger.share": {"icon":"","label":"Open LocalSend","aliases":["share"],"when":"flatpak info org.localsend.localsend_app","action":"uwsm-app -- flatpak run org.localsend.localsend_app"},\n}mg;
   s{^[ ]{2}"setup\.monitors":.*\n}{  "setup.monitors": {"icon":"󰍹","label":"Monitors","action":"omarchy-menu-monitors"},\n}mg;
   s{^[ ]{2}"setup\.default\.browser":.*\n}{  "setup.default.browser": {"icon":"","label":"Browser","title":"Default Browser","action":"omarchy-default-browser-select"},\n}mg;
-  s{^[ ]{2}"setup\.default\.editor\.zed":.*\n}{  "setup.default.editor.zed": {"icon":"","label":"Zed","when":"omarchy-cmd-present zed","checked":"[[ \"$(omarchy-default-editor)\" == \"zed\" ]]","action":"omarchy-default-editor zed"},\n}mg;
+  s{^[ ]{2}"setup\.default\.editor\.zed":.*\n}{  "setup.default.editor.zed": {"icon":"","label":"Zed","when":"omarchy-cmd-present zed","checked":"[[ \"\$(omarchy-default-editor)\" == \"zed\" ]]","action":"omarchy-default-editor zed"},\n}mg;
   s{^[ ]{2}"install\.package":.*\n}{  "install.package": {"icon":"󰏗","label":"Flatpak","action":"xdg-terminal-exec --app-id=org.omarchy.terminal omarchy-pkg-install"},\n}mg;
   s{^[ ]{2}"remove\.package":.*\n}{  "remove.package": {"icon":"󰏗","label":"Flatpak","action":"xdg-terminal-exec --app-id=org.omarchy.terminal omarchy-pkg-remove"},\n}mg;
 ' "$menu"
