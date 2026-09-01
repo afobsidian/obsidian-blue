@@ -19,8 +19,14 @@ echo "$OMARCHY_SHA256  $archive" | sha256sum --check --status
 tar -xzf "$archive" --strip-components=1 -C "$source_dir"
 (cd "$source_dir" && git apply --recount <"$script_dir/../patches/omarchy-browser-launcher.patch")
 lock_service="$source_dir/shell/plugins/lock/Service.qml"
-sed -i 's/lockRequested || sessionLock\.locked || sessionLock\.secure/!!(lockRequested + sessionLock.locked + sessionLock.secure)/' "$lock_service"
-grep -Fq '!!(lockRequested + sessionLock.locked + sessionLock.secure)' "$lock_service"
+sed -i \
+  -e 's/readonly property bool locked: lockRequested || sessionLock\.locked || sessionLock\.secure/function lockStateActive() { return lockRequested || sessionLock.locked || sessionLock.secure }/' \
+  -e 's/root\.locked/root.lockStateActive()/g' \
+  -e 's/if (locked || lockRequested)/if (root.lockStateActive() || lockRequested)/' \
+  "$lock_service"
+grep -Fq 'function lockStateActive() { return lockRequested || sessionLock.locked || sessionLock.secure }' \
+  "$lock_service"
+! grep -Fq 'root.locked' "$lock_service"
 
 curl -fsSL \
   "https://github.com/ryanoasis/nerd-fonts/releases/download/v$NERD_FONTS_VERSION/JetBrainsMono.tar.xz" \
