@@ -69,4 +69,4 @@ test "$(cat "$home/.config/hypr/hyprland.lua")" = mutable
 HOME="$home" XDG_STATE_HOME="$home/.local/state" OMARCHY_VERSION=4.0.1 \
   OMARCHY_PATH="$root/missing" "$repo/files/usr/libexec/obsidian-blue/quattro-migrate"
 test "$(cat "$home/.config/hypr/hyprland.lua")" = mutable
-test -f "$home/.local/state/obsidian-blue/quattro-4.0.1-image-config-v3"
+test -f "$home/.local/state/obsidian-blue/quattro-4.0.1-image-config-v4"
