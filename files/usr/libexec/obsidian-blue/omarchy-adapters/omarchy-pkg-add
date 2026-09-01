@@ -2,6 +2,10 @@
 
 set -euo pipefail
 for package in "$@"; do
+  case "$package" in
+    mise-bin) package=mise ;;
+    qt6-imageformats) package=qt6-qtimageformats ;;
+  esac
   if [[ "$package" == *.* ]]; then
     flatpak install --user --noninteractive -y flathub "$package"
   elif ! rpm -q "$package" >/dev/null 2>&1 && ! command -v "$package" >/dev/null 2>&1; then

@@ -36,6 +36,7 @@ modules:
         - hyprland-uwsm
         - uwsm
         - quickshell
+        - qt6-qtimageformats
         - hypridle
         - hyprpicker
         - hyprpolkitagent
@@ -71,9 +72,8 @@ modules:
         - chromium
         - clang
         - cups
-        - cups-browsed
         - cups-filters
-        - cups-pdf
+        - cups-pk-helper
         - curl
         - libcurl.x86_64
         - dbus-tools
@@ -171,6 +171,10 @@ modules:
     remove:
       packages:
         - curl-minimal
+        - cups-browsed
+        - cups-pdf
+        - kvantum
+        - kvantum-qt5
         - Thunar
         - thunar-archive-plugin
         - thunar-volman

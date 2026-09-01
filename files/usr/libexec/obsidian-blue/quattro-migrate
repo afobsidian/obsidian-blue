@@ -4,13 +4,20 @@ set -euo pipefail
 
 version="${OMARCHY_VERSION:-4.0.0}"
 state_root="${XDG_STATE_HOME:-$HOME/.local/state}"
-marker="$state_root/obsidian-blue/quattro-$version-image-config-v3"
-[[ -e "$marker" ]] && exit 0
+image_marker="$state_root/obsidian-blue/quattro-$version-image-config-v4"
+legacy_marker="$state_root/obsidian-blue/quattro-$version-image-config-v3"
+[[ -e "$image_marker" ]] && exit 0
 
-export OMARCHY_PATH="${OMARCHY_PATH:-/usr/share/omarchy}"
-
-mkdir -p "$state_root/omarchy/migrations" "$(dirname "$marker")"
-for migration in "$OMARCHY_PATH"/migrations/*.sh; do
-  [[ -e "$migration" ]] && touch "$state_root/omarchy/migrations/$(basename "$migration")"
-done
-touch "$marker"
+mkdir -p "$(dirname "$image_marker")"
+if [[ -e "$legacy_marker" ]]; then
+  for migration in \
+    1786782461.sh 1786952219.sh 1787133200.sh 1787399318.sh \
+    1787481315.sh 1787494718.sh 1787515927.sh 1787580187.sh \
+    1787589206.sh 1787618700.sh 1787691200.sh 1787815267.sh \
+    1787865477.sh 1788009111.sh 1788025225.sh 1788102906.sh \
+    1788112314.sh 1788124236.sh; do
+    rm -f "$state_root/omarchy/migrations/$migration"
+  done
+fi
+systemctl --user enable omarchy-migrate-notify.service >/dev/null 2>&1 || true
+touch "$image_marker"

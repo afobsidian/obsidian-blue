@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 
 for package in "$@"; do
+  case "$package" in
+    mise-bin) package=mise ;;
+    qt6-imageformats) package=qt6-qtimageformats ;;
+  esac
   if [[ "$package" == *.* ]]; then
     flatpak info --user "$package" >/dev/null 2>&1 || flatpak info --system "$package" >/dev/null 2>&1 || exit 1
   else

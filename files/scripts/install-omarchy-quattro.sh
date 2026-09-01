@@ -39,6 +39,18 @@ tar -xJf "$font_archive" -C /usr/share/fonts/jetbrains-mono-nerd \
 install -d /usr/share/omarchy /usr/bin /usr/share/applications /usr/share/wayland-sessions
 cp -a "$source_dir"/{applications,config,default,install,migrations,shell,themes} /usr/share/omarchy/
 install -m 0644 "$source_dir"/{icon.png,icon.txt,logo.svg,logo.txt,version} /usr/share/omarchy/
+for migration in "$script_dir"/omarchy-migrations/*.sh; do
+  [[ -f "$migration" ]] || continue
+  install -m 0644 "$migration" "/usr/share/omarchy/migrations/$(basename "$migration")"
+done
+for migration in /usr/share/omarchy/migrations/*.sh; do
+  [[ -f "$migration" ]] || continue
+  if sed 's/[[:space:]]*#.*//' "$migration" |
+    grep -Eq '(^|[^[:alnum:]_-])([[:space:]]*sudo[[:space:]]+)?pacman([[:alnum:]_-]*)([[:space:]]|$)'; then
+    echo "Unadapted Fedora migration: $(basename "$migration")" >&2
+    exit 1
+  fi
+done
 
 menu=/usr/share/omarchy/default/omarchy/omarchy-menu.jsonc
 perl -0pi -e '
@@ -200,7 +212,7 @@ install -d /etc/skel/.local/state/omarchy/migrations /etc/skel/.local/state/obsi
 for migration in "$source_dir"/migrations/*.sh; do
   touch "/etc/skel/.local/state/omarchy/migrations/$(basename "$migration")"
 done
-touch /etc/skel/.local/state/obsidian-blue/quattro-4.0.2-image-config-v3
+touch /etc/skel/.local/state/obsidian-blue/quattro-4.0.2-image-config-v4
 
 install -Dm644 "$script_dir/omarchy-version.env" /usr/share/obsidian-blue/omarchy-version.env
 install -Dm755 /usr/bin/omarchy-hyprland-monitor-scaling \

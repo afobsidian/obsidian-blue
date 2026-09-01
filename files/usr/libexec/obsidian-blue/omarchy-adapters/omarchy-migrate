@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+mode=run
+while (($#)); do
+  case "$1" in
+    --pending|--check)
+      mode=pending
+      shift
+      ;;
+    -h|--help)
+      printf 'Usage: omarchy-migrate [--pending]\n'
+      exit 0
+      ;;
+    *)
+      printf 'Unknown option: %s\n' "$1" >&2
+      exit 1
+      ;;
+  esac
+done
+
+omarchy_path="${OMARCHY_PATH:-/usr/share/omarchy}"
+state_dir="${OMARCHY_MIGRATION_STATE:-${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/migrations}"
+migrations_dir="$omarchy_path/migrations"
+
+pending_migrations() {
+  local migration name
+  [[ -d "$migrations_dir" ]] || return 0
+  for migration in "$migrations_dir"/*.sh; do
+    [[ -f "$migration" ]] || continue
+    name="$(basename "$migration")"
+    [[ -f "$state_dir/$name" ]] || printf '%s\n' "$name"
+  done
+}
+
+if [[ "$mode" == pending ]]; then
+  pending_output="$(pending_migrations)"
+  [[ -n "$pending_output" ]] || exit 1
+  printf '%s\n' "$pending_output"
+  exit 0
+fi
+
+mkdir -p "$state_dir"
+[[ -d "$migrations_dir" ]] || exit 0
+
+for migration in "$migrations_dir"/*.sh; do
+  [[ -f "$migration" ]] || continue
+  name="$(basename "$migration")"
+  marker="$state_dir/$name"
+  [[ -f "$marker" ]] && continue
+  printf 'Running migration (%s)\n' "${name%.sh}"
+  OMARCHY_PATH="$omarchy_path" bash -euo pipefail "$migration"
+  touch "$marker"
+done
+
+omarchy-notification-dismiss "Omarchy Migrations" >/dev/null 2>&1 || true

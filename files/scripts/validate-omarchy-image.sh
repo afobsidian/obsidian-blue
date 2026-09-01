@@ -7,7 +7,7 @@ fail() {
   exit 1
 }
 
-for command in Hyprland flatpak hyprlock quickshell uwsm omarchy podman docker gh nvim fd rg nmtui xkbcli \
+for command in Hyprland flatpak hyprlock quickshell uwsm omarchy omarchy-migrate podman docker gh nvim fd rg nmtui xkbcli \
   tailscale perf nc curl; do
   command -v "$command" >/dev/null || fail "missing command: $command"
 done
@@ -26,11 +26,12 @@ for path in \
   /etc/skel/.config/nvim/lua/plugins/theme.lua \
   /usr/bin/omarchy-nvim-setup \
   /usr/bin/omarchy-default-browser-select \
+  /usr/bin/omarchy-migrate \
   /usr/bin/omarchy-menu-monitors \
   /etc/profile.d/omarchy.sh \
   /etc/profile.d/99-omarchy-bash.sh \
   /etc/pam.d/omarchy-lock-password \
-  /etc/skel/.local/state/obsidian-blue/quattro-4.0.2-image-config-v3 \
+  /etc/skel/.local/state/obsidian-blue/quattro-4.0.2-image-config-v4 \
   /usr/share/wayland-sessions/omarchy.desktop \
   /usr/share/applications/Basecamp.desktop \
   /usr/share/applications/Alacritty.desktop \
@@ -125,6 +126,7 @@ HOME="$home" OMARCHY_PATH=/usr/share/omarchy \
     --config /usr/share/omarchy/config/hypr/hyprland.lua >/dev/null
 
 bash -n /usr/bin/obsidian-blue-quattro-session /usr/libexec/obsidian-blue/quattro-migrate \
+  /usr/bin/omarchy-migrate \
   /usr/bin/omarchy-refresh-applications /usr/bin/omarchy-default-browser-select \
   /usr/bin/omarchy-menu-monitors
 echo "Omarchy Quattro image validated."

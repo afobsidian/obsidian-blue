@@ -13,6 +13,9 @@ grep -Fq 'libxkbcommon-utils' "$recipe"
 grep -Fq 'perl-JSON-PP' "$recipe"
 grep -Fq '        - curl' "$recipe"
 grep -Fq '        - libcurl.x86_64' "$recipe"
+grep -Fq '        - cups-pk-helper' "$recipe"
+grep -Fq '        - qt6-qtimageformats' "$recipe"
+grep -Fq '        - kvantum-qt5' "$recipe"
 grep -Fq '        - curl-minimal' "$recipe"
 curl_protocols="$(curl --version | sed -n 's/^Protocols: //p')"
 grep -Eq '(^| )imap( |$)' <<<"$curl_protocols"
@@ -28,7 +31,7 @@ grep -Fq '/usr/share/wayland-sessions/omarchy.desktop' \
   "$repo/files/scripts/install-omarchy-quattro.sh"
 ! grep -Fq '/usr/local/share/wayland-sessions/omarchy.desktop' \
   "$repo/files/scripts/install-omarchy-quattro.sh"
-grep -Fq 'quattro-$version-image-config-v3' \
+grep -Fq 'quattro-$version-image-config-v4' \
   "$repo/files/usr/libexec/obsidian-blue/quattro-migrate"
 grep -Fq 'omarchy-default-browser-select' "$repo/files/scripts/install-omarchy-quattro.sh"
 grep -Fq 'omarchy-menu-monitors' "$repo/files/scripts/install-omarchy-quattro.sh"
@@ -38,6 +41,8 @@ grep -Fq 'JETBRAINS_MONO_NERD_SHA256=' "$repo/files/scripts/omarchy-version.env"
 test ! -e "$repo/.gitmodules"
 grep -Fqx 'auth include login' "$repo/files/etc/pam.d/omarchy-lock-password"
 grep -Fq 'omarchy-browser-launcher.patch' "$repo/files/scripts/install-omarchy-quattro.sh"
+grep -Fq 'Unadapted Fedora migration' "$repo/files/scripts/install-omarchy-quattro.sh"
+grep -Fq 'omarchy-migrations' "$repo/files/scripts/install-omarchy-quattro.sh"
 grep -Fq 'dnf -y swap libcurl-minimal libcurl' \
   "$repo/files/scripts/install-omarchy-quattro.sh"
 grep -Fq 'Private browser binding is absent' "$repo/files/scripts/validate-omarchy-image.sh"
