@@ -52,6 +52,9 @@ for migration in /usr/share/omarchy/migrations/*.sh; do
   fi
 done
 
+OMARCHY_CHROMIUM_PREFS=/etc/chromium/master_preferences \
+  bash "$script_dir/omarchy-migrations/1787691200.sh"
+
 menu=/usr/share/omarchy/default/omarchy/omarchy-menu.jsonc
 perl -0pi -e '
   s{^[ ]{2}"(?:

@@ -25,9 +25,11 @@ printf '%s\n' 'printf recovered >"$HOME/recovered"' >"$omarchy/migrations/178678
 printf '%s\n' 'printf pacman-called >"$HOME/pacman-called"' >"$fake_bin/pacman"
 printf '%s\n' '[[ "$2" == mise || "$2" == qt6-qtimageformats ]] && exit 0; exit 1' >"$fake_bin/rpm"
 printf '%s\n' 'printf "%s\\n" "$*" >"$HOME/systemctl-called"' >"$fake_bin/systemctl"
+printf '%s\n' '"$@"' >"$fake_bin/sudo"
 chmod 755 "$fake_bin/pacman"
 chmod 755 "$fake_bin/rpm"
 chmod 755 "$fake_bin/systemctl"
+chmod 755 "$fake_bin/sudo"
 mkdir -p "$home/.local/state/obsidian-blue" "$home/.local/state/omarchy/migrations"
 touch "$home/.local/state/obsidian-blue/quattro-4.0.0-image-config-v3"
 touch "$home/.local/state/omarchy/migrations/1786782461.sh"
@@ -60,6 +62,14 @@ test -f "$home/.local/state/omarchy/migrations/001.sh"
 test -f "$home/.local/state/omarchy/migrations/002.sh"
 PATH="$fake_bin:$adapter_dir:$PATH" omarchy-pkg-present mise-bin
 PATH="$fake_bin:$adapter_dir:$PATH" omarchy-pkg-add qt6-imageformats
+
+chromium_prefs="$root/master_preferences"
+printf '%s\n' '{"distribution":{"require_eula":true},"browser":{"theme":{"color_scheme":1}}}' \
+  >"$chromium_prefs"
+OMARCHY_CHROMIUM_PREFS="$chromium_prefs" PATH="$fake_bin:$PATH" \
+  bash "$repo/files/scripts/omarchy-migrations/1787691200.sh"
+jq -e '.distribution.require_eula == false and .browser.theme.color_scheme == 0 and
+  .browser.theme.color_scheme2 == 0' "$chromium_prefs" >/dev/null
 
 printf 'mutable\n' >"$home/.config/hypr/hyprland.lua"
 HOME="$home" XDG_STATE_HOME="$home/.local/state" OMARCHY_PATH="$omarchy" \
