@@ -60,6 +60,9 @@ test -f "$home/pacman-called"
 test -f "$home/recovered"
 test -f "$home/.local/state/omarchy/migrations/001.sh"
 test -f "$home/.local/state/omarchy/migrations/002.sh"
+second_run="$(HOME="$home" XDG_STATE_HOME="$home/.local/state" OMARCHY_PATH="$omarchy" \
+  PATH="$fake_bin:$adapter_dir:$PATH" omarchy-migrate 2>&1)"
+test -z "$second_run"
 PATH="$fake_bin:$adapter_dir:$PATH" omarchy-pkg-present mise-bin
 PATH="$fake_bin:$adapter_dir:$PATH" omarchy-pkg-add qt6-imageformats
 
