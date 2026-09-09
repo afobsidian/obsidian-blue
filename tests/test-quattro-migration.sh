@@ -65,6 +65,7 @@ second_run="$(HOME="$home" XDG_STATE_HOME="$home/.local/state" OMARCHY_PATH="$om
 test -z "$second_run"
 PATH="$fake_bin:$adapter_dir:$PATH" omarchy-pkg-present mise-bin
 PATH="$fake_bin:$adapter_dir:$PATH" omarchy-pkg-add qt6-imageformats
+PATH="$fake_bin:$PATH" bash "$repo/files/scripts/omarchy-migrations/1788009111.sh" >/dev/null
 
 chromium_prefs="$root/master_preferences"
 printf '%s\n' '{"distribution":{"require_eula":true},"browser":{"theme":{"color_scheme":1}}}' \

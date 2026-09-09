@@ -4,3 +4,4 @@ machine_marker="${OMARCHY_CUPS_BROWSED_REMOVAL_MARKER:-/var/lib/omarchy/migratio
 
 [[ ! -e "$machine_marker" ]] || exit 0
 rpm -q cups-browsed >/dev/null 2>&1 && exit 1
+exit 0
