@@ -31,7 +31,7 @@ for path in \
   /etc/profile.d/omarchy.sh \
   /etc/profile.d/99-omarchy-bash.sh \
   /etc/pam.d/omarchy-lock-password \
-  /etc/skel/.local/state/obsidian-blue/quattro-4.0.2-image-config-v4 \
+  /etc/skel/.local/state/obsidian-blue/quattro-4.0.3-image-config-v4 \
   /usr/share/wayland-sessions/omarchy.desktop \
   /usr/share/applications/Basecamp.desktop \
   /usr/share/applications/Alacritty.desktop \
