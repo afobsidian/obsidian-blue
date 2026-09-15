@@ -6,9 +6,6 @@ on:
       - main
     paths-ignore:
       - "**.md"
-  schedule:
-    # Rebuild every Monday at 04:00 UTC to pick up base-image & package updates
-    - cron: "0 4 * * 1"
   workflow_dispatch:
 
 env:
