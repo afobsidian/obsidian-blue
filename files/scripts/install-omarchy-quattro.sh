@@ -18,15 +18,7 @@ curl -fsSL "https://codeload.github.com/basecamp/omarchy/tar.gz/$OMARCHY_COMMIT"
 echo "$OMARCHY_SHA256  $archive" | sha256sum --check --status
 tar -xzf "$archive" --strip-components=1 -C "$source_dir"
 (cd "$source_dir" && git apply --recount <"$script_dir/../patches/omarchy-browser-launcher.patch")
-lock_service="$source_dir/shell/plugins/lock/Service.qml"
-sed -i \
-  -e 's/readonly property bool locked: lockRequested || sessionLock\.locked || sessionLock\.secure/function lockStateActive() { return lockRequested || sessionLock.locked || sessionLock.secure }/' \
-  -e 's/root\.locked/root.lockStateActive()/g' \
-  -e 's/if (locked || lockRequested)/if (root.lockStateActive() || lockRequested)/' \
-  "$lock_service"
-grep -Fq 'function lockStateActive() { return lockRequested || sessionLock.locked || sessionLock.secure }' \
-  "$lock_service"
-! grep -Fq 'root.locked' "$lock_service"
+(cd "$source_dir" && git apply --recount <"$script_dir/../patches/omarchy-lock-state.patch")
 
 curl -fsSL \
   "https://github.com/ryanoasis/nerd-fonts/releases/download/v$NERD_FONTS_VERSION/JetBrainsMono.tar.xz" \
@@ -171,6 +163,8 @@ install -Dm644 "$source_dir/default/systemd/user/app.slice.d/10-oomd.conf" \
   /usr/lib/systemd/user/app.slice.d/10-oomd.conf
 install -Dm644 "$source_dir/default/systemd/zram-generator.conf.d/90-omarchy.conf" \
   /usr/lib/systemd/zram-generator.conf.d/90-omarchy.conf
+install -Dm644 "$source_dir/etc/systemd/logind.conf.d/20-inhibit-delay.conf" \
+  /etc/systemd/logind.conf.d/20-inhibit-delay.conf
 
 cp -a "$source_dir/default/sddm/omarchy" /usr/share/sddm/themes/
 install -Dm644 "$source_dir/default/sddm/hyprland.lua" /usr/share/sddm/hyprland.lua
@@ -215,7 +209,7 @@ install -d /etc/skel/.local/state/omarchy/migrations /etc/skel/.local/state/obsi
 for migration in "$source_dir"/migrations/*.sh; do
   touch "/etc/skel/.local/state/omarchy/migrations/$(basename "$migration")"
 done
-touch /etc/skel/.local/state/obsidian-blue/quattro-4.0.2-image-config-v4
+touch /etc/skel/.local/state/obsidian-blue/quattro-4.0.4-image-config-v4
 
 install -Dm644 "$script_dir/omarchy-version.env" /usr/share/obsidian-blue/omarchy-version.env
 install -Dm755 /usr/bin/omarchy-hyprland-monitor-scaling \

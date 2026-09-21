@@ -41,6 +41,9 @@ grep -Fq 'JETBRAINS_MONO_NERD_SHA256=' "$repo/files/scripts/omarchy-version.env"
 test ! -e "$repo/.gitmodules"
 grep -Fqx 'auth include login' "$repo/files/etc/pam.d/omarchy-lock-password"
 grep -Fq 'omarchy-browser-launcher.patch' "$repo/files/scripts/install-omarchy-quattro.sh"
+grep -Fq 'omarchy-lock-state.patch' "$repo/files/scripts/install-omarchy-quattro.sh"
+grep -Fq 'etc/systemd/logind.conf.d/20-inhibit-delay.conf' \
+  "$repo/files/scripts/install-omarchy-quattro.sh"
 grep -Fq 'Unadapted Fedora migration' "$repo/files/scripts/install-omarchy-quattro.sh"
 grep -Fq 'omarchy-migrations' "$repo/files/scripts/install-omarchy-quattro.sh"
 grep -Fq 'dnf -y swap libcurl-minimal libcurl' \

@@ -1,0 +1,77 @@
+--- a/shell/plugins/lock/Service.qml
++++ b/shell/plugins/lock/Service.qml
+@@ -34,7 +34,7 @@
+   property bool strandedLock: false
+   property bool strandedLockResolved: false
+ 
+-  readonly property bool locked: lockRequested || sessionLock.locked || sessionLock.secure
++  function lockStateActive() { return lockRequested || sessionLock.locked || sessionLock.secure }
+   readonly property bool authenticating: authenticatingPassword || fingerprintAuthenticating
+ 
+   function realScreenCount() {
+@@ -83,7 +83,7 @@
+     if (strandedLockResolved || strandedLockCheckProc.running) return
+ 
+     // A lock this shell took is nobody's orphan.
+-    if (locked || lockRequested) {
++    if (root.lockStateActive() || lockRequested) {
+       strandedLockResolved = true
+       return
+     }
+@@ -92,7 +92,7 @@
+   }
+ 
+   function recoverStrandedLock() {
+-    if (!strandedLock || locked || !passwordPamConfigured) return
++    if (!strandedLock || root.lockStateActive() || !passwordPamConfigured) return
+ 
+     strandedLock = false
+     logEvent("lock-stranded: recovering")
+@@ -146,7 +146,7 @@
+   }
+ 
+   function finishUnlock() {
+-    if (!root.locked && !lockRequested) return
++    if (!root.lockStateActive() && !lockRequested) return
+ 
+     lockRequested = false
+     pendingSessionLock = false
+@@ -275,7 +275,7 @@
+         failureMessage: root.failureMessage
+         failedAttempts: root.failedAttempts
+         inputEnabled: root.lockRequested
+-        loadBackground: root.locked
++        loadBackground: root.lockStateActive()
+         passwordText: root.enteredPassword
+         onPasswordTextEdited: function(password) { root.enteredPassword = password }
+         onSubmitPassword: function(password) { root.submitPassword(password) }
+@@ -396,7 +396,7 @@
+       root.strandedLockResolved = true
+ 
+       // A lock taken while this was in flight is this shell's own.
+-      root.strandedLock = exitCode === 0 && !root.locked && !root.lockRequested
++      root.strandedLock = exitCode === 0 && !root.lockStateActive() && !root.lockRequested
+       root.recoverStrandedLock()
+     }
+   }
+@@ -512,17 +512,17 @@
+ 
+     function lock(): string {
+       if (!root.passwordPamConfigured) return "missing-pam"
+-      if (!root.locked && !root.beginLock()) return "failed"
++      if (!root.lockStateActive() && !root.beginLock()) return "failed"
+       return "ok"
+     }
+ 
+     function isLocked(): string {
+-      return root.locked ? "true" : "false"
++      return root.lockStateActive() ? "true" : "false"
+     }
+ 
+     function status(): string {
+       return JSON.stringify({
+-        locked: root.locked,
++        locked: root.lockStateActive(),
+         requested: root.lockRequested,
+         pending: root.pendingSessionLock,
+         sessionLocked: sessionLock.locked,
