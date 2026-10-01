@@ -11,8 +11,9 @@ fi
 
 archive="$(mktemp)"
 font_archive="$(mktemp)"
+herdr_binary="$(mktemp)"
 source_dir="$(mktemp -d)"
-trap 'rm -f "$archive" "$font_archive"; rm -rf "$source_dir"' EXIT
+trap 'rm -f "$archive" "$font_archive" "$herdr_binary"; rm -rf "$source_dir"' EXIT
 
 curl -fsSL "https://codeload.github.com/basecamp/omarchy/tar.gz/$OMARCHY_COMMIT" -o "$archive"
 echo "$OMARCHY_SHA256  $archive" | sha256sum --check --status
@@ -31,6 +32,26 @@ tar -xJf "$font_archive" -C /usr/share/fonts/jetbrains-mono-nerd \
 install -d /usr/share/omarchy /usr/bin /usr/share/applications /usr/share/wayland-sessions
 cp -a "$source_dir"/{applications,config,default,install,migrations,shell,themes} /usr/share/omarchy/
 install -m 0644 "$source_dir"/{icon.png,icon.txt,logo.svg,logo.txt,version} /usr/share/omarchy/
+
+case "$(uname -m)" in
+  x86_64)
+    herdr_arch=x86_64
+    herdr_sha256="$HERDR_X86_64_SHA256"
+    ;;
+  aarch64)
+    herdr_arch=aarch64
+    herdr_sha256="$HERDR_AARCH64_SHA256"
+    ;;
+  *)
+    echo "Unsupported Herdr architecture: $(uname -m)" >&2
+    exit 1
+    ;;
+esac
+curl -fsSL "https://github.com/herdrdev/herdr/releases/download/v$HERDR_VERSION/herdr-linux-$herdr_arch" \
+  -o "$herdr_binary"
+echo "$herdr_sha256  $herdr_binary" | sha256sum --check --status
+install -m 0755 "$herdr_binary" /usr/bin/herdr
+
 for migration in "$script_dir"/omarchy-migrations/*.sh; do
   [[ -f "$migration" ]] || continue
   install -m 0644 "$migration" "/usr/share/omarchy/migrations/$(basename "$migration")"
