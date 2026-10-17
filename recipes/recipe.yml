@@ -211,6 +211,7 @@ modules:
       - install-omarchy-quattro.sh
       - install-omarchy-nvim.sh
       - setup-image-config.sh
+      - install-rustle.sh
       - validate-omarchy-image.sh
 
   - type: systemd
@@ -229,6 +230,7 @@ modules:
     user:
       enabled:
         - podman.socket
+        - rustle.service
 
   - type: default-flatpaks
     configurations:
