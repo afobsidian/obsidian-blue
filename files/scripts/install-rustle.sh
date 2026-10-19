@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-RUSTLE_VERSION=0.0.5
+RUSTLE_VERSION=0.0.6
 [[ "$(uname -m)" == x86_64 ]]
 dnf -y install pipewire-utils pipewire-pulseaudio pulseaudio-utils wireplumber python3 curl dbus-tools dbus-daemon
 
