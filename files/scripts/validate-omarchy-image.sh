@@ -32,7 +32,7 @@ for path in \
   /etc/profile.d/99-omarchy-bash.sh \
   /etc/pam.d/omarchy-lock-password \
   /etc/systemd/logind.conf.d/20-inhibit-delay.conf \
-  /etc/skel/.local/state/obsidian-blue/quattro-4.0.4-image-config-v4 \
+  /etc/skel/.local/state/obsidian-blue/quattro-4.0.5-image-config-v4 \
   /usr/share/wayland-sessions/omarchy.desktop \
   /usr/share/applications/Basecamp.desktop \
   /usr/share/applications/Alacritty.desktop \
