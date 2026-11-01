@@ -19,7 +19,6 @@ curl -fsSL "https://codeload.github.com/basecamp/omarchy/tar.gz/$OMARCHY_COMMIT"
 echo "$OMARCHY_SHA256  $archive" | sha256sum --check --status
 tar -xzf "$archive" --strip-components=1 -C "$source_dir"
 (cd "$source_dir" && git apply --recount <"$script_dir/../patches/omarchy-browser-launcher.patch")
-(cd "$source_dir" && git apply --recount <"$script_dir/../patches/omarchy-lock-state.patch")
 
 curl -fsSL \
   "https://github.com/ryanoasis/nerd-fonts/releases/download/v$NERD_FONTS_VERSION/JetBrainsMono.tar.xz" \
@@ -176,6 +175,9 @@ ln -sfn /usr/share/fontconfig/conf.avail/50-omarchy.conf /etc/fonts/conf.d/50-om
 install -Dm644 "$source_dir/default/xdg-terminal-exec/hyprland-xdg-terminals.list" \
   /usr/share/xdg-terminal-exec/hyprland-xdg-terminals.list
 install -Dm644 "$source_dir/default/applications/mimeapps.list" /usr/share/applications/mimeapps.list
+sed -i 's/=chromium\.desktop$/=chromium-browser.desktop/' /usr/share/applications/mimeapps.list
+install -Dm644 "$source_dir/default/chromium/policies/omarchy.json" \
+  /etc/chromium/policies/managed/omarchy.json
 
 for unit in "$source_dir"/default/systemd/user/*.service; do
   install -Dm644 "$unit" "/usr/lib/systemd/user/$(basename "$unit")"
@@ -230,7 +232,7 @@ install -d /etc/skel/.local/state/omarchy/migrations /etc/skel/.local/state/obsi
 for migration in "$source_dir"/migrations/*.sh; do
   touch "/etc/skel/.local/state/omarchy/migrations/$(basename "$migration")"
 done
-touch /etc/skel/.local/state/obsidian-blue/quattro-4.0.4-image-config-v4
+touch /etc/skel/.local/state/obsidian-blue/quattro-4.0.6-image-config-v4
 
 install -Dm644 "$script_dir/omarchy-version.env" /usr/share/obsidian-blue/omarchy-version.env
 install -Dm755 /usr/bin/omarchy-hyprland-monitor-scaling \

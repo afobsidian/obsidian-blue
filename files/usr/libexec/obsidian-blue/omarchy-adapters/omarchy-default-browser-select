@@ -34,8 +34,8 @@ selection="$(omarchy-menu-select 'Default Browser' "${choices[@]}" -- --width 52
 desktop_id="${selection#*$'\t'}"
 name="${selection%%$'\t'*}"
 
-env -u BROWSER xdg-settings set default-web-browser "$desktop_id"
-xdg-mime default "$desktop_id" x-scheme-handler/http
-xdg-mime default "$desktop_id" x-scheme-handler/https
-xdg-mime default "$desktop_id" text/html
+env -u BROWSER XDG_CURRENT_DESKTOP= xdg-settings set default-web-browser "$desktop_id"
+env XDG_CURRENT_DESKTOP= xdg-mime default "$desktop_id" x-scheme-handler/http
+env XDG_CURRENT_DESKTOP= xdg-mime default "$desktop_id" x-scheme-handler/https
+env XDG_CURRENT_DESKTOP= xdg-mime default "$desktop_id" text/html
 omarchy-notification-send -g  "$name is now the default browser"

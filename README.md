@@ -4,7 +4,7 @@ An immutable Fedora Atomic image with the Omarchy Quattro desktop and a develope
 
 ## Model
 
-- Omarchy `v4.0.2` is fetched from its [pinned commit](https://github.com/omacom/omarchy/commit/346e69e1cec6c4e8924531874af6ba010a1bc99e)
+- Omarchy `v4.0.6` is fetched from its [pinned commit](https://github.com/omacom/omarchy/commit/237f1b4071a0bff2296c6d740ba2b9fd695ebfa0)
   and verified by SHA-256 during the image build.
 - Canonical Omarchy defaults live in `/usr/share/omarchy` and are not copied into user config.
 - User files under `~/.config` override the baked defaults.

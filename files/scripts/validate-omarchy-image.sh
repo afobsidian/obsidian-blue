@@ -32,7 +32,7 @@ for path in \
   /etc/profile.d/99-omarchy-bash.sh \
   /etc/pam.d/omarchy-lock-password \
   /etc/systemd/logind.conf.d/20-inhibit-delay.conf \
-  /etc/skel/.local/state/obsidian-blue/quattro-4.0.4-image-config-v4 \
+  /etc/skel/.local/state/obsidian-blue/quattro-4.0.6-image-config-v4 \
   /usr/share/wayland-sessions/omarchy.desktop \
   /usr/share/applications/Basecamp.desktop \
   /usr/share/applications/Alacritty.desktop \
@@ -47,8 +47,9 @@ grep -Fqx 'auth include login' /etc/pam.d/omarchy-lock-password || \
 grep -Fqx 'InhibitDelayMaxSec=15' /etc/systemd/logind.conf.d/20-inhibit-delay.conf || \
   fail "logind suspend inhibitor window is not 15 seconds"
 lock_service=/usr/share/omarchy/shell/plugins/lock/Service.qml
-grep -Fq 'function lockStateActive()' "$lock_service" || fail "lock state fix is absent"
-! grep -Fq 'root.locked' "$lock_service" || fail "stale root lock state references remain"
+grep -Fq 'function currentlyLocked()' "$lock_service" || fail "upstream lock state fix is absent"
+grep -Fq 'if (!root.currentlyLocked() && !root.beginLock()) return "failed"' "$lock_service" || \
+  fail "lock request does not check the current session state"
 ! grep -Fq 'if (!strandedLock || locked || !passwordPamConfigured)' "$lock_service" || \
   fail "stale stranded-lock recovery reference remains"
 grep -Fqx 'NAME="obsidian-blue"' /usr/lib/os-release || fail "image name is not branded"

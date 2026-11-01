@@ -84,3 +84,22 @@ HOME="$home" XDG_STATE_HOME="$home/.local/state" OMARCHY_VERSION=4.0.1 \
   OMARCHY_PATH="$root/missing" "$repo/files/usr/libexec/obsidian-blue/quattro-migrate"
 test "$(cat "$home/.config/hypr/hyprland.lua")" = mutable
 test -f "$home/.local/state/obsidian-blue/quattro-4.0.1-image-config-v4"
+
+# Browser flags stay user-owned and retries do not append duplicates.
+printf '%s' '--custom-browser-flag' >"$home/.config/chromium-flags.conf"
+for attempt in 1 2; do
+  HOME="$home" bash -euo pipefail "$repo/files/scripts/omarchy-migrations/1791935188.sh"
+done
+test "$(cat "$home/.config/chromium-flags.conf")" = $'--custom-browser-flag\n--no-default-browser-check'
+
+# The clipboard repair must preserve customized and symlink-managed providers.
+nvim_provider="$home/.config/nvim/lua/config/remote_clipboard.lua"
+mkdir -p "$(dirname "$nvim_provider")"
+printf '%s\n' '-- custom clipboard provider' >"$nvim_provider"
+HOME="$home" bash -euo pipefail "$repo/files/scripts/omarchy-migrations/1788996284.sh"
+test "$(cat "$nvim_provider")" = '-- custom clipboard provider'
+mv "$nvim_provider" "$root/provider.lua"
+ln -s "$root/provider.lua" "$nvim_provider"
+HOME="$home" bash -euo pipefail "$repo/files/scripts/omarchy-migrations/1788996284.sh"
+test -L "$nvim_provider"
+test "$(cat "$root/provider.lua")" = '-- custom clipboard provider'

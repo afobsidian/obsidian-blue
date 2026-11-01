@@ -86,10 +86,12 @@ printf 'Zen Browser\tapp.zen_browser.zen.desktop\n'
 EOF
 cat >"$mock/xdg-settings" <<'EOF'
 #!/usr/bin/env bash
+[[ -z ${XDG_CURRENT_DESKTOP:-} ]] || exit 1
 printf '%s\n' "$@" >"$SETTINGS_ARGS"
 EOF
 cat >"$mock/xdg-mime" <<'EOF'
 #!/usr/bin/env bash
+[[ -z ${XDG_CURRENT_DESKTOP:-} ]] || exit 1
 printf '%s\n' "$@" >>"$MIME_ARGS"
 EOF
 cat >"$mock/omarchy-notification-send" <<'EOF'
@@ -103,7 +105,7 @@ EOF
 chmod +x "$mock"/*
 
 PATH="$mock:$PATH" HOME="$home" XDG_DATA_HOME="$home/.local/share" SELECT_ARGS="$root/select" \
-  SETTINGS_ARGS="$root/settings" MIME_ARGS="$root/mime" \
+  XDG_CURRENT_DESKTOP=Hyprland SETTINGS_ARGS="$root/settings" MIME_ARGS="$root/mime" \
   "$repo/files/usr/libexec/obsidian-blue/omarchy-adapters/omarchy-default-browser-select"
 grep -Fq 'Zen Browser' "$root/select"
 grep -Fqx $'Zen Browser\tapp.zen_browser.zen.desktop' "$root/select"

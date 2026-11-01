@@ -9,10 +9,11 @@ trap 'rm -rf "$root"' EXIT
 mkdir -p "$root/bin" "$root/applications"
 cat >"$root/bin/omarchy-launch-browser" <<'EOF'
 #!/bin/bash
-default_browser=$(env -u BROWSER xdg-settings get default-web-browser)
-if [[ -z $default_browser ]]; then
-  default_browser=$(xdg-mime query default x-scheme-handler/https)
-fi
+
+# omarchy:summary=Launch the default browser as determined by xdg-settings.
+# omarchy:args=[url]
+
+default_browser=$(omarchy-cmd-default-browser)
 browser_exec=$(sed -n 's/^Exec=\([^ ]*\).*/\1/p' {~/.local,~/.nix-profile,/usr}/share/applications/$default_browser 2>/dev/null | head -1)
 
 if $browser_exec --help 2>/dev/null | grep -q MOZ_LOG; then
@@ -23,9 +24,11 @@ else
   private_flag="--incognito"
 fi
 
-systemd-run --user --quiet --collect --unit="omarchy-browser-$(date +%s%N)" \
-  --property=StandardOutput=null --property=StandardError=null \
-  uwsm-app -- "$browser_exec" "${@/--private/$private_flag}"
+if ! omarchy-cmd-browser-handoff "$browser_exec" "${@/--private/$private_flag}"; then
+  systemd-run --user --quiet --collect --unit="omarchy-browser-$(date +%s%N)" \
+    --property=StandardOutput=null --property=StandardError=null \
+    uwsm-app -- "$browser_exec" "${@/--private/$private_flag}"
+fi
 
 url=""
 for argument in "$@"; do
@@ -51,6 +54,12 @@ EOF
 cat >"$mock/xdg-mime" <<'EOF'
 #!/bin/bash
 printf '%s\n' "${MIME_BROWSER_ID:-}"
+EOF
+cat >"$mock/omarchy-cmd-default-browser" <<'EOF'
+#!/bin/bash
+browser=$(env -u BROWSER xdg-settings get default-web-browser)
+[[ -n $browser ]] || browser=$(xdg-mime query default x-scheme-handler/https)
+printf '%s\n' "$browser"
 EOF
 cat >"$mock/systemd-run" <<'EOF'
 #!/bin/bash
