@@ -51,4 +51,4 @@ bluebuild generate -o Containerfile recipes/recipe.yml
 podman build -t obsidian-blue .
 ```
 
-Update the Omarchy pin with `scripts/update-omarchy.sh VERSION`.
+Updates are manual. Update the Omarchy pin with `scripts/update-omarchy.sh VERSION`.
