@@ -128,10 +128,12 @@ home="$(mktemp -d)"
 runtime="$(mktemp -d)"
 chmod 700 "$runtime"
 trap 'rm -rf "$home" "$runtime"' EXIT
-HOME="$home" OMARCHY_PATH=/usr/share/omarchy \
+# Hyprland 0.57's verifier crashes if root can create /.socket2.sock.
+chown nobody:nobody "$home" "$runtime"
+runuser -u nobody -- env HOME="$home" OMARCHY_PATH=/usr/share/omarchy \
   XDG_RUNTIME_DIR="$runtime" \
   LUA_PATH='/usr/share/omarchy/config/?.lua;;' \
-  Hyprland --i-am-really-stupid --verify-config \
+  Hyprland --verify-config \
     --config /usr/share/omarchy/config/hypr/hyprland.lua >/dev/null
 
 bash -n /usr/bin/obsidian-blue-quattro-session /usr/libexec/obsidian-blue/quattro-migrate \
