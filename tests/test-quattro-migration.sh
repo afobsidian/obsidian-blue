@@ -23,7 +23,7 @@ printf '%s\n' 'printf migrated >"$HOME/migrated"' >"$omarchy/migrations/001.sh"
 printf '%s\n' 'pacman -S impossible' >"$omarchy/migrations/002.sh"
 printf '%s\n' 'printf recovered >"$HOME/recovered"' >"$omarchy/migrations/1786782461.sh"
 printf '%s\n' 'printf pacman-called >"$HOME/pacman-called"' >"$fake_bin/pacman"
-printf '%s\n' '[[ "$2" == mise || "$2" == qt6-qtimageformats ]] && exit 0; exit 1' >"$fake_bin/rpm"
+printf '%s\n' '[[ "$2" == mise || "$2" == qt6-qtimageformats || "$2" == xsetroot || "$2" == disktree-bin || "$2" == power-profiles-daemon || "$2" == libva-intel-media-driver || "$2" == intel-vpl-gpu-rt ]] && exit 0; exit 1' >"$fake_bin/rpm"
 printf '%s\n' 'printf "%s\\n" "$*" >"$HOME/systemctl-called"' >"$fake_bin/systemctl"
 printf '%s\n' '"$@"' >"$fake_bin/sudo"
 chmod 755 "$fake_bin/pacman"
@@ -65,6 +65,25 @@ second_run="$(HOME="$home" XDG_STATE_HOME="$home/.local/state" OMARCHY_PATH="$om
 test -z "$second_run"
 PATH="$fake_bin:$adapter_dir:$PATH" omarchy-pkg-present mise-bin
 PATH="$fake_bin:$adapter_dir:$PATH" omarchy-pkg-add qt6-imageformats
+PATH="$fake_bin:$adapter_dir:$PATH" omarchy-pkg-add xorg-xsetroot
+PATH="$fake_bin:$adapter_dir:$PATH" omarchy-pkg-add intel-media-driver vpl-gpu-rt
+PATH="$fake_bin:$PATH" bash -euo pipefail "$repo/files/scripts/omarchy-migrations/1780739888.sh"
+PATH="$fake_bin:$PATH" bash -euo pipefail "$repo/files/scripts/omarchy-migrations/1790702362.sh" && exit 1
+printf '#!/bin/bash\nexit 0\n' >"$fake_bin/rpm"
+PATH="$fake_bin:$PATH" bash -euo pipefail "$repo/files/scripts/omarchy-migrations/1790702362.sh"
+printf '%s\n' '[[ "$2" == mise || "$2" == qt6-qtimageformats || "$2" == xsetroot || "$2" == disktree-bin || "$2" == power-profiles-daemon || "$2" == libva-intel-media-driver || "$2" == intel-vpl-gpu-rt ]] && exit 0; exit 1' >"$fake_bin/rpm"
+printf '#!/bin/bash\nprintf "%%s\\n" "${MOCK_ARCH:-x86_64}"\n' >"$fake_bin/uname"
+chmod +x "$fake_bin/uname"
+PATH="$fake_bin:$PATH" bash -euo pipefail "$repo/files/scripts/omarchy-migrations/1791554699.sh"
+if MOCK_ARCH=aarch64 PATH="$fake_bin:$PATH" bash -euo pipefail "$repo/files/scripts/omarchy-migrations/1791554699.sh"; then exit 1; fi
+if MOCK_ARCH=aarch64 OMARCHY_LIMINE_CONF="$root/limine" PATH="$fake_bin:$PATH" bash -euo pipefail "$repo/files/scripts/omarchy-migrations/1789928586.sh"; then :; else exit 1; fi
+touch "$root/limine"
+if MOCK_ARCH=aarch64 OMARCHY_LIMINE_CONF="$root/limine" PATH="$fake_bin:$PATH" bash -euo pipefail "$repo/files/scripts/omarchy-migrations/1789928586.sh"; then exit 1; fi
+sed "s|/usr/lib/omarchy-hyprland-titlebars/titlebars.so|$root/titlebars.so|" \
+  "$repo/files/scripts/omarchy-migrations/1791403310.sh" >"$root/titlebars-migration.sh"
+if bash -euo pipefail "$root/titlebars-migration.sh"; then exit 1; fi
+printf 'plugin\n' >"$root/titlebars.so"
+bash -euo pipefail "$root/titlebars-migration.sh"
 PATH="$fake_bin:$PATH" bash "$repo/files/scripts/omarchy-migrations/1788009111.sh" >/dev/null
 
 chromium_prefs="$root/master_preferences"
@@ -84,6 +103,18 @@ HOME="$home" XDG_STATE_HOME="$home/.local/state" OMARCHY_VERSION=4.0.1 \
   OMARCHY_PATH="$root/missing" "$repo/files/usr/libexec/obsidian-blue/quattro-migrate"
 test "$(cat "$home/.config/hypr/hyprland.lua")" = mutable
 test -f "$home/.local/state/obsidian-blue/quattro-4.0.1-image-config-v4"
+source "$repo/files/scripts/omarchy-version.env"
+HOME="$home" XDG_STATE_HOME="$home/.local/state" OMARCHY_VERSION="$OMARCHY_VERSION" \
+  OMARCHY_PATH="$root/missing" "$repo/files/usr/libexec/obsidian-blue/quattro-migrate"
+test -f "$home/.local/state/obsidian-blue/quattro-$OMARCHY_VERSION-image-config-v4"
+sed -e "s|/usr/share/obsidian-blue/omarchy-version.env|$repo/files/scripts/omarchy-version.env|" \
+  -e "s|/usr/libexec/obsidian-blue/quattro-migrate|$fake_bin/quattro-migrate|" \
+  "$repo/files/usr/bin/obsidian-blue-quattro-session" >"$root/session"
+printf '#!/bin/bash\nprintf "%%s\\n" "$OMARCHY_VERSION" >"$HOME/session-version"\n' >"$fake_bin/quattro-migrate"
+printf '#!/bin/bash\nexit 0\n' >"$fake_bin/uwsm"
+chmod +x "$fake_bin/quattro-migrate" "$fake_bin/uwsm"
+HOME="$home" XDG_CONFIG_HOME="$home/.config" PATH="$fake_bin:$PATH" bash "$root/session"
+test "$(cat "$home/session-version")" = "$OMARCHY_VERSION"
 
 # Browser flags stay user-owned and retries do not append duplicates.
 printf '%s' '--custom-browser-flag' >"$home/.config/chromium-flags.conf"

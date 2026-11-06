@@ -2,15 +2,20 @@
 
 An immutable Fedora Atomic image with the Omarchy Quattro desktop and a developer workstation layer.
 
+The image is built for x86-64. ARM Limine recovery and CPPC power-profile migrations are not yet supported.
+
 ## Model
 
-- Omarchy `v4.0.6` is fetched from its [pinned commit](https://github.com/omacom/omarchy/commit/237f1b4071a0bff2296c6d740ba2b9fd695ebfa0)
+- Omarchy `v4.5.0` is fetched from its [pinned commit](https://github.com/omacom/omarchy/commit/ac2690cd7be4f47e4a255f5e2e78d904d436b068)
   and verified by SHA-256 during the image build.
-- Canonical Omarchy defaults live in `/usr/share/omarchy` and are not copied into user config.
+- Canonical Omarchy configuration defaults live in `/usr/share/omarchy`; new accounts receive the OWE theme hook.
 - User files under `~/.config` override the baked defaults.
 - Image updates use `ujust update`; Omarchy's Arch package updater is replaced by an image adapter.
 - Weekly automation opens a pull request when a new stable Omarchy release exists.
 - JetBrainsMono Nerd Font is fetched from its pinned release and checksum for visual parity.
+- Omarchy applications are installed from the restricted, signed `kammer/omadora` Fedora COPR;
+  titlebars are built from pinned source against the image's Hyprland headers.
+- FFmpeg development headers come from the restricted Negativo17 repository, matching the base image's FFmpeg libraries.
 
 Existing desktop configuration is archived once under `~/.local/state/obsidian-blue/backups/`.
 Quattro then starts from the image defaults until the user creates an override.

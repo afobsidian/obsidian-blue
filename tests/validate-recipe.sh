@@ -26,7 +26,12 @@ grep -Fq 'type: os-release' "$recipe"
 grep -Fq 'DEFAULT_HOSTNAME: obsidian-blue' "$recipe"
 grep -Fq 'scope: system' "$recipe"
 grep -Fq 'md.obsidian.Obsidian' "$recipe"
-! grep -Eqi 'omadora|monique|waybar-git|visual-studio-code|kubectl|helm' "$recipe"
+if sed -n '/    install:/,/    remove:/p' "$recipe" | \
+  grep -Ei '^[[:space:]]*-[[:space:]]*(omadora|monique|waybar-git|visual-studio-code|kubectl|helm)([[:space:]]|$)' >/dev/null; then
+  echo "Unsupported package in recipe" >&2
+  exit 1
+fi
+grep -Fq 'omarchy-migrate-notify.service' "$recipe"
 grep -Fq '/usr/share/wayland-sessions/omarchy.desktop' \
   "$repo/files/scripts/install-omarchy-quattro.sh"
 ! grep -Fq '/usr/local/share/wayland-sessions/omarchy.desktop' \

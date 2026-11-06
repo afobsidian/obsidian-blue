@@ -5,6 +5,9 @@ for package in "$@"; do
   case "$package" in
     mise-bin) package=mise ;;
     qt6-imageformats) package=qt6-qtimageformats ;;
+    xorg-xsetroot) package=xsetroot ;;
+    intel-media-driver) package=libva-intel-media-driver ;;
+    vpl-gpu-rt) package=intel-vpl-gpu-rt ;;
   esac
   if [[ "$package" == *.* ]]; then
     flatpak install --user --noninteractive -y flathub "$package"

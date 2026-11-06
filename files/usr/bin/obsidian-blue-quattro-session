@@ -5,6 +5,8 @@ set -euo pipefail
 export OMARCHY_PATH=/usr/share/omarchy
 export XDG_CONFIG_DIRS="$OMARCHY_PATH/config:${XDG_CONFIG_DIRS:-/etc/xdg}"
 export LUA_PATH="$OMARCHY_PATH/config/?.lua;${LUA_PATH:-;}"
+source /usr/share/obsidian-blue/omarchy-version.env
+export OMARCHY_VERSION
 
 /usr/libexec/obsidian-blue/quattro-migrate
 

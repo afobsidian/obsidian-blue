@@ -227,12 +227,14 @@ for source in "$source_dir"/config/*; do
   rm -rf "/etc/skel/.config/$(basename "$source")"
 done
 rm -rf /etc/skel/.config/omadora /etc/skel/.config/waybar
+install -Dm755 /usr/share/owe/10-owe-sync \
+  /etc/skel/.config/omarchy/hooks/theme-set.d/10-owe-sync
 
 install -d /etc/skel/.local/state/omarchy/migrations /etc/skel/.local/state/obsidian-blue
 for migration in "$source_dir"/migrations/*.sh; do
   touch "/etc/skel/.local/state/omarchy/migrations/$(basename "$migration")"
 done
-touch /etc/skel/.local/state/obsidian-blue/quattro-4.0.6-image-config-v4
+touch /etc/skel/.local/state/obsidian-blue/quattro-4.5.0-image-config-v4
 
 install -Dm644 "$script_dir/omarchy-version.env" /usr/share/obsidian-blue/omarchy-version.env
 install -Dm755 /usr/bin/omarchy-hyprland-monitor-scaling \

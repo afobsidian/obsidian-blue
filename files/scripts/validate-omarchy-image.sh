@@ -13,6 +13,12 @@ for command in Hyprland flatpak hyprlock quickshell uwsm omarchy omarchy-migrate
 done
 
 perl -MJSON::PP -e 1 || fail "missing Perl JSON::PP module"
+rpm -q disktree-bin gliff hype monologue omasnap owe owe-lockfeed signed xsetroot \
+  fcitx5-chewing fcitx5-chinese-addons fcitx5-hangul fcitx5-mozc \
+  gcc gcc-c++ make qt6-qtbase-devel qt6-qtdeclarative-devel qt6-qtmultimedia-devel \
+  qt6-qtsvg-devel qt6-qtwayland-devel ffmpeg-devel \
+  libva-intel-media-driver libvpl intel-vpl-gpu-rt >/dev/null || \
+  fail "Omarchy 4.5 packages are absent"
 curl_protocols="$(curl --version | sed -n 's/^Protocols: //p')"
 grep -Eq '(^| )imap( |$)' <<<"$curl_protocols" || fail "curl IMAP support is absent"
 grep -Eq '(^| )imaps( |$)' <<<"$curl_protocols" || fail "curl IMAPS support is absent"
@@ -32,12 +38,14 @@ for path in \
   /etc/profile.d/99-omarchy-bash.sh \
   /etc/pam.d/omarchy-lock-password \
   /etc/systemd/logind.conf.d/20-inhibit-delay.conf \
-  /etc/skel/.local/state/obsidian-blue/quattro-4.0.6-image-config-v4 \
+  /etc/skel/.local/state/obsidian-blue/quattro-4.5.0-image-config-v4 \
   /usr/share/wayland-sessions/omarchy.desktop \
   /usr/share/applications/Basecamp.desktop \
   /usr/share/applications/Alacritty.desktop \
   /usr/libexec/obsidian-blue/omarchy-hyprland-monitor-scaling \
   /usr/share/obsidian-blue/load-user-monitors.lua \
+  /usr/lib/omarchy-hyprland-titlebars/titlebars.so \
+  /etc/skel/.config/omarchy/hooks/theme-set.d/10-owe-sync \
   /usr/share/nautilus-python/extensions/localsend.py; do
   [[ -e "$path" ]] || fail "missing path: $path"
 done
@@ -69,7 +77,7 @@ for session in omarchy.desktop hyprland.desktop hyprland-uwsm.desktop; do
     "/usr/share/wayland-sessions/$session" || fail "session bypass remains: $session"
 done
 
-for path in /etc/skel/.config/hypr /etc/skel/.config/omarchy /etc/skel/.config/waybar \
+for path in /etc/skel/.config/hypr /etc/skel/.config/waybar \
   /etc/skel/.local/share/omadora; do
   [[ ! -e "$path" ]] || fail "user config default remains: $path"
 done
@@ -83,8 +91,12 @@ done
 grep -Fqx 'Current=omarchy' /etc/sddm.conf.d/10-theme.conf || fail "Omarchy SDDM theme is inactive"
 grep -Fq '$OMARCHY_PATH/config/?.lua' /usr/bin/obsidian-blue-quattro-session || \
   fail "baked Lua config path is absent"
+grep -Fq 'source /usr/share/obsidian-blue/omarchy-version.env' /usr/bin/obsidian-blue-quattro-session || \
+  fail "session does not use the image migration version"
 grep -Fq 'start-hyprland -- --config "$config"' /usr/bin/obsidian-blue-quattro-session || \
   fail "session launcher bypasses start-hyprland"
+grep -Fqx 'export HYPRLAND_NO_RT=1' /usr/share/uwsm/env.d/20-obsidian-blue-hyprland || \
+  fail "Hyprland real-time scheduling workaround is absent"
 grep -Fq 'load-user-monitors.lua' /usr/share/omarchy/config/hypr/hyprland.lua || \
   fail "mutable monitor config is absent"
 grep -Fq '/omarchy/hypr/monitors.lua' /usr/bin/omarchy-hyprland-monitor-scaling || \
@@ -130,11 +142,17 @@ chmod 700 "$runtime"
 trap 'rm -rf "$home" "$runtime"' EXIT
 # Hyprland 0.57's verifier crashes if root can create /.socket2.sock.
 chown nobody:nobody "$home" "$runtime"
+# The verifier tears down its event loop before startup cursor timers; skip that
+# timer only in this temporary wrapper, while still parsing the real config.
+printf '%s\n' 'omarchy_startup_cursor_pending = false' \
+  'dofile("/usr/share/omarchy/config/hypr/hyprland.lua")' >"$home/verify.lua"
+chown nobody:nobody "$home/verify.lua"
+luac -p /usr/share/omarchy/default/hypr/startup-cursor.lua
 runuser -u nobody -- env HOME="$home" OMARCHY_PATH=/usr/share/omarchy \
   XDG_RUNTIME_DIR="$runtime" \
   LUA_PATH='/usr/share/omarchy/config/?.lua;;' \
   Hyprland --verify-config \
-    --config /usr/share/omarchy/config/hypr/hyprland.lua >/dev/null
+    --config "$home/verify.lua"
 
 bash -n /usr/bin/obsidian-blue-quattro-session /usr/libexec/obsidian-blue/quattro-migrate \
   /usr/bin/omarchy-migrate \
