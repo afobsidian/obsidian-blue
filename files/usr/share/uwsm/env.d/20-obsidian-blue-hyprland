@@ -1,0 +1,2 @@
+# Avoid Hyprland 0.57 real-time timeout kills; remove once fixed upstream.
+export HYPRLAND_NO_RT=1

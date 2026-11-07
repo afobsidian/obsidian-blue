@@ -1,0 +1,8 @@
+[fedora-multimedia-devel]
+name=Negativo17 multimedia development packages
+baseurl=https://negativo17.org/repos/multimedia/fedora-$releasever/$basearch/
+gpgcheck=1
+gpgkey=https://negativo17.org/repos/RPM-GPG-KEY-slaanesh
+skip_if_unavailable=0
+includepkgs=ffmpeg-devel,libavcodec-devel,libavdevice-devel,libavfilter-devel,libavformat-devel,libavutil-devel,libswresample-devel,libswscale-devel
+enabled=1
