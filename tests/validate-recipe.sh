@@ -25,7 +25,10 @@ grep -Fq 'brew-analytics: false' "$recipe"
 grep -Fq 'type: os-release' "$recipe"
 grep -Fq 'DEFAULT_HOSTNAME: obsidian-blue' "$recipe"
 grep -Fq 'scope: system' "$recipe"
-grep -Fq 'md.obsidian.Obsidian' "$recipe"
+if grep -Eq '^[[:space:]]*- (hype|monologue|signed|com.github.PintaProject.Pinta|com.moonlight_stream.Moonlight|md.obsidian.Obsidian|org.libreoffice.LibreOffice)$' "$recipe"; then
+  echo "Removed preinstall remains in recipe" >&2
+  exit 1
+fi
 if sed -n '/    install:/,/    remove:/p' "$recipe" | \
   grep -Ei '^[[:space:]]*-[[:space:]]*(omadora|monique|waybar-git|visual-studio-code|kubectl|helm)([[:space:]]|$)' >/dev/null; then
   echo "Unsupported package in recipe" >&2

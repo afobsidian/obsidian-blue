@@ -134,3 +134,27 @@ ln -s "$root/provider.lua" "$nvim_provider"
 HOME="$home" bash -euo pipefail "$repo/files/scripts/omarchy-migrations/1788996284.sh"
 test -L "$nvim_provider"
 test "$(cat "$root/provider.lua")" = '-- custom clipboard provider'
+
+# The image opt-out precedes optional package migrations and preserves user launchers.
+mkdir -p "$home/.local/bin"
+printf 'personal launcher\n' >"$home/.local/bin/codex"
+for attempt in 1 2; do
+  HOME="$home" bash -euo pipefail "$repo/files/scripts/omarchy-migrations/1780000000-obsidian-preinstalls.sh"
+done
+test -f "$home/.local/state/omarchy/preinstalls-removed"
+test "$(cat "$home/.local/bin/codex")" = 'personal launcher'
+
+printf '#!/bin/bash\nprintf "%%s\n" "$*" >>"$HOME/mise-calls"\n' >"$fake_bin/mise"
+chmod +x "$fake_bin/mise"
+# Even an exact legacy Omarchy Codex wrapper must remain usable on this image.
+cat >"$home/.local/bin/codex" <<'EOF'
+#!/bin/bash
+export MISE_MINIMUM_RELEASE_AGE=0
+mise use -g --quiet "codex" || exit 1
+exec mise x "codex" -- "codex" "$@"
+EOF
+cp "$home/.local/bin/codex" "$root/codex-before"
+HOME="$home" PATH="$fake_bin:$PATH" bash -euo pipefail \
+  "$repo/files/scripts/omarchy-migrations/1791382872.sh"
+cmp "$root/codex-before" "$home/.local/bin/codex"
+test "$(cat "$home/mise-calls")" = $'reshim --system\nreshim'

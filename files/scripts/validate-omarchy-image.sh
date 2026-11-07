@@ -13,7 +13,7 @@ for command in Hyprland flatpak hyprlock quickshell uwsm omarchy omarchy-migrate
 done
 
 perl -MJSON::PP -e 1 || fail "missing Perl JSON::PP module"
-rpm -q disktree-bin gliff hype monologue omasnap owe owe-lockfeed signed xsetroot \
+rpm -q disktree-bin gliff omasnap owe owe-lockfeed xsetroot \
   fcitx5-chewing fcitx5-chinese-addons fcitx5-hangul fcitx5-mozc \
   gcc gcc-c++ make qt6-qtbase-devel qt6-qtdeclarative-devel qt6-qtmultimedia-devel \
   qt6-qtsvg-devel qt6-qtwayland-devel ffmpeg-devel \
@@ -39,8 +39,8 @@ for path in \
   /etc/pam.d/omarchy-lock-password \
   /etc/systemd/logind.conf.d/20-inhibit-delay.conf \
   /etc/skel/.local/state/obsidian-blue/quattro-4.5.0-image-config-v4 \
+  /etc/skel/.local/state/omarchy/migrations/1780000000-obsidian-preinstalls.sh \
   /usr/share/wayland-sessions/omarchy.desktop \
-  /usr/share/applications/Basecamp.desktop \
   /usr/share/applications/Alacritty.desktop \
   /usr/libexec/obsidian-blue/omarchy-hyprland-monitor-scaling \
   /usr/share/obsidian-blue/load-user-monitors.lua \
@@ -158,4 +158,18 @@ bash -n /usr/bin/obsidian-blue-quattro-session /usr/libexec/obsidian-blue/quattr
   /usr/bin/omarchy-migrate \
   /usr/bin/omarchy-refresh-applications /usr/bin/omarchy-default-browser-select \
   /usr/bin/omarchy-menu-monitors
+
+[[ -f /etc/skel/.local/state/omarchy/preinstalls-removed ]] || fail "preinstall opt-out is absent"
+if grep -El '^Exec=(omarchy-launch-webapp|omarchy-webapp-handler|xdg-terminal-exec --app-id=TUI\.)' /usr/share/applications/*.desktop; then
+  fail "preinstalled web apps or TUIs remain"
+fi
+for package in hype monologue signed; do
+  if rpm -q "$package" >/dev/null 2>&1; then
+    fail "removed preinstall remains: $package"
+  fi
+done
+grep -Fqx '[tools]' /etc/mise/conf.d/omarchy-tools.toml || fail "mise compatibility file is absent"
+if grep -Eq '^[[:alnum:]"].*=' /etc/mise/conf.d/omarchy-tools.toml; then
+  fail "optional mise tools remain"
+fi
 echo "Omarchy Quattro image validated."

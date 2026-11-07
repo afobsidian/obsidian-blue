@@ -225,12 +225,9 @@ modules:
       packages:
         - disktree-bin
         - gliff
-        - hype
-        - monologue
         - omasnap
         - owe
         - owe-lockfeed
-        - signed
 
   - type: brew
     brew-analytics: false
@@ -294,14 +291,10 @@ modules:
           url: https://dl.flathub.org/repo/flathub.flatpakrepo
           name: flathub
         install:
-          - com.github.PintaProject.Pinta
           - com.github.xournalpp.xournalpp
-          - com.moonlight_stream.Moonlight
           - com.obsproject.Studio
           - io.podman_desktop.PodmanDesktop
-          - md.obsidian.Obsidian
           - org.kde.kdenlive
-          - org.libreoffice.LibreOffice
           - org.localsend.localsend_app
 
   - type: signing

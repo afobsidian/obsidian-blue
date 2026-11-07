@@ -151,6 +151,10 @@ if compgen -G "$source_dir/applications/hidden/*.desktop" >/dev/null; then
     rm -f "/etc/skel/.local/share/applications/$(basename "$desktop")"
   done
 fi
+# Use upstream removal helpers against the image-owned launcher directory.
+HOME=/etc/skel omarchy-webapp-remove-all /usr/share/applications
+HOME=/etc/skel omarchy-tui-remove-all /usr/share/applications
+
 install -m 0644 "$source_dir/default/alacritty/Alacritty.desktop" \
   /usr/share/applications/Alacritty.desktop
 for icon in "$source_dir"/applications/icons/*; do
@@ -164,6 +168,12 @@ for icon in "$source_dir"/applications/icons/*; do
       "PNG32:/usr/share/icons/hicolor/256x256/apps/$name.png"
   fi
 done
+# Keep account dispatch and upgrade safety settings without optional tool declarations.
+install -d /etc/mise/conf.d
+install -m 0644 "$source_dir/etc/mise/conf.d/omarchy.toml" \
+  "$source_dir/etc/mise/conf.d/omarchy-agent-accounts.toml" /etc/mise/conf.d/
+printf '# Optional tools are omitted from this image.\n[tools]\n' > /etc/mise/conf.d/omarchy-tools.toml
+
 install -Dm644 "$source_dir/default/uwsm/env.d/10-omarchy" /usr/share/uwsm/env.d/10-omarchy
 install -Dm644 "$source_dir/default/bash/env-bootstrap" /etc/profile.d/omarchy.sh
 install -Dm644 "$source_dir/default/environment.d/10-omarchy-fcitx.conf" \
@@ -231,9 +241,11 @@ install -Dm755 /usr/share/owe/10-owe-sync \
   /etc/skel/.config/omarchy/hooks/theme-set.d/10-owe-sync
 
 install -d /etc/skel/.local/state/omarchy/migrations /etc/skel/.local/state/obsidian-blue
-for migration in "$source_dir"/migrations/*.sh; do
+for migration in /usr/share/omarchy/migrations/*.sh; do
   touch "/etc/skel/.local/state/omarchy/migrations/$(basename "$migration")"
 done
+touch /etc/skel/.local/state/omarchy/preinstalls-removed
+HOME=/etc/skel MISE_OFFLINE=true omarchy-mise-default-tools disable
 touch /etc/skel/.local/state/obsidian-blue/quattro-4.5.0-image-config-v4
 
 install -Dm644 "$script_dir/omarchy-version.env" /usr/share/obsidian-blue/omarchy-version.env

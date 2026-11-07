@@ -38,6 +38,12 @@ Existing system and user Flatpaks are never removed, and more can be installed n
 flatpak install flathub APP_ID
 ```
 
+The image omits Omarchy 4.5 optional preinstalls: web apps, TUI launchers,
+Pinta, Moonlight, Obsidian, LibreOffice, Monologue, Hype, and Signed.
+New accounts opt out of Omarchy default mise tools. Existing accounts receive
+the preinstall opt-out marker through the migration notification; their personal
+tools, launchers (including Codex), and installed Flatpaks are preserved.
+
 ## Install
 
 ```bash

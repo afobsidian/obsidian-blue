@@ -5,5 +5,5 @@ type=rpm-md
 gpgcheck=1
 skip_if_unavailable=0
 gpgkey=https://download.copr.fedorainfracloud.org/results/kammer/omadora/pubkey.gpg
-includepkgs=disktree-bin,gliff,hype,monologue,omasnap,owe,owe-lockfeed,signed
+includepkgs=disktree-bin,gliff,omasnap,owe,owe-lockfeed
 enabled=1
