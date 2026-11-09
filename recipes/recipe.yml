@@ -1,33 +1,15 @@
-name: obsidian-blue
+name: obsidian-blue-rawhide
 description: Omarchy Quattro on Fedora Atomic with a mutable user configuration layer.
 
-base-image: ghcr.io/wayblueorg/hyprland
-image-version: latest
+base-image: quay.io/fedora/fedora-bootc
+image-version: rawhide
 
 modules:
-  - type: script
-    scripts:
-      - clear-rpmfusion-dnf-cache.sh
-      - swap-hyprland-copr.sh
-
   - type: dnf
     repos:
       cleanup: true
       files:
         - lionheartp-hyprland.repo
-    remove:
-      auto-remove: false
-      packages:
-        - hyprland
-        - hyprland-git
-        - hyprland-plugins
-        - hyprland-plugins-git
-        - waybar
-        - waybar-git
-        - dunst
-        - mako
-        - greetd
-        - gtkgreet
     install:
       allow-erasing: true
       install-weak-deps: false
@@ -39,6 +21,7 @@ modules:
         - quickshell
         - qt6-qtimageformats
         - hypridle
+        - hyprlock
         - hyprpicker
         - hyprpolkitagent
         - hyprsunset
@@ -54,10 +37,21 @@ modules:
         - starship.repo
     install:
       allow-erasing: true
-      skip-unavailable: true
-      skip-broken: true
       install-weak-deps: false
       packages:
+        - NetworkManager
+        - NetworkManager-wifi
+        - flatpak
+        - polkit
+        - mesa-dri-drivers
+        - mesa-vulkan-drivers
+        - pipewire
+        - pipewire-pulseaudio
+        - openssh-clients
+        - openssh-server
+        - xorg-x11-server-Xwayland
+        - hicolor-icon-theme
+        - adwaita-icon-theme
         - ImageMagick
         - NetworkManager-tui
         - alacritty
@@ -111,7 +105,7 @@ modules:
         - git
         - gnome-disk-utility
         - gnome-keyring
-        - gnome-themes-extra
+        - adw-gtk3-theme
         - google-noto-color-emoji-fonts
         - google-noto-sans-cjk-fonts
         - grim
@@ -120,7 +114,9 @@ modules:
         - gvfs-nfs
         - gvfs-smb
         - imv
-        - inetutils
+        - hostname
+        - iputils
+        - traceroute
         - inotify-tools
         - inxi
         - intel-vpl-gpu-rt
@@ -205,29 +201,9 @@ modules:
         - tuned-ppd
         - wlsunset
 
-  - type: dnf
-    repos:
-      cleanup: true
-      files:
-        - negativo17-multimedia-devel.repo
-    install:
-      install-weak-deps: false
-      packages:
-        - ffmpeg-devel
-
-  - type: dnf
-    repos:
-      cleanup: true
-      files:
-        - kammer-omadora.repo
-    install:
-      install-weak-deps: false
-      packages:
-        - disktree-bin
-        - gliff
-        - omasnap
-        - owe
-        - owe-lockfeed
+  - type: script
+    scripts:
+      - install-omarchy-apps.sh
 
   - type: brew
     brew-analytics: false

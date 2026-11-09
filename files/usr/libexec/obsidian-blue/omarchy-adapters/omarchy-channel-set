@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
-echo 'Omarchy is updated with the obsidian-blue image; use ujust update.' >&2
+echo 'Omarchy is updated with the obsidian-blue image; use omarchy update.' >&2
 exit 2

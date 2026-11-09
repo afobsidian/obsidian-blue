@@ -16,7 +16,7 @@ perl -MJSON::PP -e 1 || fail "missing Perl JSON::PP module"
 rpm -q disktree-bin gliff omasnap owe owe-lockfeed xsetroot \
   fcitx5-chewing fcitx5-chinese-addons fcitx5-hangul fcitx5-mozc \
   gcc gcc-c++ make qt6-qtbase-devel qt6-qtdeclarative-devel qt6-qtmultimedia-devel \
-  qt6-qtsvg-devel qt6-qtwayland-devel ffmpeg-devel \
+  qt6-qtsvg-devel qt6-qtwayland-devel libavcodec-free-devel \
   libva-intel-media-driver libvpl intel-vpl-gpu-rt >/dev/null || \
   fail "Omarchy 4.5 packages are absent"
 curl_protocols="$(curl --version | sed -n 's/^Protocols: //p')"
@@ -173,4 +173,8 @@ if grep -Eq '^[[:alnum:]"].*=' /etc/mise/conf.d/omarchy-tools.toml; then
   fail "optional mise tools remain"
 fi
 bash -euo pipefail /usr/share/omarchy/migrations/1792504295.sh
+qt_version="$(rpm -q --qf '%{VERSION}\n' qt6-qtbase)"
+[[ "$(printf '6.12.0\n%s\n' "$qt_version" | sort -V | head -1)" == 6.12.0 ]] || fail "Qt 6.12 or newer is required"
+command -v bootc >/dev/null || fail "bootc update support is absent"
+quickshell --version >/dev/null || fail "Quickshell cannot load against the installed Qt"
 echo "Omarchy Quattro image validated."

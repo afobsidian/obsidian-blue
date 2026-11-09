@@ -1,6 +1,9 @@
 # obsidian-blue
 
-An immutable Fedora Atomic image with the Omarchy Quattro desktop and a developer workstation layer.
+An experimental Fedora Rawhide bootc image with the Omarchy Quattro desktop and a developer workstation layer.
+
+This `rawhide-base` branch builds `ghcr.io/afobsidian/obsidian-blue-rawhide`.
+The stable image remains on `main`. This branch has not been approved for desktop deployment.
 
 The image is built for x86-64. ARM Limine recovery and CPPC power-profile migrations are not yet supported.
 
@@ -10,12 +13,13 @@ The image is built for x86-64. ARM Limine recovery and CPPC power-profile migrat
   and verified by SHA-256 during the image build.
 - Canonical Omarchy configuration defaults live in `/usr/share/omarchy`; new accounts receive the OWE theme hook.
 - User files under `~/.config` override the baked defaults.
-- Image updates use `ujust update`; Omarchy's Arch package updater is replaced by an image adapter.
+- Image updates use `omarchy update` (which invokes `sudo bootc upgrade`); Omarchy's Arch package updater is replaced by an image adapter.
 - Weekly automation opens a pull request when a new stable Omarchy release exists.
 - JetBrainsMono Nerd Font is fetched from its pinned release and checksum for visual parity.
-- Omarchy applications are installed from the restricted, signed `kammer/omadora` Fedora COPR;
-  titlebars are built from pinned source against the image's Hyprland headers.
-- FFmpeg development headers come from the restricted Negativo17 repository, matching the base image's FFmpeg libraries.
+- Omarchy apps are rebuilt against Rawhide from checksum-pinned Omadora source RPMs.
+  Titlebars are built from pinned source against the image's Hyprland headers.
+- Qt 6.12 or newer is required. FFmpeg and its development libraries come from Fedora.
+- The base is Fedora bootc Rawhide, with no inherited Wayblue desktop or update tooling.
 
 Existing desktop configuration is archived once under `~/.local/state/obsidian-blue/backups/`.
 Quattro then starts from the image defaults until the user creates an override.
@@ -46,12 +50,10 @@ tools, launchers (including Codex), and installed Flatpaks are preserved.
 
 ## Install
 
-```bash
-rpm-ostree rebase ostree-unverified-registry:ghcr.io/afobsidian/obsidian-blue:latest
-systemctl reboot
-rpm-ostree rebase ostree-image-signed:docker://ghcr.io/afobsidian/obsidian-blue:latest
-systemctl reboot
-```
+The image is experimental. Keep the currently booted stable deployment available
+when testing; do not remove it before a successful boot and desktop check.
+Deployment and reboot are separate from building this branch.
+
 
 Every Hyprland entry in SDDM starts the Omarchy session.
 
