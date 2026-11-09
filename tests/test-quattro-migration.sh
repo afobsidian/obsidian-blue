@@ -2,6 +2,9 @@
 
 set -euo pipefail
 
+# Keep fixture versions independent of the running Omarchy session.
+export OMARCHY_VERSION=4.0.0
+
 repo="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 root="$(mktemp -d)"
 trap 'rm -rf "$root"' EXIT
@@ -158,3 +161,36 @@ HOME="$home" PATH="$fake_bin:$PATH" bash -euo pipefail \
   "$repo/files/scripts/omarchy-migrations/1791382872.sh"
 cmp "$root/codex-before" "$home/.local/bin/codex"
 test "$(cat "$home/mise-calls")" = $'reshim --system\nreshim'
+
+# Optional-agent migration completes with empty declarations, preserves Codex,
+# runs once, and leaves failures pending instead of hiding a broken image.
+agent_migrations="$root/agents/migrations"
+agent_state="$root/agent-state"
+mkdir -p "$agent_migrations"
+cp "$repo/files/scripts/omarchy-migrations/1792504295.sh" "$agent_migrations/"
+printf '[tools]\n' >"$root/agent-tools.toml"
+cat >"$fake_bin/omarchy-mise-default-tools" <<'EOF'
+#!/bin/bash
+printf 'called\n' >>"$HOME/agent-tool-calls"
+[[ ${MOCK_TOOLS_FAIL:-0} == 0 ]] || exit 1
+printf '%s' "${MOCK_DEFAULT_TOOLS:-}"
+EOF
+chmod +x "$fake_bin/omarchy-mise-default-tools"
+run_agent_migration() {
+  HOME="$home" XDG_STATE_HOME="$root/state" OMARCHY_MIGRATION_STATE="$agent_state" \
+    OMARCHY_PATH="$root/agents" OMARCHY_MISE_CONFIG_PATH="$root/agent-tools.toml" \
+    PATH="$fake_bin:$PATH" "$repo/files/usr/libexec/obsidian-blue/omarchy-adapters/omarchy-migrate"
+}
+run_agent_migration
+test -f "$agent_state/1792504295.sh"
+run_agent_migration
+test "$(wc -l <"$home/agent-tool-calls")" -eq 1
+cmp "$root/codex-before" "$home/.local/bin/codex"
+rm "$agent_state/1792504295.sh"
+if MOCK_DEFAULT_TOOLS=qwen run_agent_migration; then exit 1; fi
+test ! -e "$agent_state/1792504295.sh"
+if MOCK_TOOLS_FAIL=1 run_agent_migration; then exit 1; fi
+test ! -e "$agent_state/1792504295.sh"
+rm "$root/agent-tools.toml"
+if run_agent_migration; then exit 1; fi
+test ! -e "$agent_state/1792504295.sh"

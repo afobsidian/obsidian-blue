@@ -172,4 +172,5 @@ grep -Fqx '[tools]' /etc/mise/conf.d/omarchy-tools.toml || fail "mise compatibil
 if grep -Eq '^[[:alnum:]"].*=' /etc/mise/conf.d/omarchy-tools.toml; then
   fail "optional mise tools remain"
 fi
+bash -euo pipefail /usr/share/omarchy/migrations/1792504295.sh
 echo "Omarchy Quattro image validated."
