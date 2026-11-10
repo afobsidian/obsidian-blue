@@ -27,6 +27,7 @@ jobs:
 
       - name: Test image definition
         run: |
+          bash -x tests/test-desktop-initramfs.sh
           bash -x tests/test-omarchy-apps-build.sh
           bash -x tests/validate-recipe.sh
           bash -x tests/test-omarchy-menu.sh

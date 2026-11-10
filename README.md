@@ -23,6 +23,8 @@ The image is built for x86-64. ARM Limine recovery and CPPC power-profile migrat
   Titlebars are built from pinned source against the image's Hyprland headers.
 - Qt 6.12 or newer is required. Full FFmpeg and its development libraries come from RPM Fusion for Rawhide.
 - The base is Fedora bootc Rawhide, with no inherited Wayblue desktop or update tooling.
+- The image initramfs is rebuilt after installing graphics and the Omarchy unlock theme.
+  Build checks require disk encryption, Intel graphics, and Plymouth label rendering support.
 
 Existing desktop configuration is archived once under `~/.local/state/obsidian-blue/backups/`.
 Quattro then starts from the image defaults until the user creates an override.

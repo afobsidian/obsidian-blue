@@ -114,6 +114,7 @@ modules:
         - adw-gtk3-theme
         - google-noto-color-emoji-fonts
         - google-noto-sans-cjk-fonts
+        - google-noto-sans-fonts
         - grim
         - gum
         - gvfs-mtp
@@ -150,6 +151,8 @@ modules:
         - playerctl
         - plocate
         - plymouth
+        - plymouth-plugin-script
+        - plymouth-plugin-label
         - podman
         - podman-compose
         - podman-docker
@@ -243,6 +246,7 @@ modules:
       - install-omarchy-nvim.sh
       - setup-image-config.sh
       - install-rustle.sh
+      - rebuild-desktop-initramfs.sh
       - validate-omarchy-image.sh
 
   - type: systemd
