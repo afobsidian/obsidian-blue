@@ -1,9 +1,12 @@
 # obsidian-blue
 
-An experimental Fedora Rawhide bootc image with the Omarchy Quattro desktop and a developer workstation layer.
+A Fedora Rawhide bootc image with the Omarchy Quattro desktop and a developer workstation layer.
 
-This `rawhide-base` branch builds `ghcr.io/afobsidian/obsidian-blue-rawhide`.
-The stable image remains on `main`. Boot and desktop testing are still required before deployment.
+The main branch publishes `ghcr.io/afobsidian/obsidian-blue:latest`.
+Existing installations can use their usual image update path to move to Rawhide.
+Pin the current working deployment with `sudo ostree admin pin booted` before
+the first update so it remains available from the boot menu. Boot and desktop
+testing of the Rawhide image is still outstanding.
 
 The image is built for x86-64. ARM Limine recovery and CPPC power-profile migrations are not yet supported.
 

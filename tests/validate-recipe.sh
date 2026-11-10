@@ -7,7 +7,7 @@ recipe="$repo/recipes/recipe.yml"
 
 grep -Fqx 'base-image: quay.io/fedora/fedora-bootc' "$recipe"
 grep -Fqx 'image-version: rawhide' "$recipe"
-grep -Fqx 'name: obsidian-blue-rawhide' "$recipe"
+grep -Fqx 'name: obsidian-blue' "$recipe"
 grep -Fq 'install-omarchy-apps.sh' "$recipe"
 grep -Fq 'install-omarchy-quattro.sh' "$recipe"
 grep -Fq 'podman-docker' "$recipe"
