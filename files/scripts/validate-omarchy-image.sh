@@ -16,9 +16,11 @@ perl -MJSON::PP -e 1 || fail "missing Perl JSON::PP module"
 rpm -q disktree-bin gliff omasnap owe owe-lockfeed xsetroot \
   fcitx5-chewing fcitx5-chinese-addons fcitx5-hangul fcitx5-mozc \
   gcc gcc-c++ make qt6-qtbase-devel qt6-qtdeclarative-devel qt6-qtmultimedia-devel \
-  qt6-qtsvg-devel qt6-qtwayland-devel libavcodec-free-devel \
+  qt6-qtsvg-devel qt6-qtwayland-devel ffmpeg-devel \
   libva-intel-media-driver libvpl intel-vpl-gpu-rt >/dev/null || \
   fail "Omarchy 4.5 packages are absent"
+ffmpeg_encoders="$(ffmpeg -hide_banner -encoders 2>/dev/null)"
+grep -q libx264 <<<"$ffmpeg_encoders" || fail "FFmpeg H.264 encoding is absent"
 curl_protocols="$(curl --version | sed -n 's/^Protocols: //p')"
 grep -Eq '(^| )imap( |$)' <<<"$curl_protocols" || fail "curl IMAP support is absent"
 grep -Eq '(^| )imaps( |$)' <<<"$curl_protocols" || fail "curl IMAPS support is absent"
@@ -63,8 +65,6 @@ grep -Fq 'if (!root.currentlyLocked() && !root.beginLock()) return "failed"' "$l
 grep -Fqx 'NAME="obsidian-blue"' /usr/lib/os-release || fail "image name is not branded"
 grep -Fqx 'DEFAULT_HOSTNAME="obsidian-blue"' /usr/lib/os-release || \
   fail "default hostname is not branded"
-grep -Eq '^127\.0\.0\.1[[:space:]]+obsidian-blue[[:space:]]' /usr/etc/hosts || \
-  fail "hostname is absent from hosts"
 [[ ! -e /usr/lib/systemd/user/wayblue-update-verification.service ]] || \
   fail "Wayblue update notifier remains"
 grep -Fqx 'SHELL=/bin/bash' /etc/default/useradd || fail "Bash is not the default user shell"

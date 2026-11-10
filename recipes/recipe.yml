@@ -5,6 +5,10 @@ base-image: quay.io/fedora/fedora-bootc
 image-version: rawhide
 
 modules:
+  - type: script
+    scripts:
+      - enable-rpmfusion-free.sh
+
   - type: dnf
     repos:
       cleanup: true
@@ -47,6 +51,8 @@ modules:
         - mesa-vulkan-drivers
         - pipewire
         - pipewire-pulseaudio
+        - pipewire-alsa
+        - pipewire-plugin-bluez
         - openssh-clients
         - openssh-server
         - xorg-x11-server-Xwayland
@@ -97,7 +103,8 @@ modules:
         - fcitx5-mozc
         - fcitx5-qt
         - fd-find
-        - ffmpeg-free
+        - ffmpeg
+        - ffmpeg-devel
         - ffmpegthumbnailer
         - foot
         - fzf

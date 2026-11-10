@@ -20,7 +20,7 @@ cat >"$root/bin/rpmbuild" <<'MOCK'
 #!/bin/bash
 set -eu
 build_root="${2#_topdir }"
-grep -Fxq 'BuildRequires: ffmpeg-free' "$build_root/SPECS/owe.spec"
+grep -Fxq 'BuildRequires: ffmpeg' "$build_root/SPECS/owe.spec"
 mkdir -p "$build_root/RPMS/x86_64"
 touch "$build_root/RPMS/x86_64/owe.fc46.rpm"
 printf built >>"$TEST_ROOT/built"

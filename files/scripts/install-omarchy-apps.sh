@@ -16,8 +16,6 @@ while read -r checksum url; do
   rpm --define "_topdir $build_root" -i "$source_rpm"
 done < "$script_dir/omarchy-apps-sources.sha256"
 
-# Fedora supplies the free codec build; Wayblue previously supplied Negativo17.
-sed -i -E 's/^(BuildRequires:[[:space:]]+)ffmpeg$/\1ffmpeg-free/' "$build_root/SPECS/owe.spec"
 for spec in "$build_root"/SPECS/*.spec; do
   dnf -y builddep "$spec"
   rpmbuild --define "_topdir $build_root" --define '_smp_mflags -j2' -bb "$spec"

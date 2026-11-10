@@ -3,7 +3,7 @@
 An experimental Fedora Rawhide bootc image with the Omarchy Quattro desktop and a developer workstation layer.
 
 This `rawhide-base` branch builds `ghcr.io/afobsidian/obsidian-blue-rawhide`.
-The stable image remains on `main`. This branch has not been approved for desktop deployment.
+The stable image remains on `main`. Boot and desktop testing are still required before deployment.
 
 The image is built for x86-64. ARM Limine recovery and CPPC power-profile migrations are not yet supported.
 
@@ -18,7 +18,7 @@ The image is built for x86-64. ARM Limine recovery and CPPC power-profile migrat
 - JetBrainsMono Nerd Font is fetched from its pinned release and checksum for visual parity.
 - Omarchy apps are rebuilt against Rawhide from checksum-pinned Omadora source RPMs.
   Titlebars are built from pinned source against the image's Hyprland headers.
-- Qt 6.12 or newer is required. FFmpeg and its development libraries come from Fedora.
+- Qt 6.12 or newer is required. Full FFmpeg and its development libraries come from RPM Fusion for Rawhide.
 - The base is Fedora bootc Rawhide, with no inherited Wayblue desktop or update tooling.
 
 Existing desktop configuration is archived once under `~/.local/state/obsidian-blue/backups/`.
