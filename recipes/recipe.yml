@@ -52,7 +52,6 @@ modules:
         - pipewire
         - pipewire-pulseaudio
         - pipewire-alsa
-        - pipewire-plugin-bluez
         - openssh-clients
         - openssh-server
         - xorg-x11-server-Xwayland
