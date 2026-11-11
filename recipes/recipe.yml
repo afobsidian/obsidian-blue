@@ -33,6 +33,10 @@ modules:
         - hyprland-qt-support
         - xdg-desktop-portal-hyprland
 
+  - type: script
+    scripts:
+      - install-openapv-compat.sh
+
   - type: dnf
     repos:
       cleanup: true
