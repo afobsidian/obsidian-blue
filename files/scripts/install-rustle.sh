@@ -18,3 +18,5 @@ import sys, tarfile
 with tarfile.open(sys.argv[1]) as archive:
     archive.extractall('/', filter='data')
 PY
+dependencies="$(ldd /usr/bin/rustle)"
+[[ "$dependencies" != *'not found'* ]] || { printf '%s\n' "$dependencies" >&2; exit 1; }
