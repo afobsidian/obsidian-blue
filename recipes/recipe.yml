@@ -179,6 +179,7 @@ modules:
         - qt6-qtsvg-devel
         - qt6-qtwayland-devel
         - ripgrep
+        - rsync
         - ruby
         - sddm
         - slurp

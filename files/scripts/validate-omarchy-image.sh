@@ -8,7 +8,7 @@ fail() {
 }
 
 for command in Hyprland flatpak hyprlock quickshell uwsm omarchy omarchy-migrate herdr podman docker gh nvim fd rg nmtui xkbcli \
-  tailscale perf nc curl; do
+  tailscale perf nc curl rsync; do
   command -v "$command" >/dev/null || fail "missing command: $command"
 done
 
