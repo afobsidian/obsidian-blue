@@ -113,6 +113,8 @@ modules:
         - ffmpegthumbnailer
         - foot
         - fzf
+        - fwupd
+        - fwupd-efi
         - gh
         - git
         - gnome-disk-utility

@@ -12,7 +12,7 @@ grep -Fq 'install-omarchy-apps.sh' "$recipe"
 grep -Fq 'install-omarchy-quattro.sh' "$recipe"
 grep -Fq 'podman-docker' "$recipe"
 grep -Fq 'NetworkManager-tui' "$recipe"
-for package in wpa_supplicant iwlwifi-mvm-firmware iwlwifi-dvm-firmware iwlbluetooth-firmware alsa-sof-firmware distrobox upower glibc-langpack-en; do
+for package in wpa_supplicant iwlwifi-mvm-firmware iwlwifi-dvm-firmware iwlbluetooth-firmware alsa-sof-firmware distrobox upower glibc-langpack-en fwupd fwupd-efi; do
   grep -Fqx "        - $package" "$recipe"
 done
 grep -Fq 'tailscale' "$recipe"

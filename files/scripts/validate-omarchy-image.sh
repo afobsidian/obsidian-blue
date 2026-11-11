@@ -157,7 +157,11 @@ runuser -u nobody -- env HOME="$home" OMARCHY_PATH=/usr/share/omarchy \
 bash -n /usr/bin/obsidian-blue-quattro-session /usr/libexec/obsidian-blue/quattro-migrate \
   /usr/bin/omarchy-migrate \
   /usr/bin/omarchy-refresh-applications /usr/bin/omarchy-default-browser-select \
-  /usr/bin/omarchy-menu-monitors
+  /usr/bin/omarchy-menu-monitors /usr/bin/obsidian-blue-setup
+
+[[ -x /usr/bin/obsidian-blue-setup ]] || fail "first-login setup is absent"
+grep -Fqx 'ExecStartPost=/usr/bin/obsidian-blue-setup --first-login' \
+  /usr/lib/systemd/user/omarchy-migrate-notify.service.d/20-obsidian-blue-setup.conf || fail "first-login setup hook is absent"
 
 [[ -f /etc/skel/.local/state/omarchy/preinstalls-removed ]] || fail "preinstall opt-out is absent"
 if grep -El '^Exec=(omarchy-launch-webapp|omarchy-webapp-handler|xdg-terminal-exec --app-id=TUI\.)' /usr/share/applications/*.desktop; then

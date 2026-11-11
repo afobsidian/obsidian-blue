@@ -62,6 +62,17 @@ Deployment and reboot are separate from building this branch.
 
 Every Hyprland entry in SDDM starts the Omarchy session.
 
+On first graphical login, an Omarchy-style terminal wizard offers automatic login
+for the current account and guides firmware/Secure Boot checks through Fedora's
+interactive firmware updater. Automatic login does not unlock an encrypted disk.
+Firmware keys are never silently enrolled, and bootloader safety checks remain enabled.
+If no signed update provides a required trust certificate, the wizard directs you
+to the manufacturer's firmware settings/support.
+
+Choose **Later** to return on the next login, or **Finish setup** to stop the
+automatic prompt. Run `obsidian-blue-setup` anytime to revisit these settings.
+The wizard manages its own SDDM drop-in and preserves other account customizations.
+
 ## Build
 
 ```bash

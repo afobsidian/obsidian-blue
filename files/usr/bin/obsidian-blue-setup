@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/obsidian-blue"
+marker="$state_dir/setup-v1.done"
+autologin_file=/etc/sddm.conf.d/90-obsidian-blue-autologin.conf
+
+case "${1:-}" in
+  --first-login)
+    [[ ! -e "$marker" ]] || exit 0
+    exec omarchy-launch-floating-terminal-with-presentation /usr/bin/obsidian-blue-setup
+    ;;
+  '') ;;
+  *) echo "Usage: obsidian-blue-setup [--first-login]" >&2; exit 2 ;;
+esac
+
+[[ "$(id -u)" != 0 ]] || { echo "Run setup as your desktop user, without sudo." >&2; exit 1; }
+account="$(id -un)"
+[[ "$account" =~ ^[a-zA-Z_][a-zA-Z0-9_.-]*\$?$ ]] || { echo "Unsupported account name." >&2; exit 1; }
+mkdir -p "$state_dir"
+exec 9>"$state_dir/setup.lock"
+flock -n 9 || exit 0
+autologin_config="$(mktemp)"
+trap 'rm -f -- "$autologin_config"' EXIT
+
+configure_login() {
+  local choice
+  choice="$(gum choose --header "Login for $account" \
+    'Disable setup-managed autologin' "Automatically log in as $account" Back)" || return 0
+  case "$choice" in
+    'Disable setup-managed autologin')
+      gum confirm 'Remove the autologin setting managed by this wizard?' || return 0
+      sudo rm -f -- "$autologin_file"
+      ;;
+    "Automatically log in as $account")
+      printf '%s\n' 'Automatic login takes effect next login. Disk encryption still requires unlocking.'
+      if [[ -f /etc/sddm.conf ]] && grep -Eq '^[[:space:]]*\[Autologin\]' /etc/sddm.conf; then
+        echo '/etc/sddm.conf has its own autologin section, which takes precedence. Review it before enabling autologin.' >&2
+        return 1
+      fi
+      gum confirm "Enable automatic desktop login for $account?" || return 0
+      printf '[Autologin]\nUser=%s\nSession=omarchy.desktop\nRelogin=false\n' "$account" >"$autologin_config" || return 1
+      sudo install -D -o root -g root -m 644 -T -- "$autologin_config" "$autologin_file"
+      ;;
+  esac
+}
+
+configure_firmware() {
+  printf '%s\n' \
+    'Firmware trust belongs to this machine, not to the image.' \
+    'Review Fedora firmware updates below. The updater keeps its own confirmation and safety checks.' \
+    'If bootloader updates require Microsoft UEFI CA 2023 and no signed update is offered,' \
+    "use your manufacturer's firmware settings/support. Do not force the bootloader update."
+  fwupdmgr security --no-security-fix || echo 'Firmware security report unavailable.'
+  journalctl -b -u bootloader-update.service --no-pager -n 8 || true
+  gum confirm 'Refresh firmware metadata and open the interactive updater? Updates may change firmware and require a reboot.' || return 0
+  fwupdmgr refresh || return 1
+  fwupdmgr update
+}
+
+while action="$(gum choose --header 'Obsidian Blue setup' \
+  'Automatic login' 'Firmware and Secure Boot' 'Finish setup' Later)"; do
+  case "$action" in
+    'Automatic login') configure_login || echo 'Login settings were not saved. You can retry.' >&2 ;;
+    'Firmware and Secure Boot') configure_firmware || echo 'Firmware updates were not completed. You can retry.' >&2 ;;
+    'Finish setup') touch "$marker"; exit 0 ;;
+    Later) exit 0 ;;
+  esac
+done
