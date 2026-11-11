@@ -26,6 +26,8 @@ grep -Eq '(^| )imap( |$)' <<<"$curl_protocols" || fail "curl IMAP support is abs
 grep -Eq '(^| )imaps( |$)' <<<"$curl_protocols" || fail "curl IMAPS support is absent"
 
 for path in \
+  /usr/local/sbin \
+  /etc/tmpfiles.d/root.conf \
   /etc/xkb/rules/evdev \
   /etc/xkb/symbols/omarchy \
   /usr/share/omarchy/version \

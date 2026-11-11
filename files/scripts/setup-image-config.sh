@@ -2,6 +2,9 @@
 
 set -euo pipefail
 
+# tmpfiles cannot create image-owned directories after composefs mounts read-only.
+install -d -m 0755 /usr/local/sbin
+
 mkdir -p /etc/systemd/system
 ln -sfn /usr/lib/systemd/system/sddm.service /etc/systemd/system/display-manager.service
 rm -f /etc/systemd/system/multi-user.target.wants/greetd.service
