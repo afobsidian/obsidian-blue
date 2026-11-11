@@ -26,6 +26,8 @@ grep -Eq '(^| )imap( |$)' <<<"$curl_protocols" || fail "curl IMAP support is abs
 grep -Eq '(^| )imaps( |$)' <<<"$curl_protocols" || fail "curl IMAPS support is absent"
 
 for path in \
+  /etc/xkb/rules/evdev \
+  /etc/xkb/symbols/omarchy \
   /usr/share/omarchy/version \
   /usr/share/omarchy/shell/shell.qml \
   /usr/share/omarchy/config/hypr/hyprland.lua \
@@ -51,6 +53,12 @@ for path in \
   /usr/share/nautilus-python/extensions/localsend.py; do
   [[ -e "$path" ]] || fail "missing path: $path"
 done
+
+xkb_map="$(xkbcli compile-keymap --layout us --options omarchy:shift_caps_compose 2>&1)" || \
+  fail "Omarchy keyboard option cannot be compiled"
+if grep -Fq 'Unrecognized RMLVO option "omarchy:shift_caps_compose"' <<<"$xkb_map"; then
+  fail "Omarchy keyboard option is not registered"
+fi
 
 grep -Fqx 'auth include login' /etc/pam.d/omarchy-lock-password || \
   fail "Fedora lock PAM stack is absent"

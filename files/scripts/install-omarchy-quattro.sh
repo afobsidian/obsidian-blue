@@ -32,6 +32,8 @@ tar -xJf "$font_archive" -C /usr/share/fonts/jetbrains-mono-nerd \
 install -d /usr/share/omarchy /usr/bin /usr/share/applications /usr/share/wayland-sessions
 cp -a "$source_dir"/{applications,config,default,install,migrations,shell,themes} /usr/share/omarchy/
 install -m 0644 "$source_dir"/{icon.png,icon.txt,logo.svg,logo.txt,version} /usr/share/omarchy/
+install -D -m 0644 "$source_dir/etc/xkb/rules/evdev" /etc/xkb/rules/evdev
+install -D -m 0644 "$source_dir/etc/xkb/symbols/omarchy" /etc/xkb/symbols/omarchy
 
 case "$(uname -m)" in
   x86_64)
