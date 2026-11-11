@@ -19,6 +19,7 @@ curl -fsSL "https://codeload.github.com/basecamp/omarchy/tar.gz/$OMARCHY_COMMIT"
 echo "$OMARCHY_SHA256  $archive" | sha256sum --check --status
 tar -xzf "$archive" --strip-components=1 -C "$source_dir"
 (cd "$source_dir" && git apply --recount <"$script_dir/../patches/omarchy-browser-launcher.patch")
+(cd "$source_dir" && git apply --recount <"$script_dir/../patches/omarchy-sudo-passwordless.patch")
 
 curl -fsSL \
   "https://github.com/ryanoasis/nerd-fonts/releases/download/v$NERD_FONTS_VERSION/JetBrainsMono.tar.xz" \

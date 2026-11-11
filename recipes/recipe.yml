@@ -45,6 +45,11 @@ modules:
       packages:
         - NetworkManager
         - NetworkManager-wifi
+        - wpa_supplicant
+        - iwlwifi-mvm-firmware
+        - iwlwifi-dvm-firmware
+        - iwlbluetooth-firmware
+        - alsa-sof-firmware
         - flatpak
         - polkit
         - mesa-dri-drivers
@@ -89,6 +94,7 @@ modules:
         - dbus-tools
         - ddcutil
         - dosfstools
+        - distrobox
         - evince
         - exfatprogs
         - eza
@@ -110,6 +116,7 @@ modules:
         - gh
         - git
         - gnome-disk-utility
+        - glibc-langpack-en
         - gnome-keyring
         - adw-gtk3-theme
         - google-noto-color-emoji-fonts
@@ -181,6 +188,7 @@ modules:
         - tmux
         - udiskie
         - unzip
+        - upower
         - usbutils
         - whois
         - wireplumber

@@ -1,0 +1,27 @@
+  done
+}
+
+verify_boot_cleanup() {
+  local active_rules hook
+  [[ ! -e $REMOVAL_BLOCKER && ! -L $REMOVAL_BLOCKER ]] || return 1
+  verify_root_path "$BOOT_CLEANUP_FILE" || return 1
+  active_rules=$(/usr/bin/awk '!/^[[:space:]]*(#|$)/ { print }' "$BOOT_CLEANUP_FILE") || return 1
+  [[ $active_rules == 'r! /etc/sudoers.d/99-omarchy-nopasswd-*' ]] || return 1
+  verify_root_path "$PACKAGE_HOOK" || return 1
+  hook=$(/usr/bin/cat -- "$PACKAGE_HOOK") || return 1
+  [[ $hook == '[Trigger]
+Operation = Upgrade
+Operation = Remove
+Type = Package
+Target = omarchy-settings
+Target = omarchy-settings-dev
+
+[Action]
+Description = Revoking temporary Omarchy sudo grants before settings changes...
+When = PreTransaction
+Exec = /usr/bin/omarchy-sudo-passwordless __package-removing
+AbortOnFail' ]]
+}
+
+package_removing_locked() {
+  # ALPM must abort before removing the helper or boot cleanup if revocation
