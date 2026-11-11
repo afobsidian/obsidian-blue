@@ -32,6 +32,7 @@ jobs:
           bash -x tests/validate-recipe.sh
           bash -x tests/test-sudo-boot-cleanup.sh
           bash -x tests/test-first-login-setup.sh
+          bash -x tests/test-rpmfusion-bootstrap.sh
           bash -x tests/test-omarchy-menu.sh
           bash -x tests/test-quattro-migration.sh
           bash -x tests/test-yt6801-migration.sh

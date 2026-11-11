@@ -12,6 +12,7 @@ jobs:
       - run: bash tests/validate-recipe.sh
       - run: bash tests/test-sudo-boot-cleanup.sh
       - run: bash tests/test-first-login-setup.sh
+      - run: bash tests/test-rpmfusion-bootstrap.sh
       - run: bash tests/test-omarchy-browser-launcher.sh
       - run: bash tests/test-omarchy-menu.sh
       - run: bash tests/test-quattro-migration.sh
