@@ -6,33 +6,17 @@ root="$(mktemp -d)"
 trap 'rm -rf "$root"' EXIT
 mkdir "$root/bin"
 export TEST_ROOT="$root" PATH="$root/bin:$PATH"
-cat >"$root/bin/curl" <<'EOF'
-#!/usr/bin/env bash
-printf '%s\n' "$*" >>"$TEST_ROOT/downloads"
-[[ "${FAIL_ALL:-0}" == 0 ]] || exit 22
-[[ "$*" != *mirrors.rpmfusion.org* ]] || exit 22
-printf 'fixture\n' >"${!#}"
-EOF
-cat >"$root/bin/sha256sum" <<'EOF'
-#!/usr/bin/env bash
-[[ "$*" == '--check --status' ]] || exit 1
-read -r hash file
-[[ "$hash" =~ ^[a-f0-9]{64}$ && -s "$file" ]] || exit 1
-[[ "${BAD_HASH:-0}" == 0 ]] || exit 1
-touch "$TEST_ROOT/verified"
-EOF
 cat >"$root/bin/dnf" <<'EOF'
 #!/usr/bin/env bash
-test -e "$TEST_ROOT/verified" || exit 1
-touch "$TEST_ROOT/installed"
+set -euo pipefail
+[[ "$1" == -y && "$2" == --setopt=reposdir=* && "$3" == install && "$4" == rpmfusion-free-release ]]
+config="${2#--setopt=reposdir=}/rpmfusion-bootstrap.repo"
+grep -Fxq 'gpgcheck=1' "$config"
+grep -Fq 'development/rawhide/Everything/$basearch/os/' "$config"
+key="$(sed -n 's/^gpgkey=file:\/\/\(.*\)/\1/p' "$config")"
+[[ "$(sha256sum "$key" | cut -d' ' -f1)" == 10fc0a3e1a0307e8088357a31a9c5e4e3d9f9e0b01db2b03b5790d949a47f3b3 ]]
+exit "${DNF_STATUS:-0}"
 EOF
-chmod +x "$root/bin/"*
-
+chmod +x "$root/bin/dnf"
 bash "$repo/files/scripts/enable-rpmfusion-free.sh"
-test -e "$root/installed"
-grep -Fq repo.fedora.md "$root/downloads"
-rm "$root/verified" "$root/installed"
-if BAD_HASH=1 bash "$repo/files/scripts/enable-rpmfusion-free.sh"; then exit 1; fi
-test ! -e "$root/installed"
-if FAIL_ALL=1 bash "$repo/files/scripts/enable-rpmfusion-free.sh"; then exit 1; fi
-test ! -e "$root/installed"
+if DNF_STATUS=1 bash "$repo/files/scripts/enable-rpmfusion-free.sh"; then exit 1; fi

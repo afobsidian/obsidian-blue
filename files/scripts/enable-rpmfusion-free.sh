@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-release_rpm="$(mktemp --suffix=.rpm)"
-trap 'rm -f "$release_rpm"' EXIT
-curl -fsSL --retry 3 --connect-timeout 15 --max-time 120 \
-  https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-rawhide.noarch.rpm -o "$release_rpm" ||
-  curl -fsSL --retry 3 --connect-timeout 15 --max-time 120 \
-    https://repo.fedora.md/mirrors/rpmfusion/free/fedora/rpmfusion-free-release-rawhide.noarch.rpm -o "$release_rpm"
-printf '9365a2240104c56efb81feaca1fdd0e9b36c93bb6dc1001dea0967261faf867e  %s\n' "$release_rpm" | sha256sum --check --status
-dnf -y install "$release_rpm"
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+repo_dir="$(mktemp -d)"
+trap 'rm -rf "$repo_dir"' EXIT
+cat >"$repo_dir/rpmfusion-bootstrap.repo" <<EOF
+[rpmfusion-bootstrap]
+name=RPM Fusion Free Rawhide bootstrap
+baseurl=https://repo.fedora.md/mirrors/rpmfusion/free/fedora/development/rawhide/Everything/\$basearch/os/
+        https://mirrors.lug.mtu.edu/rpmfusion/free/fedora/development/rawhide/Everything/\$basearch/os/
+enabled=1
+gpgcheck=1
+gpgkey=file://$script_dir/rpmfusion-free-2020.gpg
+EOF
+dnf -y --setopt="reposdir=$repo_dir" install rpmfusion-free-release
